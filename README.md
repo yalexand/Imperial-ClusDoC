@@ -1,4 +1,4 @@
-# This version of ClusDoC software contains headless version performing single-channel DBSCAN and RipleyK analysis of localisations in the FOV within several automatically chosen ROIs. 
+# This version of ClusDoC software contains headless utility performing single-channel DBSCAN and RipleyK analysis of localisations in the FOV within several automatically chosen ROIs. 
 
 The settings are controlled via xml settinfgs file.
 Input data format is ThunderSTORM. It also can process csv files created by the version of WindSTORM software (https://github.com/ImperialCollegeLondon/WindSTORM_MATLAB).
