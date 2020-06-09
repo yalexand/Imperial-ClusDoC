@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<settings>
+   <pixelSizenm>1</pixelSizenm>
+   <WindSTORM_Sigmapix>1</WindSTORM_Sigmapix>
+   <RipleyK_Start>0</RipleyK_Start>
+   <RipleyK_End>1000</RipleyK_End>
+   <RipleyK_Step>10</RipleyK_Step>
+   <RipleyK_MaxSampledPts>10000</RipleyK_MaxSampledPts>
+   <DBSCAN_epsilon>20</DBSCAN_epsilon>
+   <DBSCAN_minPts>3</DBSCAN_minPts>
+   <DBSCAN_UseLr_rThresh>[true]</DBSCAN_UseLr_rThresh>
+   <DBSCAN_Lr_rThreshRad>20</DBSCAN_Lr_rThreshRad>
+   <DBSCAN_SmoothingRad>15</DBSCAN_SmoothingRad>
+   <DBSCAN_Cutoff>10</DBSCAN_Cutoff>
+   <DBSCAN_threads>2</DBSCAN_threads>
+   <DBSCAN_DoStats>[true]</DBSCAN_DoStats>
+   <Square_ROIs_Auto_anm>1400</Square_ROIs_Auto_anm>
+   <Square_ROIs_Auto_qthresh>20</Square_ROIs_Auto_qthresh>
+   <Square_ROIs_Auto_maxNrois>0.95</Square_ROIs_Auto_maxNrois>
+</settings>
