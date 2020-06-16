@@ -10,9 +10,6 @@ classdef ClusDoC_analysis_controller < handle
     
     properties(SetObservable = true)
 	
-	src_dir = [];
-	dst_dir = [];  
-    
     pixelSizenm = 1;
     WindSTORM_Sigmapix = 1;
 
@@ -36,26 +33,25 @@ classdef ClusDoC_analysis_controller < handle
         'Outputfolder',['C:' filesep]);
  
         Square_ROIs_Auto_anm = 1400;
-        Square_ROIs_Auto_qthresh = 20;
-        Square_ROIs_Auto_maxNrois = .95;  
+        Square_ROIs_Auto_qthresh = [.5 .5];
+        Square_ROIs_Auto_maxNrois = 20; 
+        Square_ROIs_Auto_method = 'channel';         
+        
+        Align_channels_nmppix = 4;
+        Align_channels_method = 'Matlab_multimodal';
     
     % Initialize structure to pass values between GUI components
-    CellData = {}; % better it rename this as FOVData
-    ROIData = {};
-    ROIPos = [];
-    CurrentCellData = 1;
-    CurrentROIData = [];
+    CellData = {2,1}; % better it rename this as FOVData
     
-    pathName = pwd;
-    fileName = [];
-
-    % Default ROI settings
-    ROISize = 4000; % Length of ROI, in nm   
+    pathName = cell(2,1);
+    fileName = cell(2,1);
     
     NDataColumns = [];
-    MaxSize = [];
-    ROIMultiplier = [];
-    Nchannels = []; % ?
+    
+    SizeX = 256; % # original image pixels as on acquisition
+    SizeY = 256;
+
+    Nchannels = 1;
     
     ROICoordinates = {};
     
@@ -63,7 +59,7 @@ classdef ClusDoC_analysis_controller < handle
     
     ClusterTable = [];
     
-    Chan1Color = [1 0 0]; %red
+    Chan1Color = [1 0 0]; %red        
     
     end                    
     
@@ -112,7 +108,15 @@ function load_settings(obj,fname,~)
                     
                     obj.Square_ROIs_Auto_anm = settings.Square_ROIs_Auto_anm; % square side
                     obj.Square_ROIs_Auto_qthresh = settings.Square_ROIs_Auto_qthresh; % brightness threshold
-                    obj.Square_ROIs_Auto_maxNrois = settings.Square_ROIs_Auto_maxNrois;                                 
+                    obj.Square_ROIs_Auto_maxNrois = settings.Square_ROIs_Auto_maxNrois;
+                    obj.Square_ROIs_Auto_method = settings.Square_ROIs_Auto_method;   
+                    
+                    obj.SizeX = settings.SizeX;
+                    obj.SizeY = settings.SizeY;                           
+        
+                    obj.Align_channels_nmppix = settings.Align_channels_nmppix;
+                    obj.Align_channels_method = settings.Align_channels_method;                    
+                                       
              end
     catch err
         disp('cannot load settings file, exiting..');
@@ -143,6 +147,13 @@ function save_settings(obj,fname,~)
                     settings.Square_ROIs_Auto_anm = obj.Square_ROIs_Auto_anm; % square side
                     settings.Square_ROIs_Auto_qthresh = obj.Square_ROIs_Auto_qthresh; % brightness threshold
                     settings.Square_ROIs_Auto_maxNrois = obj.Square_ROIs_Auto_maxNrois;
+                    settings.Square_ROIs_Auto_method = obj.Square_ROIs_Auto_method;
+                    
+                    settings.SizeX = obj.SizeX;
+                    settings.SizeY = obj.SizeY; 
+                    
+                    settings.Align_channels_nmppix = obj.Align_channels_nmppix;
+                    settings.Align_channels_method = obj.Align_channels_method;                      
                     
                     xml_write(fname,settings);
     catch err
@@ -157,43 +168,32 @@ end
         function clear_all(obj,~)
         end
 %-------------------------------------------------------------------------%
-        function Load_Data(obj,fileName,pathName,~)
+        function Load_Data(obj,fileName,pathName,chan,~)
             
-            obj.fileName = fileName;
-            obj.pathName = pathName;
+            obj.fileName{chan} = fileName;
+            obj.pathName{chan} = pathName;
         
-            goodZENFile = checkZenFile(fullfile(obj.pathName,obj.fileName));
+            goodZENFile = checkZenFile(fullfile(obj.pathName{chan},obj.fileName{chan}));
       
-            if goodZENFile || contains(obj.fileName,'.csv')
-                importData = Import1File(fullfile(obj.pathName,obj.fileName),obj);
+            if goodZENFile || contains(obj.fileName{chan},'.csv')
+                importData = ImportFile(fullfile(obj.pathName{chan},obj.fileName{chan}),obj);
                                 
-                obj.CellData = [importData.Data zeros(size(importData.Data, 1), 8)];
-                
-%                 obj.CellData{k}(:,5:6) = obj.CellData{k}(:,5:6)*importData.Footer{2}(3)/importData.Footer{2}(1);
+                obj.CellData{chan} = [importData zeros(size(importData, 1), 8)];
 
 %                 obj.CellData{k}(any(isnan(obj.CellData{k}), 2), :) = []; % protection against incomplete line writing in ZEN export
                                                                                  % This breaks import for ThunderSTORMConcatenator output                                                                                  % Commenting this out to allow that format to work.
-                obj.NDataColumns = size(importData.Data, 2);
-                obj.CellData(:,obj.NDataColumns + 2) = 1; % All data is in mask until set otherwise
-                obj.ROIMultiplier = importData.Footer{2}(1); % Conversion from coordinates.txt positions to nm
-                             
-                % Max size calc has some issues around certain imported ZEN
-                % files
-                obj.MaxSize = importData.Footer{2}(5)*10*importData.Footer{2}(1)/importData.Footer{2}(3); % FOV size, in nm
+                obj.NDataColumns = size(importData, 2);
+                obj.CellData{chan}(:,obj.NDataColumns + 2) = 1; % All data is in mask until set otherwise
+                                             
+                obj.CellData{chan}(any(obj.CellData{chan}(:, 5) > obj.SizeX), : )= [];
+                obj.CellData{chan}(any(obj.CellData{chan}(:, 6) > obj.SizeY), : )= [];                
+                obj.CellData{chan}(any(obj.CellData{chan}(:, 5:6) < 0), : )= [];
                 
-                if obj.MaxSize == 256
-                    obj.MaxSize = obj.MaxSize*100;
-                end
-                
-                % Clear out any points outside of bounds [0 MaxSize];
-                obj.CellData(any(obj.CellData(:, 5:6) > obj.MaxSize), : )= [];
-                obj.CellData(any(obj.CellData(:, 5:6) < 0), : )= [];
-                
-                obj.Nchannels = min([numel(unique(obj.CellData(:,12))), 2]); % cap import to 2 channels ever
+                obj.Nchannels = max(chan,obj.Nchannels); %min([numel(unique(obj.CellData{chan}(:,12))), 2]); % cap import to 2 channels ever
                 
             else
                 
-                fprintf(1, 'File not in accepted coordinate table format.\nSkipping %s\n', fullfile(obj.pathName,obj.fileName));
+                fprintf(1, 'File not in accepted coordinate table format.\nSkipping %s\n', fullfile(obj.pathName{chan},obj.fileName{chan}));
 
             end            
             
@@ -237,18 +237,19 @@ end
     function Analyze_ROIs_DBSCAN(obj,verbose,~)
   
         try
-               chan = 1;
+            
+        for chan = 1 : obj.Nchannels
                
-               fname = strrep(obj.fileName,'.csv','');
+               fname = strrep(obj.fileName{chan},'.csv','');
                fname = strrep(fname,'.txt','');
-               DBSCAN_out_dirname = [obj.Outputfolder filesep fname '_ClusDoC_Results' filesep 'DBSCAN'];
+               DBSCAN_out_dirname = [obj.Outputfolder filesep fname '_channel_' num2str(chan) '_ClusDoC_Results' filesep 'DBSCAN'];         
                if ~exist(DBSCAN_out_dirname,'dir')
-                   mkdir( fullfile(obj.Outputfolder,[fname '_ClusDoC_Results'],'DBSCAN'));
+                   mkdir( fullfile(obj.Outputfolder,[fname '_channel_' num2str(chan) '_ClusDoC_Results'],'DBSCAN'));
                    mkdir(DBSCAN_out_dirname,'Cluster_maps');
                    mkdir(DBSCAN_out_dirname,'Cluster_density_maps');
                end
                           
-          obj.DBSCAN.Outputfolder = DBSCAN_out_dirname;  
+        obj.DBSCAN.Outputfolder = DBSCAN_out_dirname;  
                
         cellROIPair = [];                  
                
@@ -258,7 +259,7 @@ end
                     if verbose
                         figure;  
                         ax = gca;
-                        plot(ax,obj.CellData(:,5),obj.CellData(:,6),'b.');
+                        plot(ax,obj.CellData{chan}(:,5),obj.CellData{chan}(:,6),'b.');
                         daspect(ax,[1 1 1]); 
                         grid(ax,'on');
                         hold(ax,'on');
@@ -270,10 +271,10 @@ end
                         
                     x_roi=roi(:,1);
                     y_roi=roi(:,2);
-                        x=obj.CellData(:,5);
-                        y=obj.CellData(:,6);
+                        x=obj.CellData{chan}(:,5);
+                        y=obj.CellData{chan}(:,6);
                             whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
-                    dataCropped = obj.CellData(whichPointsInROI,:);
+                    dataCropped = obj.CellData{chan}(whichPointsInROI,:);
 
                     if verbose
                         color = [rand rand 0];
@@ -294,17 +295,22 @@ end
                             %         clusterColor = varargin{5}
                             
                             clusterColor = obj.Chan1Color;
-                            [~, ClusterSmoothTable{roiInc}, ~, classOut, ~, ~, ~, Result{roiInc,c}] = ...
-                                DBSCANHandler_YA(dataCropped(dataCropped(:,12) == chan, 5:6), obj.DBSCAN, c, roiInc, ...
-                                true, true, clusterColor, dataCropped(dataCropped(:,12) == chan, obj.NDataColumns + 2));
+%                             [~, ClusterSmoothTable{roiInc}, ~, classOut, ~, ~, ~, Result{roiInc,c}] = ...
+%                                 DBSCANHandler_YA(dataCropped(dataCropped(:,12) == chan, 5:6), obj.DBSCAN, c, roiInc, ...
+%                                 true, true, clusterColor, dataCropped(dataCropped(:,12) == chan, obj.NDataColumns + 2));
 
-                            % disp(Result);
+                            [~, ClusterSmoothTable{roiInc}, ~, classOut, ~, ~, ~, Result{roiInc,c}] = ...
+                                DBSCANHandler_YA(dataCropped(dataCropped(:,12) == 1, 5:6), obj.DBSCAN, c, roiInc, ...
+                                true, true, clusterColor, dataCropped(dataCropped(:,12) == 1, obj.NDataColumns + 2));
+
                             
-                            obj.CellData(whichPointsInROI & (obj.CellData(:,12) == chan), obj.NDataColumns + 3) = classOut;
+                            %obj.CellData(whichPointsInROI & (obj.CellData(:,12) == chan), obj.NDataColumns + 3) = classOut;
+                            obj.CellData{chan}(whichPointsInROI & (obj.CellData{chan}(:,12) == 1), obj.NDataColumns + 3) = classOut;
                              
                             cellROIPair = [cellROIPair; c, roiInc, roi(1,1), roi(1,2), polyarea(roi(:,1), roi(:,2))];
                             
-                            obj.ClusterTable = AppendToClusterTable(obj.ClusterTable, chan, c, roiInc, ClusterSmoothTable{roiInc, c}, classOut);
+                            % obj.ClusterTable = AppendToClusterTable(obj.ClusterTable, chan, c, roiInc, ClusterSmoothTable{roiInc, c}, classOut);
+                            obj.ClusterTable = AppendToClusterTable(obj.ClusterTable, 1, c, roiInc, ClusterSmoothTable{roiInc, c}, classOut);
 
                         else
                             % Have chosen an empty region as ROI                            
@@ -318,22 +324,21 @@ end
                     if verbose, hold(ax,'off'), end
 
                 if ~all(cellfun(@isempty, Result))
-                    ExportDBSCANDataToExcelFiles(cellROIPair, Result, obj.DBSCAN.Outputfolder, chan);
+                    
+                    %ExportDBSCANDataToExcelFiles(cellROIPair, Result, obj.DBSCAN.Outputfolder, chan);
+                    ExportDBSCANDataToExcelFiles(cellROIPair, Result, obj.DBSCAN.Outputfolder, 1);
                 else
                     fprintf(1, 'All cells and ROIs empty.  Skipping export.\n');
                 end
                 
                save(fullfile(obj.DBSCAN.Outputfolder,'DBSCAN_Cluster_Result.mat'),'ClusterSmoothTable','Result','-v7.3');                
-                                            
+              
+        end
+               
         catch mErr
-            
-            assignin('base', 'cellROIPair', cellROIPair);
-            assignin('base', 'Result', Result);
-            assignin('base', 'outputFolder', strcat(obj.Outputfolder, '\DBSCAN Results'));
-            assignin('base', 'chan', chan);
-            
-            disp('DBSCAN processing exited with errors.');
-            rethrow(mErr);
+                
+           disp('DBSCAN processing exited with errors.');
+           rethrow(mErr);
 
         end
 
@@ -414,16 +419,20 @@ end
             % Moving here to create more reasonable workflow
             % create the output folder 'RipleyKGUI_Result
 
-               fname = strrep(obj.fileName,'.csv','');
-               fname = strrep(fname,'.txt','');
-               RipleyK_out_dirname = [obj.Outputfolder filesep fname '_ClusDoC_Results' filesep 'RipleyK'];
-               if ~exist(RipleyK_out_dirname,'dir')
-                   mkdir( fullfile(obj.Outputfolder,[fname '_ClusDoC_Results'],'RipleyK'));
-                   mkdir(RipleyK_out_dirname,'RipleyK_Plots');
-                   mkdir(RipleyK_out_dirname,'RipleyK_Results');
-               end            
-                       
-            [~] = obj.RipleyKHandler(RipleyK_out_dirname);
+               for chan = 1 : obj.Nchannels
+                   
+                   fname = strrep(obj.fileName{chan},'.csv','');
+                   fname = strrep(fname,'.txt','');
+                   RipleyK_out_dirname = [obj.Outputfolder filesep fname '_channel_' num2str(chan) '_ClusDoC_Results' filesep  'RipleyK'];
+                   if ~exist(RipleyK_out_dirname,'dir')
+                       mkdir( fullfile(obj.Outputfolder,[fname '_channel_' num2str(chan) '_ClusDoC_Results'],'RipleyK'));
+                       mkdir(RipleyK_out_dirname,'RipleyK_Plots');
+                       mkdir(RipleyK_out_dirname,'RipleyK_Results');
+                   end
+                                      
+                   [~] = obj.RipleyKHandler(RipleyK_out_dirname,chan);
+            
+               end                       
             
         catch mError
             
@@ -433,7 +442,7 @@ end
         end        
     end
     %-------------------------------------------------------------------------%   
-    function valOut = RipleyKHandler(obj,Fun_OutputFolder_name,~)
+    function valOut = RipleyKHandler(obj,Fun_OutputFolder_name,chan,~)
         
         if isempty(obj.ROICoordinates), return, end
         
@@ -449,9 +458,13 @@ end
 
                 nSteps = ceil((End - Start)/Step) + 1;
 
-                Max_Lr = zeros(sum(cell2mat(cellfun(@length, obj.ROICoordinates, 'uniformoutput', false))), obj.Nchannels); % Assuming the first cell has the same number of channels as the rest
-                Max_r = zeros(sum(cell2mat(cellfun(@length, obj.ROICoordinates, 'uniformoutput', false))), obj.Nchannels);
-                Lr_r_Result = zeros(nSteps, sum(cell2mat(cellfun(@length, obj.ROICoordinates, 'uniformoutput', false))), obj.Nchannels);
+%                 Max_Lr = zeros(sum(cell2mat(cellfun(@length, obj.ROICoordinates, 'uniformoutput', false))), obj.Nchannels); % Assuming the first cell has the same number of channels as the rest
+%                 Max_r = zeros(sum(cell2mat(cellfun(@length, obj.ROICoordinates, 'uniformoutput', false))), obj.Nchannels);
+%                 Lr_r_Result = zeros(nSteps, sum(cell2mat(cellfun(@length, obj.ROICoordinates, 'uniformoutput', false))), obj.Nchannels);
+
+                Max_Lr = zeros(sum(cell2mat(cellfun(@length, obj.ROICoordinates, 'uniformoutput', false))), 1); % Assuming the first cell has the same number of channels as the rest
+                Max_r = zeros(sum(cell2mat(cellfun(@length, obj.ROICoordinates, 'uniformoutput', false))), 1);
+                Lr_r_Result = zeros(nSteps, sum(cell2mat(cellfun(@length, obj.ROICoordinates, 'uniformoutput', false))), 1);
 
                     for roiIter = 1:length(obj.ROICoordinates) % ROI number
                         
@@ -467,11 +480,11 @@ end
 %                             whichPointsInROI = whichPointsInROI(:,roiIter) == '1';
                     x_roi=roi(:,1);
                     y_roi=roi(:,2);
-                        x=obj.CellData(:,5);
-                        y=obj.CellData(:,6);
+                        x=obj.CellData{chan}(:,5);
+                        y=obj.CellData{chan}(:,6);
                             whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
 
-                            dataCropped = obj.CellData(whichPointsInROI, :);
+                            dataCropped = obj.CellData{chan}(whichPointsInROI, :);
 
                             if ~isempty(dataCropped)
 
@@ -598,180 +611,158 @@ end
                     % end loop over channels .. ? ..
 
                 valOut = 1;
-end
+    end
 %-------------------------------------------------------------------------%   
-        % Load ROI coordinates from coordinates.txt file (if existing)
-        function [roiCoordinates, loadOK] = loadCoordinatesFile(obj,fName,~)
-
-            scaleFactor = obj.ROIMultiplier;
+        function ash = Define_Square_ROIs_Auto(obj,~,varargin) 
             
-            % Optional comment block at top, which may contain line specifying
-            % the ROI size.
-            % Comments have first character #
-            % ROI size specified by # ROISize:\t%f in nanometers
-            % If not specified, assume is default value
-            % Assuming that all ROIs specified in coordinates.txt file are
-            % squares
+            if 1 == nargin
+                chan = 1;
+            else
+                chan = varargin(1);
+            end        
+            
+            Nrois = obj.Square_ROIs_Auto_maxNrois;
+            anm = obj.Square_ROIs_Auto_anm;
+                                          
+            % if isnumeric(chan) && intersect(chan,[1 2])
+            if strcmp(obj.Square_ROIs_Auto_method,'channel')
+                 
+                qthresh = obj.Square_ROIs_Auto_qthresh(chan);                  
 
-            fID = fopen(fName, 'r');
-            lineNow = 0;
-            isEnd = false;
-            isData = false;
-            while ~isEnd | ~isData
-                lineString = fgetl(fID);
-                if lineString(1) ~= '#'
-                    testLine = lineString;
-        %             disp('end of header');
-                    isData = true;
-                    break;
-                elseif isempty(lineString)
-                    isEnd = true;
-        %             disp('end of file');
-                else
-                    lineNow = lineNow + 1;
-                    % Check if ROI size specified
-                    if ~isempty(strfind(lower(lineString), 'roisize'))
-                        obj.ROISize = str2double(lineString(regexp(lineString, '\d+'):end));
+                % to have pixel roughly the size of ROI   
+                nmppix = obj.pixelSizenm; % first step - just back to widefield                        
+                ash = obj.get_ash(nmppix,chan);
+                %
+                f = anm/nmppix;
+                z = imresize(ash,1/f);          
+                z = z.*(z > quantile(z(:),qthresh));
+                ash = z;
+                %
+                obj.ROICoordinates = cell(0);
+                for k=1:size(z,1)
+                    for m=1:size(z,2)
+                        if z(k,m)>0
+                           % disp([k-0.5,m-0.5]);
+                           x = round((m-.5)*f*nmppix);
+                           y = round((k-.5)*f*nmppix);
+                          d = floor(anm/2)-1;
+                          p1 = [x-d y+d];
+                          p2 = [x+d y+d];
+                          p3 = [x+d y-d];
+                          p4 = [x-d y-d];
+                          p5 = [x-d y+d];                      
+                          roi = [p1;p2;p3;p4;p5];                      
+                         obj.ROICoordinates = [obj.ROICoordinates; roi];
+                        end
                     end
                 end
-            end
-
-            % See if file is ZEN export format of identical rectangles, or is
-            % polygons w/ xy coordinates
-            % If only 4 columns, then ZEN rectangles
-            % Any more than 4 columns and format has to be polygons in
-            % x1\ty1\tx2\ty2\tx3\ty3... format
-
-            nTabs = numel(strfind(testLine, sprintf('\t')));
-            fseek(fID, 0, -1);
-            for skipLines = 1:lineNow
-                fgetl(fID);
-                % Skip enough lines to get back to start of data
-            end
-
-            if nTabs == 3
-                % is ZEN output file
-
-                coordRead = textscan(fID, '%s\t%s\t%f\t%f');
-                fclose(fID);
-
-                obj.ROICoordinates = cell(1);
-
-                    [~, IDstring, ~] = fileparts(obj.fileName);
-                    % coordinates here are in "reslution units", which is ~10
-                    % nm in most cases for ZEN output
-                    thisCellsROIs = [coordRead{3}(strcmp(IDstring, cellstr(coordRead{2})))/scaleFactor, ...
-                        obj.MaxSize - coordRead{4}(strcmp(IDstring, cellstr(coordRead{2})))/scaleFactor];
-
-                    for p = 1:size(thisCellsROIs, 1)
-                        obj.ROICoordinates{p} = zeros(5, 2);
-                        % Assign ROI coordinates in proper format for inpolygon()
-                        obj.ROICoordinates{p} = [thisCellsROIs(p,:) + [-obj.ROISize/2 -obj.ROISize/2];
-                            thisCellsROIs(p,:) + [obj.ROISize/2 -obj.ROISize/2];
-                            thisCellsROIs(p,:) + [obj.ROISize/2 obj.ROISize/2];
-                            thisCellsROIs(p,:) + [-obj.ROISize/2 obj.ROISize/2];
-                            thisCellsROIs(p,:) + [-obj.ROISize/2 -obj.ROISize/2]];
-                    end
-
-                loadOK = true;
-
-    elseif nTabs > 3
-        % Is polygonal format file
-        % Each line may have a different number of coordinates, but
-        % should always be paired
-        % Everything is still in "resolution units", so be sure to
-        % incorporate scaleFactor into the import
-
-        roiCount = 1;
-        fileEnd = false;
-        cellList = cell(1,1);
-        coordList = cell(1,1);
-        while ~fileEnd
-            thisLine = fgetl(fID);
-            if ischar(thisLine)
-                thisLine = strsplit(thisLine, sprintf('\t'));
-                cellList{roiCount} = thisLine{2};
-                coordList{roiCount} = reshape(str2double(thisLine(3:end)), 2, [])';
-                roiCount = roiCount + 1;
+                % if too many ROIs, choose random Nrois among defined
+                if (numel(obj.ROICoordinates) > Nrois)
+                    obj.ROICoordinates = obj.ROICoordinates(randi(numel(obj.ROICoordinates),1,Nrois));
+                end
             else
-                fileEnd = true;
+                % composite - todo
             end
+            %
         end
+%-------------------------------------------------------------------------%
+function [dx2,dy2] = Align_channels(obj,~) % translation only
+     
+    dx2 = 0; dy2 = 0;    
+    if 2 ~= numel(obj.CellData), return, end
 
-        fclose(fID);
-        
-        obj.ROICoordinates = cell(1);
-
-            [~, IDstring, ~] = fileparts(obj.fileName);
+% FOR TESTING    
+%             % cheating - introduce shift to channel 2;
+%             dx0 = 45
+%             dy0 = -70
+%             x = obj.CellData{2}(:,5) + dx0;
+%             y = obj.CellData{2}(:,6) + dy0;
+%             x(x>obj.SizeX*obj.pixelSizenm) = obj.SizeX*obj.pixelSizenm;
+%             x(x<1) = 1;
+%             y(y>obj.SizeY*obj.pixelSizenm) = obj.SizeY*obj.pixelSizenm;
+%             y(y<1) = 1;                        
+%             obj.CellData{2}(:,5) = x;
+%             obj.CellData{2}(:,6) = y;
            
-            thisCellsROIs = coordList(strcmp(IDstring, cellList));
-
-%             disp(length(thisCellsROIs));
+            % the alignment is image-based, so first get channel images at pre-defined nmmppix
+            nmppix = obj.Align_channels_nmppix; 
             
-            for p = 1:length(thisCellsROIs)
-
-                % Assign ROI coordinates in proper format for inpolygon()
-                obj.ROICoordinates{p} = thisCellsROIs{p}([1:end 1], :)/scaleFactor;
-                obj.ROICoordinates{p}(:,2) = obj.MaxSize - obj.ROICoordinates{p}(:,2);
-
-            end
-
-        loadOK = true;                
-                
-            else
-                error('Import file format not supported');
-            end
-        end
-%-------------------------------------------------------------------------%   
-        % Load ROI coordinates from coordinates.txt file (if existing)
-        function v = Define_Square_ROIs_Auto(obj,~) % side of a square, um
-            
-                    anm = obj.Square_ROIs_Auto_anm;
-                    qthresh = obj.Square_ROIs_Auto_qthresh;
-                    Nrois = obj.Square_ROIs_Auto_maxNrois;
-            
-            downscale_factor = obj.pixelSizenm; % just widefield
-            %downscale_factor = obj.pixelSizenm/10; % to see better use /10);                        
-            XcT = obj.CellData(:,5);
-            YcT = obj.CellData(:,6);
-               YcT = max(YcT)-YcT;             
-            imW = obj.MaxSize;
-            imH = obj.MaxSize;
-                SY = ceil(imW/downscale_factor);
-                SX = ceil(imH/downscale_factor);   
-                ash = ASH_2d(SX,SY,[YcT XcT]/downscale_factor,3);
-                v = ash;                
-            % to have pixel roughly the size of ROI    
-            f = anm/obj.pixelSizenm;
-            z = imresize(v,1/f);          
-            z = z.*(z > quantile(z(:),qthresh));
-            v = z;
+            ash1 = obj.get_ash(nmppix,1);
+            ash2 = obj.get_ash(nmppix,2);            
             %
-            obj.ROICoordinates = cell(0);
-            for k=1:size(z,1)
-                for m=1:size(z,2)
-                    if z(k,m)>0
-                       % disp([k-0.5,m-0.5]);
-                      y = round(( (size(z,1)-k+1) -.5)*f*obj.pixelSizenm);
-                      x = round((m-.5)*f*obj.pixelSizenm);
-                      d = floor(anm/2)-1;
-                      p1 = [x-d y+d];
-                      p2 = [x+d y+d];
-                      p3 = [x+d y-d];
-                      p4 = [x-d y-d];
-                      p5 = [x-d y+d];                      
-                      roi = [p1;p2;p3;p4;p5];                      
-                     obj.ROICoordinates = [obj.ROICoordinates; roi];
+            % normalize images.. make too bright parts less influential
+            t1 = quantile(ash1(:),0.995);
+            ash1(ash1>t1)=t1;
+            t2 = quantile(ash2(:),0.995);
+            ash2(ash2>t2)=t2;            
+            %            
+            switch obj.Align_channels_method 
+                
+                case 'xcorr2'
+           
+                    snm = 16; % scale, nm
+                    s1 = round(max(2,snm/nmppix));
+                    s2 = 2*s1;
+                    tform = Correct_Simple_Image_Translation_xcorr2(ash2,ash1,s1,s2);
+
+                case 'Matlab_multimodal' 
+
+                        [optimizer, metric] = imregconfig('multimodal');
+                     
+                        % Tune the properties of the optimizer to get the problem to converge
+                        % on a global maxima and to allow for more iterations.
+                    %     optimizer.InitialRadius = 0.009;
+                    %     optimizer.Epsilon = 1.5e-4;
+                    %     optimizer.GrowthFactor = 1.01;
+                    %     optimizer.MaximumIterations = 300;
+                     
+                        tform = imregtform(ash2, ash1, 'translation', optimizer, metric);
+                     
+            end
+
+% FOR VISUAL ASSESSMENT            
+%                     ALYtools_dir = 'C:\Users\alexany\ALYtools';
+%                     addpath(ALYtools_dir);
+%                     addpath_ALYtools;                          
+%                     ash2_reg = imwarp(ash2,tform,'OutputView',imref2d(size(ash1)));
+%                     ash = zeros(size(ash1,1),size(ash1,2),3,1,1);
+%                     ash(:,:,1,1,1) = ash1;
+%                     ash(:,:,2,1,1) = ash2;
+%                     ash(:,:,3,1,1) = ash2_reg;
+%                     icy_imshow(ash);             
+            
+             dx2 = - tform.T(3,1)*nmppix;
+             dy2 = - tform.T(3,2)*nmppix;
+end
+%-------------------------------------------------------------------------%
+   function ash = get_ash(obj,nmppix,chan,varargin)
+              
+            X = obj.CellData{chan}(:,5);
+            Y = obj.CellData{chan}(:,6);
+            
+            % if one wants to exclude localisations outside selected ROIs  
+            if 4==nargin 
+                roi_only_flag = varargin{1};
+                if true==roi_only_flag                    
+                    whichPointsInROIs = zeros(size(X));
+                    for roiInc = 1:length(obj.ROICoordinates)
+                        roi = obj.ROICoordinates{roiInc};                        
+                        x_roi=roi(:,1);
+                        y_roi=roi(:,2);
+                        whichPointsInROI = X>=min(x_roi) & X<=max(x_roi) & Y>=min(y_roi) & Y<=max(y_roi); 
+                        whichPointsInROIs = whichPointsInROIs | whichPointsInROI; 
                     end
+                    X = X(whichPointsInROIs);
+                    Y = Y(whichPointsInROIs);                                        
                 end
             end
-            % if too many ROIs, choose random Nrois among defined
-            if (numel(obj.ROICoordinates) > Nrois)
-                obj.ROICoordinates = obj.ROICoordinates(randi(numel(obj.ROICoordinates),1,Nrois));
-            end
-            %
-        end
-   %-------------------------------------------------------------------------%        
+                         
+            SY = ceil(obj.SizeX*obj.pixelSizenm/nmppix);
+            SX = ceil(obj.SizeY*obj.pixelSizenm/nmppix);                
+            % set diameter to 12 nm
+            ash_size = round(max(3,12/nmppix));
+            ash = ASH_2d(SX,SY,[Y X]/nmppix,ash_size);
+end
     end % methods
             
 end

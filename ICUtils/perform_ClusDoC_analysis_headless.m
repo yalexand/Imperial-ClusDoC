@@ -1,7 +1,16 @@
-function perform_ClusDoC_analysis_headless(src_dir,filename,dst_dir,full_settings_file_name)
+function perform_ClusDoC_analysis_headless(dst_dir,full_settings_file_name,varargin)
 
 tic
 
+src_dir1 = varargin{1};
+filename1 = varargin{2};
+
+try
+    src_dir2 = varargin{3};
+    filename2 = varargin{4};
+catch
+end
+    
 ac = ClusDoC_analysis_controller();
 
 if isfile(full_settings_file_name)
@@ -17,8 +26,14 @@ else
     return;
 end
 
-ac.Outputfolder = dst_dir;    
-ac.Load_Data(filename,src_dir);
+ac.Outputfolder = dst_dir;   
+
+ac.Load_Data(filename1,src_dir1,1);
+if exist('filename2','var') && exist('src_dir2','var')
+    ac.Load_Data(filename2,src_dir2,2);
+    %[dx2,dy2] = ac.Align_channels;
+end
+
 ac.Define_Square_ROIs_Auto;
 ac.Analyze_ROIs_DBSCAN(true); % verbose
 ac.Analyze_ROIs_RipleyK; 

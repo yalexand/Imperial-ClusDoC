@@ -12,9 +12,14 @@
    <DBSCAN_Lr_rThreshRad>20</DBSCAN_Lr_rThreshRad>
    <DBSCAN_SmoothingRad>15</DBSCAN_SmoothingRad>
    <DBSCAN_Cutoff>10</DBSCAN_Cutoff>
-   <DBSCAN_threads>2</DBSCAN_threads>
+   <DBSCAN_threads>12</DBSCAN_threads>
    <DBSCAN_DoStats>[true]</DBSCAN_DoStats>
    <Square_ROIs_Auto_anm>2000</Square_ROIs_Auto_anm>
-   <Square_ROIs_Auto_qthresh>0.5</Square_ROIs_Auto_qthresh>
-   <Square_ROIs_Auto_maxNrois>028</Square_ROIs_Auto_maxNrois>
+   <Square_ROIs_Auto_qthresh>[0.5 0.5]</Square_ROIs_Auto_qthresh>
+   <Square_ROIs_Auto_maxNrois>280</Square_ROIs_Auto_maxNrois>
+   <Square_ROIs_Auto_method>channel</Square_ROIs_Auto_method>
+   <SizeX>128</SizeX>
+   <SizeY>128</SizeY>
+   <Align_channels_nmppix>4</Align_channels_nmppix>
+   <Align_channels_method>xcorr2</Align_channels_method>
 </settings>

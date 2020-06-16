@@ -285,6 +285,7 @@ end
                 mdID = fopen(fullfile(folderPath, strcat(metaDataFile, '-protocol.txt')));
                 
                 if mdID ~= -1
+                    try
                     % proceed
                     % Pull out pixel size
                     md = textscan(mdID, '%s', 'delimiter', '\n');
@@ -297,10 +298,16 @@ end
                     splitMD = textscan(md{pixMD}, '%s %f,');
                     pixelSizenm = splitMD{2};
                     handles.pixelSizenm = pixelSizenm;
+                    catch err
+                        disp('cannot open protocol file format');
+                        disp(err.message);
+                    end
                 else
-                    pixelSizenm = handles.pixelSizenm;
                     disp('Associated ThunderSTORM *-protocol.txt file not found. Using default for pixelSizenm');
                 end
+                
+                pixelSizenm = handles.pixelSizenm;
+                
                 % Example data was only single-channel data.  Assuming this
                 % is true for all ThunderSTORM data from here and filling
                 % in dummy '1' values for all channels. 
