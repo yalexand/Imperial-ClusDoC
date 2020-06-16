@@ -613,7 +613,7 @@ end
                 valOut = 1;
     end
 %-------------------------------------------------------------------------%   
-        function ash = Define_Square_ROIs_Auto(obj,~,varargin) 
+function Define_Square_ROIs_Auto(obj,~,varargin) 
             
             if 1 == nargin
                 chan = 1;
@@ -623,20 +623,20 @@ end
             
             Nrois = obj.Square_ROIs_Auto_maxNrois;
             anm = obj.Square_ROIs_Auto_anm;
-                                          
+            nmppix = obj.pixelSizenm;     
+            
             % if isnumeric(chan) && intersect(chan,[1 2])
             if strcmp(obj.Square_ROIs_Auto_method,'channel')
                  
                 qthresh = obj.Square_ROIs_Auto_qthresh(chan);                  
 
                 % to have pixel roughly the size of ROI   
-                nmppix = obj.pixelSizenm; % first step - just back to widefield                        
+                % first step - just back to widefield                        
                 ash = obj.get_ash(nmppix,chan);
                 %
                 f = anm/nmppix;
                 z = imresize(ash,1/f);          
                 z = z.*(z > quantile(z(:),qthresh));
-                ash = z;
                 %
                 obj.ROICoordinates = cell(0);
                 for k=1:size(z,1)
@@ -656,15 +656,48 @@ end
                         end
                     end
                 end
-                % if too many ROIs, choose random Nrois among defined
-                if (numel(obj.ROICoordinates) > Nrois)
-                    obj.ROICoordinates = obj.ROICoordinates(randi(numel(obj.ROICoordinates),1,Nrois));
+                
+            elseif strcmp(obj.Square_ROIs_Auto_method,'composite')
+                
+                qthresh_1 = obj.Square_ROIs_Auto_qthresh(1);                  
+                qthresh_2 = obj.Square_ROIs_Auto_qthresh(2);
+                % to have pixel roughly the size of ROI   
+                % first step - just back to widefield                        
+                ash_1 = obj.get_ash(nmppix,1);
+                ash_2 = obj.get_ash(nmppix,2);
+                %
+                f = anm/nmppix;
+                z_1 = imresize(ash_1,1/f);          
+                z_1 = z_1.*(z_1 > quantile(z_1(:),qthresh_1));
+                %
+                z_2 = imresize(ash_2,1/f);          
+                z_2 = z_2.*(z_2 > quantile(z_2(:),qthresh_2));
+                %                
+                obj.ROICoordinates = cell(0);
+                for k=1:size(z_1,1)
+                    for m=1:size(z_1,2)
+                        if z_1(k,m)>0 && z_2(k,m)>0
+                           % disp([k-0.5,m-0.5]);
+                           x = round((m-.5)*f*nmppix);
+                           y = round((k-.5)*f*nmppix);
+                          d = floor(anm/2)-1;
+                          p1 = [x-d y+d];
+                          p2 = [x+d y+d];
+                          p3 = [x+d y-d];
+                          p4 = [x-d y-d];
+                          p5 = [x-d y+d];                      
+                          roi = [p1;p2;p3;p4;p5];                      
+                         obj.ROICoordinates = [obj.ROICoordinates; roi];
+                        end
+                    end
                 end
-            else
-                % composite - todo
+                
             end
-            %
-        end
+            % if too many ROIs, choose random Nrois among defined
+            if (numel(obj.ROICoordinates) > Nrois)
+                obj.ROICoordinates = obj.ROICoordinates(randi(numel(obj.ROICoordinates),1,Nrois));
+            end                        
+end
 %-------------------------------------------------------------------------%
 function [dx2,dy2] = Align_channels(obj,~) % translation only
      
