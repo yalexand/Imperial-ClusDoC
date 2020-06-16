@@ -185,9 +185,9 @@ end
                 obj.NDataColumns = size(importData, 2);
                 obj.CellData{chan}(:,obj.NDataColumns + 2) = 1; % All data is in mask until set otherwise
                                              
-                obj.CellData{chan}(any(obj.CellData{chan}(:, 5) > obj.SizeX), : )= [];
-                obj.CellData{chan}(any(obj.CellData{chan}(:, 6) > obj.SizeY), : )= [];                
-                obj.CellData{chan}(any(obj.CellData{chan}(:, 5:6) < 0), : )= [];
+%                 obj.CellData{chan}(any(obj.CellData{chan}(:, 5) > obj.SizeX), : )= [];
+%                 obj.CellData{chan}(any(obj.CellData{chan}(:, 6) > obj.SizeY), : )= [];                
+%                 obj.CellData{chan}(any(obj.CellData{chan}(:, 5:6) < 0), : )= [];
                 
                 obj.Nchannels = max(chan,obj.Nchannels); %min([numel(unique(obj.CellData{chan}(:,12))), 2]); % cap import to 2 channels ever
                 
@@ -699,7 +699,7 @@ function Define_Square_ROIs_Auto(obj,~,varargin)
             end                        
 end
 %-------------------------------------------------------------------------%
-function [dx2,dy2] = Align_channels(obj,~) % translation only
+function [dx2,dy2] = Get_channel2_registration_corrections(obj,~) % translation only
      
     dx2 = 0; dy2 = 0;    
     if 2 ~= numel(obj.CellData), return, end
@@ -795,7 +795,20 @@ end
             % set diameter to 12 nm
             ash_size = round(max(3,12/nmppix));
             ash = ASH_2d(SX,SY,[Y X]/nmppix,ash_size);
-end
+   end
+%-------------------------------------------------------------------------%
+   function Apply_channel2_registration_corrections(obj,dx2dy2,~)
+            X = obj.CellData{2}(:,5) - dx2dy2(1);
+            Y = obj.CellData{2}(:,6) - dx2dy2(2);
+            nmppix = obj.pixelSizenm;
+            mask  = X>=0 & X<=obj.SizeX*nmppix & Y>=0 & Y<=obj.SizeY*nmppix;
+            obj.CellData{2} = obj.CellData{2}(mask,:); 
+            obj.CellData{2}(:,5) = X(mask);
+            obj.CellData{2}(:,6) = Y(mask);            
+   end
+   
+       
+       
     end % methods
             
 end
