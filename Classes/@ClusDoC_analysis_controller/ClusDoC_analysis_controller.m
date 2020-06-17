@@ -257,7 +257,8 @@ end
         ClusterSmoothTable = cell(length(obj.ROICoordinates),1);
                 
                     if verbose
-                        figure;  
+                        %figure;
+                        figure('units','normalized','outerposition',[0 0 1 1],'name','ROIs as they go..');
                         ax = gca;
                         plot(ax,obj.CellData{chan}(:,5),obj.CellData{chan}(:,6),'b.');
                         daspect(ax,[1 1 1]); 
@@ -298,35 +299,48 @@ end
 %                             [~, ClusterSmoothTable{roiInc}, ~, classOut, ~, ~, ~, Result{roiInc,c}] = ...
 %                                 DBSCANHandler_YA(dataCropped(dataCropped(:,12) == chan, 5:6), obj.DBSCAN, c, roiInc, ...
 %                                 true, true, clusterColor, dataCropped(dataCropped(:,12) == chan, obj.NDataColumns + 2));
-
-                            [~, ClusterSmoothTable{roiInc}, ~, classOut, ~, ~, ~, Result{roiInc,c}] = ...
-                                DBSCANHandler_YA(dataCropped(dataCropped(:,12) == 1, 5:6), obj.DBSCAN, c, roiInc, ...
-                                true, true, clusterColor, dataCropped(dataCropped(:,12) == 1, obj.NDataColumns + 2));
-
-                            
-                            %obj.CellData(whichPointsInROI & (obj.CellData(:,12) == chan), obj.NDataColumns + 3) = classOut;
-                            obj.CellData{chan}(whichPointsInROI & (obj.CellData{chan}(:,12) == 1), obj.NDataColumns + 3) = classOut;
-                             
-                            cellROIPair = [cellROIPair; c, roiInc, roi(1,1), roi(1,2), polyarea(roi(:,1), roi(:,2))];
-                            
-                            % obj.ClusterTable = AppendToClusterTable(obj.ClusterTable, chan, c, roiInc, ClusterSmoothTable{roiInc, c}, classOut);
-                            obj.ClusterTable = AppendToClusterTable(obj.ClusterTable, 1, c, roiInc, ClusterSmoothTable{roiInc, c}, classOut);
-
+                            try
+                                [~, ClusterSmoothTable{roiInc,c}, ~, classOut, ~, ~, ~, Result{roiInc,c}] = ...
+                                    DBSCANHandler_YA(dataCropped(dataCropped(:,12) == 1, 5:6), obj.DBSCAN, c, roiInc, ...
+                                    true, true, clusterColor, dataCropped(dataCropped(:,12) == 1, obj.NDataColumns + 2));                               
+                                
+                                %obj.CellData(whichPointsInROI & (obj.CellData(:,12) == chan), obj.NDataColumns + 3) = classOut;
+                                obj.CellData{chan}(whichPointsInROI & (obj.CellData{chan}(:,12) == 1), obj.NDataColumns + 3) = classOut;
+                                
+                                % obj.ClusterTable = AppendToClusterTable(obj.ClusterTable, chan, c, roiInc, ClusterSmoothTable{roiInc, c}, classOut);
+                                obj.ClusterTable = AppendToClusterTable(obj.ClusterTable, 1, c, roiInc, ClusterSmoothTable{roiInc, c}, classOut);                                 
+                                
+                            catch err                        
+                                fprintf(1, 'ROI %d - error.  Skipping.\n', roiInc);
+                                disp(err.message);
+                                ClusterSmoothTable{roiInc,c} = [];
+                                classOut = [];
+                                Result{roiInc,c} = [];
+                            end                           
+                                
                         else
                             % Have chosen an empty region as ROI                            
                             fprintf(1, 'Cell %d - ROI %d is empty.  Skipping.\n', 1, roiInc);                           
-                            ClusterSmoothTable{roiInc} = [];
+                            ClusterSmoothTable{roiInc,c} = [];
                             classOut = [];
                             Result{roiInc,c} = [];
-                        end                        
+                        end
+                        
+                        cellROIPair = [cellROIPair; c, roiInc, roi(1,1), roi(1,2), polyarea(roi(:,1), roi(:,2))];
+                        
                     end % ROI
                     
                     if verbose, hold(ax,'off'), end
 
                 if ~all(cellfun(@isempty, Result))
                     
+                    try
                     %ExportDBSCANDataToExcelFiles(cellROIPair, Result, obj.DBSCAN.Outputfolder, chan);
                     ExportDBSCANDataToExcelFiles(cellROIPair, Result, obj.DBSCAN.Outputfolder, 1);
+                    catch err
+                        disp('error in function ExportDBSCANDataToExcelFiles');
+                        disp(err.message);
+                    end
                 else
                     fprintf(1, 'All cells and ROIs empty.  Skipping export.\n');
                 end
@@ -512,9 +526,14 @@ end
                                     
                                     plotColor = 'red';
 
+                                    try
                                     [r, Lr_r] = RipleyKFun(dataCropped(selectVector & (dataCropped(:,12) == chan),5:6), ...
                                         A, Start, End, Step, size_ROI);
-
+                                    catch err
+                                        disp(err.message);
+                                        continue;
+                                    end
+                                    
                                     RipleyKCh1Fig = figure('color', [1 1 1]);
                                     RipleyKCh1Ax = axes('parent', RipleyKCh1Fig);
                                     plot(RipleyKCh1Ax, r, Lr_r, 'color', plotColor, 'linewidth', 2);
