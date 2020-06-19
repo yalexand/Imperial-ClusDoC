@@ -825,9 +825,150 @@ end
             obj.CellData{2}(:,5) = X(mask);
             obj.CellData{2}(:,6) = Y(mask);            
    end
-   
-       
-       
+%-------------------------------------------------------------------------%
+    function Analyze_ROIs_DoC(obj,~)
+  
+        try                      
+                   % PLACE COLOCALIZATION RESULTS INTO 1 CHANNEL DIRECTORY
+                   dbscanParams = struct;
+                       fname = strrep(obj.fileName{1},'.csv','');
+                       fname = strrep(fname,'.txt','');
+                       DoC_out_dirname = [obj.Outputfolder filesep fname '_channel_' num2str(1) '_ClusDoC_Results' filesep 'DoC'];
+                       if ~exist(DoC_out_dirname,'dir')
+                           mkdir( fullfile(obj.Outputfolder,[fname '_channel_' num2str(1) '_ClusDoC_Results'],'DoC'));
+                           mkdir(DoC_out_dirname,'DBSCAN Results');
+                            mkdir([DoC_out_dirname filesep 'DBSCAN Results'],'Ch1');
+                            mkdir([DoC_out_dirname filesep 'DBSCAN Results'],'Ch2');
+                            mkdir([DoC_out_dirname filesep 'DBSCAN Results' filesep 'Ch1'],'Cluster_maps');
+                            mkdir([DoC_out_dirname filesep 'DBSCAN Results' filesep 'Ch2'],'Cluster_maps');
+                            mkdir([DoC_out_dirname filesep 'DBSCAN Results' filesep 'Ch1'],'Cluster_density_maps');
+                            mkdir([DoC_out_dirname filesep 'DBSCAN Results' filesep 'Ch2'],'Cluster_density_maps');
+                            mkdir(DoC_out_dirname,'DoC histograms');
+                            mkdir(DoC_out_dirname,'DoC Statistics and Plots');
+                            mkdir([DoC_out_dirname filesep 'DoC Statistics and Plots'],'Density and DoC maps');
+                            mkdir([DoC_out_dirname filesep 'DoC Statistics and Plots'],'Raw data maps');
+                            mkdir([DoC_out_dirname filesep 'DoC Statistics and Plots'],'Raw data maps with outliers removed');
+                       end
+
+% to setups - all except dirname                       
+            dbscanParams(1).Outputfolder = DoC_out_dirname;
+            dbscanParams(2).Outputfolder = DoC_out_dirname;            
+            dbscanParams(1).DoCThreshold = .4;
+            dbscanParams(2).DoCThreshold = .4;
+            
+            dbscanParams(1).epsilon = 20;
+            dbscanParams(1).minPts = 3;             
+            dbscanParams(1).UseLr_rThresh = true; 
+            dbscanParams(1).Lr_rThreshRad = 20;            
+            dbscanParams(1).SmoothingRad = 15;
+            dbscanParams(1).Cutoff = 10;            
+            dbscanParams(1).threads = 12;
+            dbscanParams(1).DoStats = true;            
+
+            dbscanParams(2).epsilon = 20;
+            dbscanParams(2).minPts = 3;             
+            dbscanParams(2).UseLr_rThresh = true; 
+            dbscanParams(2).Lr_rThreshRad = 20;            
+            dbscanParams(2).SmoothingRad = 15;
+            dbscanParams(2).Cutoff = 10;            
+            dbscanParams(2).threads = 12;
+            dbscanParams(2).DoStats = true;              
+                          
+            %    original ClusDoC comment:
+            % Input parameters:
+            % Lr_rad - radius for Lr thresholding check - 20 default
+            % Rmax - max distance for DoC Calc (nm) - 500 default
+            % Step - step size for DoC Calc (nm) - 10 default
+            % ColoThres - threshold for DoC/notDoC - 0.4 default
+            % Nb - Num particles with DoC score above threshold to be a 'colocalised' cluster
+            % DBSCAN_Radius=20 - epsilon
+            % DBSCAN_Nb_Neighbor=3; - minPts ;
+            % threads = 2     
+            
+% to setups  
+            Lr_rRad = 20;
+            Rmax = 500;
+            Step = 10;
+            
+            Chan1Color = [.7 0.5 0.3];
+            Chan2Color = [.3 0.5 0.7];            
+            
+            CellData_1 = obj.CellData{1};
+            CellData_2 = obj.CellData{2};
+            
+% for debugging - introduce shift
+            x1 = CellData_1(:,5);
+            y1 = CellData_1(:,6); 
+            y2 = y1 + 70;
+            x2 = x1 + 86;                        
+            mask = x2>0 & x2<=obj.SizeX*obj.pixelSizenm & y2>0 & y2<=obj.SizeY*obj.pixelSizenm;             
+            x2(mask==0) = x1(mask==0);
+            y2(mask==0) = y1(mask==0);             
+            CellData_2(:,5) = x2;
+            CellData_2(:,6) = y2;
+%             x1 = CellData_1(:,5);
+%             y1 = CellData_1(:,6);
+%             x2 = CellData_2(:,5);
+%             y2 = CellData_2(:,6);               
+%             figure;plot(x1,y1,'r.',x2,y2,'b.');daspect([1 1 1]);            
+% for debugging - introduce noise            
+
+             CellData_1(:,12)=1;
+             CellData_2(:,12)=2;
+             CellData = cat(1,CellData_1,CellData_2);                                        
+                
+            [DoC_out_CellData, DensityROI] = DoCHandler_YA( ...
+                obj.ROICoordinates, ...
+                CellData, ... 
+                Lr_rRad, ...
+                Rmax, ...
+                Step, ...
+                Chan1Color, ... 
+                Chan2Color, ...
+                dbscanParams(1).Outputfolder, ...
+                obj.NDataColumns);            
+            
+% to setups            
+            ColoThres = 0.4;
+            
+            ResultTable = ProcessDoCResults_YA( ...
+            DoC_out_CellData, ... 
+            obj.NDataColumns, ...
+            obj.ROICoordinates, ...
+            DensityROI, ... 
+            DoC_out_dirname, ...
+            ColoThres);        
+
+%             % Run DBSCAN on data used for DoC analysis
+%             [ClusterTableCh1, ClusterTableCh2, clusterIDOut, handles.ClusterTable] = DBSCANonDoCResults(handles.CellData, handles.ROICoordinates, ...
+%                 strcat(handles.Outputfolder, '\Clus-DoC Results'), handles.Chan1Color, handles.Chan2Color, dbscanParams, handles.NDataColumns);
+
+            dbscanParams(1).Outputfolder = [DoC_out_dirname filesep 'DBSCAN Results' filesep 'Ch1'];
+            dbscanParams(2).Outputfolder = [DoC_out_dirname filesep 'DBSCAN Results' filesep 'Ch2']; % ths won't be reused;
+            %
+            [ClusterTableCh1, ClusterTableCh2, clusterIDOut, handles.ClusterTable] = DBSCANonDoCResults_YA( ...
+                DoC_out_CellData, ...
+                obj.ROICoordinates, ...
+                [DoC_out_dirname filesep 'DBSCAN Results'], ...
+                Chan1Color, ...
+                Chan2Color, ...
+                dbscanParams, ...
+                obj.NDataColumns);
+                       
+            NbThresh = 10;
+            EvalStatisticsOnDBSCANandDoCResults_YA(ClusterTableCh1, 1, DoC_out_dirname, NbThresh);
+            EvalStatisticsOnDBSCANandDoCResults_YA(ClusterTableCh2, 2, DoC_out_dirname, NbThresh);
+            
+            save([DoC_out_dirname filesep 'ClusterTables.mat'],'ClusterTableCh1','ClusterTableCh2','-v7.3');
+                        
+        catch mError
+            
+            disp('ClusDoC processing exited with errors');
+            rethrow(mError);
+             
+        end        
+    end   
+             
     end % methods
             
 end
