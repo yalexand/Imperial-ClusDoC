@@ -31,7 +31,10 @@ ac.Outputfolder = dst_dir;
 ac.Load_Data(filename1,src_dir1,1);
 if exist('filename2','var') && exist('src_dir2','var')
     ac.Load_Data(filename2,src_dir2,2);
-    %[dx2,dy2] = ac.Align_channels;
+    % ac.Align_channels_nmppix = 10;
+    % ac.Align_channels_method = 'xcorr2';    
+    % [dx2,dy2] = ac.Get_channel2_registration_corrections
+    % ac.Apply_channel2_registration_corrections([dx2 dy2]);
 end
 
 ac.Define_Square_ROIs_Auto;

@@ -897,15 +897,15 @@ end
             CellData_2 = obj.CellData{2};
             
 % for debugging - introduce shift
-            x1 = CellData_1(:,5);
-            y1 = CellData_1(:,6); 
-            y2 = y1 + 70;
-            x2 = x1 + 86;                        
-            mask = x2>0 & x2<=obj.SizeX*obj.pixelSizenm & y2>0 & y2<=obj.SizeY*obj.pixelSizenm;             
-            x2(mask==0) = x1(mask==0);
-            y2(mask==0) = y1(mask==0);             
-            CellData_2(:,5) = x2;
-            CellData_2(:,6) = y2;
+% %             x1 = CellData_1(:,5);
+% %             y1 = CellData_1(:,6); 
+% %             y2 = y1 + 70;
+% %             x2 = x1 + 86;                        
+% %             mask = x2>0 & x2<=obj.SizeX*obj.pixelSizenm & y2>0 & y2<=obj.SizeY*obj.pixelSizenm;             
+% %             x2(mask==0) = x1(mask==0);
+% %             y2(mask==0) = y1(mask==0);             
+% %             CellData_2(:,5) = x2;
+% %             CellData_2(:,6) = y2;
 %             x1 = CellData_1(:,5);
 %             y1 = CellData_1(:,6);
 %             x2 = CellData_2(:,5);
@@ -954,10 +954,13 @@ end
                 Chan2Color, ...
                 dbscanParams, ...
                 obj.NDataColumns);
-                       
+            
+% to setups            
             NbThresh = 10;
-            EvalStatisticsOnDBSCANandDoCResults_YA(ClusterTableCh1, 1, DoC_out_dirname, NbThresh);
-            EvalStatisticsOnDBSCANandDoCResults_YA(ClusterTableCh2, 2, DoC_out_dirname, NbThresh);
+
+            % doesn't work properly.. YA 19.06.2020
+            %EvalStatisticsOnDBSCANandDoCResults_YA(ClusterTableCh1, 1, DoC_out_dirname, NbThresh);
+            %EvalStatisticsOnDBSCANandDoCResults_YA(ClusterTableCh2, 2, DoC_out_dirname, NbThresh);
             
             save([DoC_out_dirname filesep 'ClusterTables.mat'],'ClusterTableCh1','ClusterTableCh2','-v7.3');
                         
