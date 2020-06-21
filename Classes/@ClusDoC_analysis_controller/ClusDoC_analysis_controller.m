@@ -632,12 +632,153 @@ end
                 valOut = 1;
     end
 %-------------------------------------------------------------------------%   
-function Define_Square_ROIs_Auto(obj,~,varargin) 
+% % % function Define_Square_ROIs_Auto(obj,varargin) 
+% % %             
+% % %             if 1 == nargin
+% % %                 chan = 1;
+% % %             else
+% % %                 chan = varargin{1};
+% % %             end        
+% % %             
+% % %             Nrois = obj.Square_ROIs_Auto_maxNrois;
+% % %             anm = obj.Square_ROIs_Auto_anm;
+% % %             nmppix = obj.pixelSizenm;     
+% % %             
+% % %             % if isnumeric(chan) && intersect(chan,[1 2])
+% % %             if strcmp(obj.Square_ROIs_Auto_method,'channel')
+% % %                  
+% % %                 qthresh = obj.Square_ROIs_Auto_qthresh(chan);                  
+% % % 
+% % %                 % to have pixel roughly the size of ROI   
+% % %                 % first step - just back to widefield                        
+% % %                 ash = obj.get_ash(nmppix,chan);
+% % %                 %
+% % %                 f = anm/nmppix;
+% % %                 z = imresize(ash,1/f);          
+% % %                 z = z.*(z > quantile(z(:),qthresh));
+% % %                 %
+% % %                 obj.ROICoordinates = cell(0);
+% % %                 for k=1:size(z,1)
+% % %                     for m=1:size(z,2)
+% % %                         if z(k,m)>0
+% % %                            % disp([k-0.5,m-0.5]);
+% % %                            x = round((m-.5)*f*nmppix);
+% % %                            y = round((k-.5)*f*nmppix);
+% % %                           d = floor(anm/2)-1;
+% % %                           p1 = [x-d y+d];
+% % %                           p2 = [x+d y+d];
+% % %                           p3 = [x+d y-d];
+% % %                           p4 = [x-d y-d];
+% % %                           p5 = [x-d y+d];                      
+% % %                           roi = [p1;p2;p3;p4;p5];                      
+% % %                          obj.ROICoordinates = [obj.ROICoordinates; roi];
+% % %                         end
+% % %                     end
+% % %                 end
+% % %                 
+% % %             elseif strcmp(obj.Square_ROIs_Auto_method,'composite')
+% % %                 
+% % %                 qthresh_1 = obj.Square_ROIs_Auto_qthresh(1);                  
+% % %                 qthresh_2 = obj.Square_ROIs_Auto_qthresh(2);
+% % %                 % to have pixel roughly the size of ROI   
+% % %                 % first step - just back to widefield                        
+% % %                 ash_1 = obj.get_ash(nmppix,1);
+% % %                 ash_2 = obj.get_ash(nmppix,2);
+% % %                 %
+% % %                 f = anm/nmppix;
+% % %                 z_1 = imresize(ash_1,1/f);          
+% % %                 z_1 = z_1.*(z_1 > quantile(z_1(:),qthresh_1));
+% % %                 %
+% % %                 z_2 = imresize(ash_2,1/f);          
+% % %                 z_2 = z_2.*(z_2 > quantile(z_2(:),qthresh_2));
+% % %                 %                
+% % %                 obj.ROICoordinates = cell(0);
+% % %                 for k=1:size(z_1,1)
+% % %                     for m=1:size(z_1,2)
+% % %                         if z_1(k,m)>0 && z_2(k,m)>0
+% % %                            % disp([k-0.5,m-0.5]);
+% % %                            x = round((m-.5)*f*nmppix);
+% % %                            y = round((k-.5)*f*nmppix);
+% % %                           d = floor(anm/2)-1;
+% % %                           p1 = [x-d y+d];
+% % %                           p2 = [x+d y+d];
+% % %                           p3 = [x+d y-d];
+% % %                           p4 = [x-d y-d];
+% % %                           p5 = [x-d y+d];                      
+% % %                           roi = [p1;p2;p3;p4;p5];                      
+% % %                          obj.ROICoordinates = [obj.ROICoordinates; roi];
+% % %                         end
+% % %                     end
+% % %                 end                                                             
+% % %             end
+% % %             
+% % % % display
+% % %                         figure('units','normalized','outerposition',[0 0 1 1],'name','ROIs as they go..');
+% % %                         ax = gca;
+% % %                         plot(ax,obj.CellData{1}(:,5),obj.CellData{1}(:,6),'b.',obj.CellData{2}(:,5),obj.CellData{2}(:,6),'r.');
+% % %                         daspect(ax,[1 1 1]); 
+% % %                         grid(ax,'on');
+% % %                         hold(ax,'on');
+% % %                         
+% % %                    for roiInc = 1:length(obj.ROICoordinates)
+% % % 
+% % %                         roi = obj.ROICoordinates{roiInc};
+% % %                         
+% % %                         x_roi=roi(:,1);
+% % %                         y_roi=roi(:,2);
+% % %                         
+% % %                         chan = 1;
+% % %                         x=obj.CellData{chan}(:,5);
+% % %                         y=obj.CellData{chan}(:,6);
+% % %                             whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
+% % %                         dataCropped = obj.CellData{chan}(whichPointsInROI,:);                       
+% % %                         x1=dataCropped(:,5);
+% % %                         y1=dataCropped(:,6);
+% % %                         chan = 2;
+% % %                         x=obj.CellData{chan}(:,5);
+% % %                         y=obj.CellData{chan}(:,6);
+% % %                             whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
+% % %                         dataCropped = obj.CellData{chan}(whichPointsInROI,:);                       
+% % %                         x2=dataCropped(:,5);
+% % %                         y2=dataCropped(:,6);                        
+% % %                         
+% % %                         color = [rand rand 0];
+% % %                                                
+% % %                         plot(ax,x_roi,y_roi,'marker','.','color',color,'linestyle','-','linewidth',3);
+% % %                         hold(ax,'on');
+% % %                         
+% % %                         if isempty(x1)
+% % %                             plot(ax,x_roi,y_roi,'k:','linewidth',7);
+% % %                             hold(ax,'on');
+% % %                             disp([roiInc 1]);
+% % %                         end 
+% % %                         
+% % %                         if isempty(x2)
+% % %                             plot(ax,x_roi,y_roi,'k:','linewidth',7);
+% % %                             hold(ax,'on');
+% % %                             disp([roiInc 2]);
+% % %                         end                         
+% % %                         
+% % %                         daspect(ax,[1 1 1]); 
+% % %                         grid(ax,'on');                  
+% % %                    end
+% % %                    hold(ax,'off');  
+% % %                 
+% % % % display            
+% % %             
+% % %             % if too many ROIs, choose random Nrois among defined
+% % %             if (numel(obj.ROICoordinates) > Nrois)
+% % %                 obj.ROICoordinates = obj.ROICoordinates(randi(numel(obj.ROICoordinates),1,Nrois));
+% % %             end                        
+% % % end
+
+
+function Define_Square_ROIs_Auto(obj,varargin) 
             
             if 1 == nargin
                 chan = 1;
             else
-                chan = varargin(1);
+                chan = varargin{1};
             end        
             
             Nrois = obj.Square_ROIs_Auto_maxNrois;
@@ -646,24 +787,31 @@ function Define_Square_ROIs_Auto(obj,~,varargin)
             
             % if isnumeric(chan) && intersect(chan,[1 2])
             if strcmp(obj.Square_ROIs_Auto_method,'channel')
-                 
-                qthresh = obj.Square_ROIs_Auto_qthresh(chan);                  
+                                 
+                % to have pixel roughly the size of ROI                 
+                size_of_ROI_as_pixel_in_microns = anm/1000;
+                ROI_numbers = obj.get_localisation_numbers(chan,size_of_ROI_as_pixel_in_microns);                                
+                LNT = 200;      % low number threshold per um2
+                HNT = 20000;    % high number threshold                
+                numbers_OK  = LNT < ROI_numbers&ROI_numbers < HNT; 
 
+                qthresh = obj.Square_ROIs_Auto_qthresh(chan);                  
                 % to have pixel roughly the size of ROI   
                 % first step - just back to widefield                        
-                ash = obj.get_ash(nmppix,chan);
-                %
+                ash = obj.get_ash(nmppix,chan);                
                 f = anm/nmppix;
                 z = imresize(ash,1/f);          
-                z = z.*(z > quantile(z(:),qthresh));
+                z = z.*(z > quantile(z(:),qthresh));               
                 %
                 obj.ROICoordinates = cell(0);
                 for k=1:size(z,1)
                     for m=1:size(z,2)
-                        if z(k,m)>0
+                        if z(k,m)>0 && numbers_OK(k,m)
                            % disp([k-0.5,m-0.5]);
-                           x = round((m-.5)*f*nmppix);
-                           y = round((k-.5)*f*nmppix);
+%                            x = round((m-.5)*f*1000);
+%                            y = round((k-.5)*f*1000);
+                           x = round(m*size_of_ROI_as_pixel_in_microns*1000); % back to nanometers to work with table
+                           y = round(k*size_of_ROI_as_pixel_in_microns*1000);                           
                           d = floor(anm/2)-1;
                           p1 = [x-d y+d];
                           p2 = [x+d y+d];
@@ -678,6 +826,18 @@ function Define_Square_ROIs_Auto(obj,~,varargin)
                 
             elseif strcmp(obj.Square_ROIs_Auto_method,'composite')
                 
+                % to have pixel roughly the size of ROI                 
+                size_of_ROI_as_pixel_in_microns = anm/1000;
+                ROI_numbers_1 = obj.get_localisation_numbers(1,size_of_ROI_as_pixel_in_microns);                                
+                LNT_1 = 200;      % low number threshold per um2
+                HNT_1 = 20000;    % high number threshold                
+                numbers_OK_1  = LNT_1 < ROI_numbers_1&ROI_numbers_1 < HNT_1; 
+                
+                ROI_numbers_2 = obj.get_localisation_numbers(2,size_of_ROI_as_pixel_in_microns);                                
+                LNT_2 = 200;      % low number threshold per um2
+                HNT_2 = 20000;    % high number threshold                
+                numbers_OK_2  = LNT_2 < ROI_numbers_2&ROI_numbers_2 < HNT_2;      
+                               
                 qthresh_1 = obj.Square_ROIs_Auto_qthresh(1);                  
                 qthresh_2 = obj.Square_ROIs_Auto_qthresh(2);
                 % to have pixel roughly the size of ROI   
@@ -695,10 +855,14 @@ function Define_Square_ROIs_Auto(obj,~,varargin)
                 obj.ROICoordinates = cell(0);
                 for k=1:size(z_1,1)
                     for m=1:size(z_1,2)
-                        if z_1(k,m)>0 && z_2(k,m)>0
+                        if z_1(k,m)>0 && z_2(k,m)>0 && numbers_OK_1(k,m) && numbers_OK_2(k,m)
                            % disp([k-0.5,m-0.5]);
-                           x = round((m-.5)*f*nmppix);
-                           y = round((k-.5)*f*nmppix);
+%                            x = round((m-.5)*f*nmppix);
+%                            y = round((k-.5)*f*nmppix);
+%                            x = round((m-.5)*size_of_ROI_as_pixel_in_microns*1000); % back to nanometers to work with table
+%                            y = round((k-.5)*size_of_ROI_as_pixel_in_microns*1000); 
+                           x = round(m*size_of_ROI_as_pixel_in_microns*1000); % back to nanometers to work with table
+                           y = round(k*size_of_ROI_as_pixel_in_microns*1000);                            
                           d = floor(anm/2)-1;
                           p1 = [x-d y+d];
                           p2 = [x+d y+d];
@@ -709,13 +873,85 @@ function Define_Square_ROIs_Auto(obj,~,varargin)
                          obj.ROICoordinates = [obj.ROICoordinates; roi];
                         end
                     end
-                end
-                
+                end                                                             
             end
+            
+% display
+                        figure('units','normalized','outerposition',[0 0 1 1],'name','ROIs as they go..');
+                        ax = gca;
+                        plot(ax,obj.CellData{1}(:,5),obj.CellData{1}(:,6),'b.',obj.CellData{2}(:,5),obj.CellData{2}(:,6),'r.');
+                        daspect(ax,[1 1 1]); 
+                        grid(ax,'on');
+                        hold(ax,'on');
+                        
+                   for roiInc = 1:length(obj.ROICoordinates)
+
+                        roi = obj.ROICoordinates{roiInc};
+                        
+                        x_roi=roi(:,1);
+                        y_roi=roi(:,2);
+                        
+                        chan = 1;
+                        x=obj.CellData{chan}(:,5);
+                        y=obj.CellData{chan}(:,6);
+                            whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
+                        dataCropped = obj.CellData{chan}(whichPointsInROI,:);                       
+                        x1=dataCropped(:,5);
+                        y1=dataCropped(:,6);
+                        chan = 2;
+                        x=obj.CellData{chan}(:,5);
+                        y=obj.CellData{chan}(:,6);
+                            whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
+                        dataCropped = obj.CellData{chan}(whichPointsInROI,:);                       
+                        x2=dataCropped(:,5);
+                        y2=dataCropped(:,6);                        
+                        
+                        color = [rand rand 0];
+                                               
+                        plot(ax,x_roi,y_roi,'marker','.','color',color,'linestyle','-','linewidth',3);
+                        hold(ax,'on');
+                        
+                        if isempty(x1)
+                            plot(ax,x_roi,y_roi,'k:','linewidth',7);
+                            hold(ax,'on');
+                            disp([roiInc 1]);
+                        end 
+                        
+                        if isempty(x2)
+                            plot(ax,x_roi,y_roi,'k:','linewidth',7);
+                            hold(ax,'on');
+                            disp([roiInc 2]);
+                        end                         
+                        
+                        daspect(ax,[1 1 1]); 
+                        grid(ax,'on');                  
+                   end
+                   hold(ax,'off');                 
+% display            
+            
             % if too many ROIs, choose random Nrois among defined
             if (numel(obj.ROICoordinates) > Nrois)
                 obj.ROICoordinates = obj.ROICoordinates(randi(numel(obj.ROICoordinates),1,Nrois));
             end                        
+end
+%-------------------------------------------------------------------------%
+function v = get_localisation_numbers(obj,chan,umppix)                     
+                        nmppix = obj.pixelSizenm;
+                        x=obj.CellData{chan}(:,5)/1000/umppix;
+                        y=obj.CellData{chan}(:,6)/1000/umppix;
+                        Lx = round(obj.SizeX*nmppix/1000/umppix);
+                        Ly = round(obj.SizeY*nmppix/1000/umppix);
+                        x=int64(round(x));
+                        y=int64(round(y));                        
+                        mask = x>=1 & x<=Lx & y>=1 & y<=Ly;
+                        x=x(mask);
+                        y=y(mask);
+                        v = zeros(Lx,Ly);
+                         for k = 1:numel(x)
+                            x_k = x(k);
+                            y_k = y(k);
+                            v(y_k,x_k) = v(y_k,x_k) + 1; % fcuk
+                         end
 end
 %-------------------------------------------------------------------------%
 function [dx2,dy2] = Get_channel2_registration_corrections(obj,~) % translation only
@@ -962,7 +1198,8 @@ end
             %EvalStatisticsOnDBSCANandDoCResults_YA(ClusterTableCh1, 1, DoC_out_dirname, NbThresh);
             %EvalStatisticsOnDBSCANandDoCResults_YA(ClusterTableCh2, 2, DoC_out_dirname, NbThresh);
             
-            save([DoC_out_dirname filesep 'ClusterTables.mat'],'ClusterTableCh1','ClusterTableCh2','-v7.3');
+            % not needed, as saved within "DBSCANonDoCResults_YA" function
+            %save([DoC_out_dirname filesep 'ClusterTables.mat'],'ClusterTableCh1','ClusterTableCh2','-v7.3');
                         
         catch mError
             

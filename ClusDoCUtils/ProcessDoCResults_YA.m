@@ -85,7 +85,7 @@ Result = struct('Correlation_Coloc1_vs_Density1', [], 'Correlation_Coloc2_vs_Den
                 plot( DataRaw(DataRaw(:,12) == 2, 5), DataRaw(DataRaw(:,12) == 2, 6),'Marker'...
                                           ,'.','MarkerSize',4,'LineStyle','none','color','red');
 
-%                 axis equal
+                axis equal
                 axis tight
                 ax = gca;
                 Xlimit = get(ax,'xlim');Ylimit = get(ax,'ylim');
