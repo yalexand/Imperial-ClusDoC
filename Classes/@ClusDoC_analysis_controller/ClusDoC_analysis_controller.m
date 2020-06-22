@@ -10,7 +10,7 @@ classdef ClusDoC_analysis_controller < handle
     
     properties(SetObservable = true)
 	
-    pixelSizenm = 1;
+    pixelSizenm = 150;
     WindSTORM_Sigmapix = 1;
 
     % Default RipleyK settings
@@ -35,7 +35,9 @@ classdef ClusDoC_analysis_controller < handle
         Square_ROIs_Auto_anm = 1400;
         Square_ROIs_Auto_qthresh = [.5 .5];
         Square_ROIs_Auto_maxNrois = 20; 
-        Square_ROIs_Auto_method = 'channel';         
+        Square_ROIs_Auto_method = 'channel';
+        Square_ROIs_Auto_LNT = [200 200]; % loc number thershold - may be interpreted as per_micron or absolute
+        Square_ROIs_Auto_HNT = [20000 20000];
         
         Align_channels_nmppix = 4;
         Align_channels_method = 'Matlab_multimodal';
@@ -60,7 +62,40 @@ classdef ClusDoC_analysis_controller < handle
     ClusterTable = [];
     
     Chan1Color = [1 0 0]; %red        
+
     
+%%%%%%%%%%%%%%%%%%%%%%%% DoC                     
+    % DoC DBSCAN parameters
+    DoC_dbscanParams_ch1 = struct( ...
+        'DoCThreshold',0.4, ...
+        'epsilon',20, ...
+        'minPts',3, ...
+        'UseLr_rThresh',true, ...
+        'Lr_rThreshRad',20, ...
+        'SmoothingRad',15, ...
+        'Cutoff',10, ...
+        'threads',12, ...
+        'DoStats',true, ...
+        'Outputfolder',['C:' filesep]);                  
+    DoC_dbscanParams_ch2 = struct( ...
+        'DoCThreshold',0.4, ...
+        'epsilon',20, ...
+        'minPts',3, ...
+        'UseLr_rThresh',true, ...
+        'Lr_rThreshRad',20, ...
+        'SmoothingRad',15, ...
+        'Cutoff',10, ...
+        'threads',12, ...
+        'DoStats',true, ...
+        'Outputfolder',['C:' filesep]);           
+    
+        DoC_Lr_rRad = 20;
+        DoC_Rmax = 500;
+        DoC_Step = 10;
+        DoC_ColoThres = 0.4;            
+        DoC_NbThresh = 10;
+%%%%%%%%%%%%%%%%%%%%%%%% DoC
+        
     end                    
     
     properties(Transient)      
@@ -109,13 +144,46 @@ function load_settings(obj,fname,~)
                     obj.Square_ROIs_Auto_anm = settings.Square_ROIs_Auto_anm; % square side
                     obj.Square_ROIs_Auto_qthresh = settings.Square_ROIs_Auto_qthresh; % brightness threshold
                     obj.Square_ROIs_Auto_maxNrois = settings.Square_ROIs_Auto_maxNrois;
-                    obj.Square_ROIs_Auto_method = settings.Square_ROIs_Auto_method;   
+                    obj.Square_ROIs_Auto_method = settings.Square_ROIs_Auto_method;
+                    obj.Square_ROIs_Auto_LNT = settings.Square_ROIs_Auto_LNT;
+                    obj.Square_ROIs_Auto_HNT = settings.Square_ROIs_Auto_HNT;
                     
                     obj.SizeX = settings.SizeX;
                     obj.SizeY = settings.SizeY;                           
         
                     obj.Align_channels_nmppix = settings.Align_channels_nmppix;
-                    obj.Align_channels_method = settings.Align_channels_method;                    
+                    obj.Align_channels_method = settings.Align_channels_method;
+                    
+%%%%%%%%%%%%%%%%%%%%%%%% DoC                     
+    % DoC DBSCAN parameters
+                    obj.DoC_dbscanParams_ch1.DoCThreshold = settings.DoC_dbscanParams_ch1_DoCThreshold;
+                    obj.DoC_dbscanParams_ch1.epsilon = settings.DoC_dbscanParams_ch1_epsilon;
+                    obj.DoC_dbscanParams_ch1.minPts = settings.DoC_dbscanParams_ch1_minPts;
+                    obj.DoC_dbscanParams_ch1.UseLr_rThresh = settings.DoC_dbscanParams_ch1_UseLr_rThresh;
+                    obj.DoC_dbscanParams_ch1.Lr_rThreshRad = settings.DoC_dbscanParams_ch1_Lr_rThreshRad;
+                    obj.DoC_dbscanParams_ch1.SmoothingRad = settings.DoC_dbscanParams_ch1_SmoothingRad;
+                    obj.DoC_dbscanParams_ch1.Cutoff = settings.DoC_dbscanParams_ch1_Cutoff;
+                    obj.DoC_dbscanParams_ch1.threads = settings.DoC_dbscanParams_ch1_threads;
+                    obj.DoC_dbscanParams_ch1.DoStats = settings.DoC_dbscanParams_ch1_DoStats;
+                    obj.DoC_dbscanParams_ch1.Outputfolder = settings.DoC_dbscanParams_ch1_Outputfolder;
+
+                    obj.DoC_dbscanParams_ch2.DoCThreshold = settings.DoC_dbscanParams_ch2_DoCThreshold;
+                    obj.DoC_dbscanParams_ch2.epsilon = settings.DoC_dbscanParams_ch2_epsilon;
+                    obj.DoC_dbscanParams_ch2.minPts = settings.DoC_dbscanParams_ch2_minPts;
+                    obj.DoC_dbscanParams_ch2.UseLr_rThresh = settings.DoC_dbscanParams_ch2_UseLr_rThresh;
+                    obj.DoC_dbscanParams_ch2.Lr_rThreshRad = settings.DoC_dbscanParams_ch2_Lr_rThreshRad;
+                    obj.DoC_dbscanParams_ch2.SmoothingRad = settings.DoC_dbscanParams_ch2_SmoothingRad;
+                    obj.DoC_dbscanParams_ch2.Cutoff = settings.DoC_dbscanParams_ch2_Cutoff;
+                    obj.DoC_dbscanParams_ch2.threads = settings.DoC_dbscanParams_ch2_threads;
+                    obj.DoC_dbscanParams_ch2.DoStats = settings.DoC_dbscanParams_ch2_DoStats;
+                    obj.DoC_dbscanParams_ch2.Outputfolder = settings.DoC_dbscanParams_ch2_Outputfolder;
+
+                    obj.DoC_Lr_rRad = settings.DoC_Lr_rRad;
+                    obj.DoC_Rmax = settings.DoC_Rmax;
+                    obj.DoC_Step = settings.DoC_Step;
+                    obj.DoC_ColoThres = settings.DoC_ColoThres;   
+                    obj.DoC_NbThresh = settings.DoC_NbThresh;
+%%%%%%%%%%%%%%%%%%%%%%%% DoC                    
                                        
              end
     catch err
@@ -148,13 +216,46 @@ function save_settings(obj,fname,~)
                     settings.Square_ROIs_Auto_qthresh = obj.Square_ROIs_Auto_qthresh; % brightness threshold
                     settings.Square_ROIs_Auto_maxNrois = obj.Square_ROIs_Auto_maxNrois;
                     settings.Square_ROIs_Auto_method = obj.Square_ROIs_Auto_method;
+                    settings.Square_ROIs_Auto_LNT = obj.Square_ROIs_Auto_LNT;
+                    settings.Square_ROIs_Auto_HNT = obj.Square_ROIs_Auto_HNT;
                     
                     settings.SizeX = obj.SizeX;
                     settings.SizeY = obj.SizeY; 
                     
                     settings.Align_channels_nmppix = obj.Align_channels_nmppix;
-                    settings.Align_channels_method = obj.Align_channels_method;                      
+                    settings.Align_channels_method = obj.Align_channels_method; 
                     
+%%%%%%%%%%%%%%%%%%%%%%%% DoC                     
+    % DoC DBSCAN parameters
+                    settings.DoC_dbscanParams_ch1_DoCThreshold = obj.DoC_dbscanParams_ch1.DoCThreshold;
+                    settings.DoC_dbscanParams_ch1_epsilon = obj.DoC_dbscanParams_ch1.epsilon;
+                    settings.DoC_dbscanParams_ch1_minPts = obj.DoC_dbscanParams_ch1.minPts;
+                    settings.DoC_dbscanParams_ch1_UseLr_rThresh = obj.DoC_dbscanParams_ch1.UseLr_rThresh;
+                    settings.DoC_dbscanParams_ch1_Lr_rThreshRad = obj.DoC_dbscanParams_ch1.Lr_rThreshRad;
+                    settings.DoC_dbscanParams_ch1_SmoothingRad = obj.DoC_dbscanParams_ch1.SmoothingRad;
+                    settings.DoC_dbscanParams_ch1_Cutoff = obj.DoC_dbscanParams_ch1.Cutoff;
+                    settings.DoC_dbscanParams_ch1_threads = obj.DoC_dbscanParams_ch1.threads;
+                    settings.DoC_dbscanParams_ch1_DoStats = obj.DoC_dbscanParams_ch1.DoStats;
+                    settings.DoC_dbscanParams_ch1_Outputfolder = obj.DoC_dbscanParams_ch1.Outputfolder;
+
+                    settings.DoC_dbscanParams_ch2_DoCThreshold = obj.DoC_dbscanParams_ch2.DoCThreshold;
+                    settings.DoC_dbscanParams_ch2_epsilon = obj.DoC_dbscanParams_ch2.epsilon;
+                    settings.DoC_dbscanParams_ch2_minPts = obj.DoC_dbscanParams_ch2.minPts;
+                    settings.DoC_dbscanParams_ch2_UseLr_rThresh = obj.DoC_dbscanParams_ch2.UseLr_rThresh;
+                    settings.DoC_dbscanParams_ch2_Lr_rThreshRad = obj.DoC_dbscanParams_ch2.Lr_rThreshRad;
+                    settings.DoC_dbscanParams_ch2_SmoothingRad = obj.DoC_dbscanParams_ch2.SmoothingRad;
+                    settings.DoC_dbscanParams_ch2_Cutoff = obj.DoC_dbscanParams_ch2.Cutoff;
+                    settings.DoC_dbscanParams_ch2_threads = obj.DoC_dbscanParams_ch2.threads;
+                    settings.DoC_dbscanParams_ch2_DoStats = obj.DoC_dbscanParams_ch2.DoStats;
+                    settings.DoC_dbscanParams_ch2_Outputfolder = obj.DoC_dbscanParams_ch2.Outputfolder;
+
+                    settings.DoC_Lr_rRad = obj.DoC_Lr_rRad;
+                    settings.DoC_Rmax = obj.DoC_Rmax;
+                    settings.DoC_Step = obj.DoC_Step;
+                    settings.DoC_ColoThres = obj.DoC_ColoThres;   
+                    settings.DoC_NbThresh = obj.DoC_NbThresh;
+%%%%%%%%%%%%%%%%%%%%%%%% DoC               
+                                                                               
                     xml_write(fname,settings);
     catch err
         disp('cannot save settings file');
@@ -791,8 +892,8 @@ function Define_Square_ROIs_Auto(obj,varargin)
                 % to have pixel roughly the size of ROI                 
                 size_of_ROI_as_pixel_in_microns = anm/1000;
                 ROI_numbers = obj.get_localisation_numbers(chan,size_of_ROI_as_pixel_in_microns);                                
-                LNT = 200;      % low number threshold per um2
-                HNT = 20000;    % high number threshold                
+                LNT = obj.Square_ROIs_Auto_LNT(chan);      % low number threshold
+                HNT = obj.Square_ROIs_Auto_HNT(chan);    % high number threshold                
                 numbers_OK  = LNT < ROI_numbers&ROI_numbers < HNT; 
 
                 qthresh = obj.Square_ROIs_Auto_qthresh(chan);                  
@@ -829,13 +930,13 @@ function Define_Square_ROIs_Auto(obj,varargin)
                 % to have pixel roughly the size of ROI                 
                 size_of_ROI_as_pixel_in_microns = anm/1000;
                 ROI_numbers_1 = obj.get_localisation_numbers(1,size_of_ROI_as_pixel_in_microns);                                
-                LNT_1 = 200;      % low number threshold per um2
-                HNT_1 = 20000;    % high number threshold                
+                LNT_1 = obj.Square_ROIs_Auto_LNT(1);      % low number threshold
+                HNT_1 = obj.Square_ROIs_Auto_HNT(1);    % high number threshold                
                 numbers_OK_1  = LNT_1 < ROI_numbers_1&ROI_numbers_1 < HNT_1; 
                 
                 ROI_numbers_2 = obj.get_localisation_numbers(2,size_of_ROI_as_pixel_in_microns);                                
-                LNT_2 = 200;      % low number threshold per um2
-                HNT_2 = 20000;    % high number threshold                
+                LNT_2 = obj.Square_ROIs_Auto_LNT(2);      % low number threshold
+                HNT_2 = obj.Square_ROIs_Auto_HNT(2);    % high number threshold               
                 numbers_OK_2  = LNT_2 < ROI_numbers_2&ROI_numbers_2 < HNT_2;      
                                
                 qthresh_1 = obj.Square_ROIs_Auto_qthresh(1);                  
@@ -875,6 +976,11 @@ function Define_Square_ROIs_Auto(obj,varargin)
                     end
                 end                                                             
             end
+            
+            % if too many ROIs, choose random Nrois among defined
+            if (numel(obj.ROICoordinates) > Nrois)
+                obj.ROICoordinates = obj.ROICoordinates(randi(numel(obj.ROICoordinates),1,Nrois));
+            end             
             
 % display
                         figure('units','normalized','outerposition',[0 0 1 1],'name','ROIs as they go..');
@@ -928,11 +1034,7 @@ function Define_Square_ROIs_Auto(obj,varargin)
                    end
                    hold(ax,'off');                 
 % display            
-            
-            % if too many ROIs, choose random Nrois among defined
-            if (numel(obj.ROICoordinates) > Nrois)
-                obj.ROICoordinates = obj.ROICoordinates(randi(numel(obj.ROICoordinates),1,Nrois));
-            end                        
+                                   
 end
 %-------------------------------------------------------------------------%
 function v = get_localisation_numbers(obj,chan,umppix)                     
@@ -1086,29 +1188,28 @@ end
                             mkdir([DoC_out_dirname filesep 'DoC Statistics and Plots'],'Raw data maps with outliers removed');
                        end
 
-% to setups - all except dirname                       
             dbscanParams(1).Outputfolder = DoC_out_dirname;
-            dbscanParams(2).Outputfolder = DoC_out_dirname;            
-            dbscanParams(1).DoCThreshold = .4;
-            dbscanParams(2).DoCThreshold = .4;
+            dbscanParams(2).Outputfolder = DoC_out_dirname;
             
-            dbscanParams(1).epsilon = 20;
-            dbscanParams(1).minPts = 3;             
-            dbscanParams(1).UseLr_rThresh = true; 
-            dbscanParams(1).Lr_rThreshRad = 20;            
-            dbscanParams(1).SmoothingRad = 15;
-            dbscanParams(1).Cutoff = 10;            
-            dbscanParams(1).threads = 12;
-            dbscanParams(1).DoStats = true;            
-
-            dbscanParams(2).epsilon = 20;
-            dbscanParams(2).minPts = 3;             
-            dbscanParams(2).UseLr_rThresh = true; 
-            dbscanParams(2).Lr_rThreshRad = 20;            
-            dbscanParams(2).SmoothingRad = 15;
-            dbscanParams(2).Cutoff = 10;            
-            dbscanParams(2).threads = 12;
-            dbscanParams(2).DoStats = true;              
+            dbscanParams(1).DoCThreshold = obj.DoC_dbscanParams_ch1.DoCThreshold;            
+            dbscanParams(1).epsilon = obj.DoC_dbscanParams_ch1.epsilon;
+            dbscanParams(1).minPts = obj.DoC_dbscanParams_ch1.minPts;             
+            dbscanParams(1).UseLr_rThresh = obj.DoC_dbscanParams_ch1.UseLr_rThresh;
+            dbscanParams(1).Lr_rThreshRad = obj.DoC_dbscanParams_ch1.Lr_rThreshRad;
+            dbscanParams(1).SmoothingRad = obj.DoC_dbscanParams_ch1.SmoothingRad;
+            dbscanParams(1).Cutoff = obj.DoC_dbscanParams_ch1.Cutoff;
+            dbscanParams(1).threads = obj.DoC_dbscanParams_ch1.threads;
+            dbscanParams(1).DoStats = obj.DoC_dbscanParams_ch1.DoStats;          
+            
+            dbscanParams(2).DoCThreshold = obj.DoC_dbscanParams_ch2.DoCThreshold;
+            dbscanParams(2).epsilon = obj.DoC_dbscanParams_ch2.epsilon;
+            dbscanParams(2).minPts = obj.DoC_dbscanParams_ch2.minPts;             
+            dbscanParams(2).UseLr_rThresh = obj.DoC_dbscanParams_ch2.UseLr_rThresh;
+            dbscanParams(2).Lr_rThreshRad = obj.DoC_dbscanParams_ch2.Lr_rThreshRad;
+            dbscanParams(2).SmoothingRad = obj.DoC_dbscanParams_ch2.SmoothingRad;
+            dbscanParams(2).Cutoff = obj.DoC_dbscanParams_ch2.Cutoff;
+            dbscanParams(2).threads = obj.DoC_dbscanParams_ch2.threads;
+            dbscanParams(2).DoStats = obj.DoC_dbscanParams_ch2.DoStats;
                           
             %    original ClusDoC comment:
             % Input parameters:
@@ -1121,10 +1222,9 @@ end
             % DBSCAN_Nb_Neighbor=3; - minPts ;
             % threads = 2     
             
-% to setups  
-            Lr_rRad = 20;
-            Rmax = 500;
-            Step = 10;
+            Lr_rRad = obj.DoC_Lr_rRad;
+            Rmax = obj.DoC_Rmax;
+            Step = obj.DoC_Step;
             
             Chan1Color = [.7 0.5 0.3];
             Chan2Color = [.3 0.5 0.7];            
@@ -1133,15 +1233,15 @@ end
             CellData_2 = obj.CellData{2};
             
 % for debugging - introduce shift
-% %             x1 = CellData_1(:,5);
-% %             y1 = CellData_1(:,6); 
-% %             y2 = y1 + 70;
-% %             x2 = x1 + 86;                        
-% %             mask = x2>0 & x2<=obj.SizeX*obj.pixelSizenm & y2>0 & y2<=obj.SizeY*obj.pixelSizenm;             
-% %             x2(mask==0) = x1(mask==0);
-% %             y2(mask==0) = y1(mask==0);             
-% %             CellData_2(:,5) = x2;
-% %             CellData_2(:,6) = y2;
+            x1 = CellData_1(:,5);
+            y1 = CellData_1(:,6); 
+            y2 = y1 + 70;
+            x2 = x1 + 86;                        
+            mask = x2>0 & x2<=obj.SizeX*obj.pixelSizenm & y2>0 & y2<=obj.SizeY*obj.pixelSizenm;             
+            x2(mask==0) = x1(mask==0);
+            y2(mask==0) = y1(mask==0);             
+            CellData_2(:,5) = x2;
+            CellData_2(:,6) = y2;
 %             x1 = CellData_1(:,5);
 %             y1 = CellData_1(:,6);
 %             x2 = CellData_2(:,5);
@@ -1163,9 +1263,8 @@ end
                 Chan2Color, ...
                 dbscanParams(1).Outputfolder, ...
                 obj.NDataColumns);            
-            
-% to setups            
-            ColoThres = 0.4;
+                  
+            ColoThres = obj.DoC_ColoThres;
             
             ResultTable = ProcessDoCResults_YA( ...
             DoC_out_CellData, ... 
@@ -1190,9 +1289,8 @@ end
                 Chan2Color, ...
                 dbscanParams, ...
                 obj.NDataColumns);
-            
-% to setups            
-            NbThresh = 10;
+                   
+            NbThresh = obj.DoC_NbThresh;
 
             % doesn't work properly.. YA 19.06.2020
             %EvalStatisticsOnDBSCANandDoCResults_YA(ClusterTableCh1, 1, DoC_out_dirname, NbThresh);

@@ -39,8 +39,8 @@ end
 
 ac.Define_Square_ROIs_Auto;
 
-ac.Analyze_ROIs_DBSCAN(true); % verbose
-ac.Analyze_ROIs_RipleyK; 
+% ac.Analyze_ROIs_DBSCAN(true); % verbose
+% ac.Analyze_ROIs_RipleyK; 
 ac.Analyze_ROIs_DoC;
 
 disp(['execution time ' num2str(toc/60) ' min']);

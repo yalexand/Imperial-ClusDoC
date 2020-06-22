@@ -15,11 +15,38 @@
    <DBSCAN_threads>12</DBSCAN_threads>
    <DBSCAN_DoStats>[true]</DBSCAN_DoStats>
    <Square_ROIs_Auto_anm>2000</Square_ROIs_Auto_anm>
-   <Square_ROIs_Auto_qthresh>[0.5 0.5]</Square_ROIs_Auto_qthresh>
-   <Square_ROIs_Auto_maxNrois>028</Square_ROIs_Auto_maxNrois>
+   <Square_ROIs_Auto_qthresh>[0.5 0.6]</Square_ROIs_Auto_qthresh>
+   <Square_ROIs_Auto_maxNrois>280</Square_ROIs_Auto_maxNrois>
    <Square_ROIs_Auto_method>channel</Square_ROIs_Auto_method>
-   <SizeX>128</SizeX>
-   <SizeY>128</SizeY>
+   <Square_ROIs_Auto_LNT>[200 200]</Square_ROIs_Auto_LNT>
+   <Square_ROIs_Auto_HNT>[20000 20000]</Square_ROIs_Auto_HNT>
+   <SizeX>256</SizeX>
+   <SizeY>256</SizeY>
    <Align_channels_nmppix>4</Align_channels_nmppix>
    <Align_channels_method>xcorr2</Align_channels_method>
+   <DoC_dbscanParams_ch1_DoCThreshold>0.4</DoC_dbscanParams_ch1_DoCThreshold>
+   <DoC_dbscanParams_ch1_epsilon>20</DoC_dbscanParams_ch1_epsilon>
+   <DoC_dbscanParams_ch1_minPts>3</DoC_dbscanParams_ch1_minPts>
+   <DoC_dbscanParams_ch1_UseLr_rThresh>[true]</DoC_dbscanParams_ch1_UseLr_rThresh>
+   <DoC_dbscanParams_ch1_Lr_rThreshRad>20</DoC_dbscanParams_ch1_Lr_rThreshRad>
+   <DoC_dbscanParams_ch1_SmoothingRad>15</DoC_dbscanParams_ch1_SmoothingRad>
+   <DoC_dbscanParams_ch1_Cutoff>10</DoC_dbscanParams_ch1_Cutoff>
+   <DoC_dbscanParams_ch1_threads>12</DoC_dbscanParams_ch1_threads>
+   <DoC_dbscanParams_ch1_DoStats>[true]</DoC_dbscanParams_ch1_DoStats>
+   <DoC_dbscanParams_ch1_Outputfolder>C:\</DoC_dbscanParams_ch1_Outputfolder>
+   <DoC_dbscanParams_ch2_DoCThreshold>0.4</DoC_dbscanParams_ch2_DoCThreshold>
+   <DoC_dbscanParams_ch2_epsilon>20</DoC_dbscanParams_ch2_epsilon>
+   <DoC_dbscanParams_ch2_minPts>3</DoC_dbscanParams_ch2_minPts>
+   <DoC_dbscanParams_ch2_UseLr_rThresh>[true]</DoC_dbscanParams_ch2_UseLr_rThresh>
+   <DoC_dbscanParams_ch2_Lr_rThreshRad>20</DoC_dbscanParams_ch2_Lr_rThreshRad>
+   <DoC_dbscanParams_ch2_SmoothingRad>15</DoC_dbscanParams_ch2_SmoothingRad>
+   <DoC_dbscanParams_ch2_Cutoff>10</DoC_dbscanParams_ch2_Cutoff>
+   <DoC_dbscanParams_ch2_threads>12</DoC_dbscanParams_ch2_threads>
+   <DoC_dbscanParams_ch2_DoStats>[true]</DoC_dbscanParams_ch2_DoStats>
+   <DoC_dbscanParams_ch2_Outputfolder>C:\</DoC_dbscanParams_ch2_Outputfolder>
+   <DoC_Lr_rRad>20</DoC_Lr_rRad>
+   <DoC_Rmax>500</DoC_Rmax>
+   <DoC_Step>10</DoC_Step>
+   <DoC_ColoThres>0.4</DoC_ColoThres>
+   <DoC_NbThresh>10</DoC_NbThresh>
 </settings>
