@@ -25,6 +25,9 @@ function tform = Correct_Simple_Image_Translation_xcorr2(moving,static,s1,s2)
         %
         [x,y] = find(z==max(z(:)));
         %
+        x=x(1);
+        y=y(1);
+        %
         x_shift = - (x-wc);
         y_shift = - (y-hc);
         

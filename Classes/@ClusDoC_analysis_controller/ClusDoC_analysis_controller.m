@@ -1081,10 +1081,12 @@ function [dx2,dy2] = Get_channel2_registration_corrections(obj,~) % translation 
             ash2 = obj.get_ash(nmppix,2);            
             %
             % normalize images.. make too bright parts less influential
-            t1 = quantile(ash1(:),0.995);
-            ash1(ash1>t1)=t1;
-            t2 = quantile(ash2(:),0.995);
-            ash2(ash2>t2)=t2;            
+              s1 = ash1(ash1>0);  
+              s2 = ash2(ash2>0);
+              t1 = quantile(s1(:),0.995);
+              ash1(ash1>t1)=t1;
+              t2 = quantile(s2(:),0.995);
+              ash2(ash2>t2)=t2;              
             %            
             switch obj.Align_channels_method 
                 
@@ -1233,15 +1235,15 @@ end
             CellData_2 = obj.CellData{2};
             
 % for debugging - introduce shift
-            x1 = CellData_1(:,5);
-            y1 = CellData_1(:,6); 
-            y2 = y1 + 70;
-            x2 = x1 + 86;                        
-            mask = x2>0 & x2<=obj.SizeX*obj.pixelSizenm & y2>0 & y2<=obj.SizeY*obj.pixelSizenm;             
-            x2(mask==0) = x1(mask==0);
-            y2(mask==0) = y1(mask==0);             
-            CellData_2(:,5) = x2;
-            CellData_2(:,6) = y2;
+%             x1 = CellData_1(:,5);
+%             y1 = CellData_1(:,6); 
+%             y2 = y1 + 70;
+%             x2 = x1 + 86;                        
+%             mask = x2>0 & x2<=obj.SizeX*obj.pixelSizenm & y2>0 & y2<=obj.SizeY*obj.pixelSizenm;             
+%             x2(mask==0) = x1(mask==0);
+%             y2(mask==0) = y1(mask==0);             
+%             CellData_2(:,5) = x2;
+%             CellData_2(:,6) = y2;
 %             x1 = CellData_1(:,5);
 %             y1 = CellData_1(:,6);
 %             x2 = CellData_2(:,5);
