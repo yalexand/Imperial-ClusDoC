@@ -1,12 +1,12 @@
 function EvalStatisticsOnDBSCANandDoCResults_YA(ClusterSmoothTableCh, Ch, outputFolder, NbThresh)
 
 % Tabulate stats and output excel file for Clus-DoC analysis
-%% Pull NbThresh from handles
-
-% handles = guidata(findobj('Tag', 'PALM GUI'));
-
+%% NbThresh is the minimal number of co-localized points - YA 26.06.2020 
 
 %% Density Comparison
+
+% row - ROI index
+% column - number of cells, i.e. 1 
 
 [row, column]=size(ClusterSmoothTableCh);
 
@@ -126,8 +126,6 @@ switch Ch
         save(fullfile(outputFolder, 'ResultCh2.mat'),'ResultCh2','-v7.3')
 end
     
-
-
 %% Convert to excel file
     
     % Density Area Circularity for cluster with DofC>0.4

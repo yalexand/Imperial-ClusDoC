@@ -15,12 +15,12 @@ function [ClusterSmoothTableCh1, ClusterSmoothTableCh2, clusterIDOut, clusterTab
 %         end
 %
 
-ClusterSmoothTableCh1 = cell(max(cellfun(@length, ROICoordinates)), length(CellData));
-ClusterSmoothTableCh2 = cell(max(cellfun(@length, ROICoordinates)), length(CellData));
+ClusterSmoothTableCh1 = cell(max(cellfun(@length, ROICoordinates)), 1);
+ClusterSmoothTableCh2 = cell(max(cellfun(@length, ROICoordinates)), 1);
 
-ResultCell = cell(max(cellfun(@length, ROICoordinates)), length(CellData));
+ResultCell = cell(max(cellfun(@length, ROICoordinates)), 1);
 
-clusterIDOut = cell(max(cellfun(@length, ROICoordinates)), length(CellData), 2);
+clusterIDOut = cell(max(cellfun(@length, ROICoordinates)), 1, 2);
 
 clusterTable = [];
 
