@@ -5,7 +5,7 @@
 % 05/14/2017 added support for Nikon SMLM file import.  Data is extracted
 % and placed into format to match 13-column Zeiss data file.
 
-function Data = ImportFile(fname,handles)
+function [Data,Head_text,Body_text] = ImportFile(fname,handles)
 
 filepath = fname;
 

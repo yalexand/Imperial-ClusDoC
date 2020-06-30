@@ -37,11 +37,20 @@ if exist('filename2','var') && exist('src_dir2','var')
     % ac.Apply_channel2_registration_corrections([dx2 dy2]);
 end
 
+% for Tubulin sequence_WindSTORM.csv - 256x256, 107nm, Sigma 1.2
+% ac.Square_ROIs_Auto_anm = 4000;
+% ac.Square_ROIs_Auto_qthresh = [.9 .9];
+
 ac.Define_Square_ROIs_Auto;
 
 % ac.Analyze_ROIs_DBSCAN(true); % verbose
 % ac.Analyze_ROIs_RipleyK; 
+
 ac.Analyze_ROIs_DoC;
+
+% dx2 = 170;
+% dy2 = -90;
+% ac.Save_original_channel2_data_with_XY_registration_corrections(ac.Outputfolder,[dx2 dy2]);
 
 disp(['execution time ' num2str(toc/60) ' min']);
 

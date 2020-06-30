@@ -45,6 +45,10 @@ classdef ClusDoC_analysis_controller < handle
     % Initialize structure to pass values between GUI components
     CellData = {2,1}; % better it rename this as FOVData
     
+    % original data
+    Original_from_file_data = {2,1};
+    Original_from_file_header = {2,1};
+    
     pathName = cell(2,1);
     fileName = cell(2,1);
     
@@ -277,7 +281,7 @@ end
             goodZENFile = checkZenFile(fullfile(obj.pathName{chan},obj.fileName{chan}));
       
             if goodZENFile || contains(obj.fileName{chan},'.csv')
-                importData = ImportFile(fullfile(obj.pathName{chan},obj.fileName{chan}),obj);
+                [importData,original_header,original_data] = ImportFile(fullfile(obj.pathName{chan},obj.fileName{chan}),obj);
                                 
                 obj.CellData{chan} = [importData zeros(size(importData, 1), 8)];
 
@@ -291,6 +295,9 @@ end
 %                 obj.CellData{chan}(any(obj.CellData{chan}(:, 5:6) < 0), : )= [];
                 
                 obj.Nchannels = max(chan,obj.Nchannels); %min([numel(unique(obj.CellData{chan}(:,12))), 2]); % cap import to 2 channels ever
+                
+                obj.Original_from_file_data{chan} = original_data;
+                obj.Original_from_file_header{chan} = original_header;
                 
             else
                 
@@ -1305,8 +1312,58 @@ end
             rethrow(mError);
              
         end        
-    end   
-             
+    end        
+%-------------------------------------------------------------------------%
+function Save_original_channel2_data_with_XY_registration_corrections(obj,save_dir,dx2dy2,~)
+
+        nmppix = obj.pixelSizenm;
+
+        if strcmp(char(obj.Original_from_file_header{2}{1}(3)),'"x [pix]"') % WindSTORM
+            x_ind = 3;
+            y_ind = 4;
+            multiplier = 1/nmppix; % corrections are in nanometers but WindSTORM format is in pixels
+        elseif strcmp(char(obj.Original_from_file_header{2}{1}(2)),'"x [nm]"') % ThunderSTORM
+            x_ind = 2;
+            y_ind = 3;
+            multiplier = 1;
+        else % X3
+        end
+
+        data = cell2mat(obj.Original_from_file_data{2});
+
+        x = data(:,x_ind) - dx2dy2(1)*multiplier;
+        y = data(:,y_ind) - dx2dy2(2)*multiplier;
+
+        mask = x>=0 & x<=obj.SizeX*nmppix & y>=0 & y<=obj.SizeY*nmppix;
+
+        data = data(mask,:);
+        data(:,x_ind) = x(mask);
+        data(:,y_ind) = y(mask);
+
+        captions = obj.Original_from_file_header{2}{1};
+
+        cap = [];
+        for ci=1:numel(captions)
+            elem = captions{ci};
+            if ci<numel(captions)
+                elem = [elem ','];
+            end
+            cap = [cap elem];
+        end
+                                    
+        fname = obj.fileName{2};
+        fname = strrep(fname,'.csv','');
+        fname = strrep(fname,'.txt','');
+        fname = [fname '_registered.csv'];
+
+        fullfilename = [save_dir filesep fname];
+
+        fid = fopen( fullfilename, 'w' );
+        fprintf( fid, '%s\n', cap);
+        fclose(fid);
+        dlmwrite(fullfilename,data,'-append','precision','%.3f');
+end    
+%-------------------------------------------------------------------------%    
     end % methods
             
 end
