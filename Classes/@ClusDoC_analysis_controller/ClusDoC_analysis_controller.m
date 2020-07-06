@@ -575,7 +575,12 @@ end
 
             % Handler function for RipleyK calculations
                 ArrayHeader = [{'r'},{'L(r)-r'}];
-
+                
+                                if 1==chan
+                                    plotColor = 'red';
+                                else
+                                    plotColor = 'green';
+                                end                 
                 i = 0;
 
                 nSteps = ceil((End - Start)/Step) + 1;
@@ -629,18 +634,14 @@ end
                                 else 
                                     selectVector = true(size(dataCropped, 1), 1);
                                 end
-
-                                    chan = 1;
-                                    
-                                    plotColor = 'red';
-
+                                                                    
                                     try
-                                    [r, Lr_r] = RipleyKFun(dataCropped(selectVector & (dataCropped(:,12) == chan),5:6), ...
-                                        A, Start, End, Step, size_ROI);
+                                    [r, Lr_r] = RipleyKFun(dataCropped(selectVector,5:6), ...
+                                                                    A, Start, End, Step, size_ROI);
                                     catch err
                                         disp(err.message);
                                         continue;
-                                    end
+                                    end                                                                       
                                     
                                     RipleyKCh1Fig = figure('color', [1 1 1]);
                                     RipleyKCh1Ax = axes('parent', RipleyKCh1Fig);
@@ -648,9 +649,9 @@ end
 
                                     % Collect results from these calculations
                                     [MaxLr_r, Index] = max(Lr_r);
-                                    Max_Lr(i, chan) = MaxLr_r;
-                                    Max_r(i, chan) = r(Index);
-                                    Lr_r_Result(:,i, chan) = Lr_r;
+                                    Max_Lr(i, 1) = MaxLr_r;     % chan==1
+                                    Max_r(i, 1) = r(Index);     % chan==1
+                                    Lr_r_Result(:,i, 1) = Lr_r; % chan==1
 
                                     annotation('textbox', [0.45,0.8,0.22,0.1],...
                                         'String', sprintf('Max L(r) - r: %.3f at Max r : %d', MaxLr_r, Max_r(i)), ...
@@ -675,6 +676,9 @@ end
                     end
 
                     % there was loop over channels here..
+                    true_chan = chan;
+                    chan = 1;
+                    
                     Average_Lr_r(:,1) = r;
                     Average_Lr_r(:,1) = r;
                     Average_Lr_r(:, 2) = squeeze(mean(Lr_r_Result(:,:,chan), 2));
@@ -685,17 +689,17 @@ end
                     if false %ispc
                         try                    
                             % Data average on all the regions and cells
-                            xlswrite(fullfile(Fun_OutputFolder_name, 'RipleyK_Results', sprintf('Ch%dPooled.xls', chan)), ArrayHeader, 'Pooled data', 'A1');
-                            xlswrite(fullfile(Fun_OutputFolder_name, 'RipleyK_Results', sprintf('Ch%dPooled.xls', chan)), Average_Lr_r, 'Pooled data', 'A2');
+                            xlswrite(fullfile(Fun_OutputFolder_name, 'RipleyK_Results', sprintf('Ch%dPooled.xls', true_chan)), ArrayHeader, 'Pooled data', 'A1');
+                            xlswrite(fullfile(Fun_OutputFolder_name, 'RipleyK_Results', sprintf('Ch%dPooled.xls', true_chan)), Average_Lr_r, 'Pooled data', 'A2');
 
                             % average for max Lr-r and r(max Lr-r)
-                            xlswrite(fullfile(Fun_OutputFolder_name, 'RipleyK_Results', sprintf('Ch%dPooled.xls', chan)), [{'r(max_Lr)'},{'Max_Lr'}], 'Pooled data', 'D3');
-                            xlswrite(fullfile(Fun_OutputFolder_name, 'RipleyK_Results', sprintf('Ch%dPooled.xls', chan)), [{'Mean'},{'Std'}]', 'Pooled data', 'E2');
-                            xlswrite(fullfile(Fun_OutputFolder_name, 'RipleyK_Results', sprintf('Ch%dPooled.xls', chan)), [Max_r_Ave' Max_Lr_Ave'], 'Pooled data', 'E3');
+                            xlswrite(fullfile(Fun_OutputFolder_name, 'RipleyK_Results', sprintf('Ch%dPooled.xls', true_chan)), [{'r(max_Lr)'},{'Max_Lr'}], 'Pooled data', 'D3');
+                            xlswrite(fullfile(Fun_OutputFolder_name, 'RipleyK_Results', sprintf('Ch%dPooled.xls', true_chan)), [{'Mean'},{'Std'}]', 'Pooled data', 'E2');
+                            xlswrite(fullfile(Fun_OutputFolder_name, 'RipleyK_Results', sprintf('Ch%dPooled.xls', true_chan)), [Max_r_Ave' Max_Lr_Ave'], 'Pooled data', 'E3');
 
                             % max Lr-r and r(max Lr-r) for each region
-                            xlswrite(fullfile(Fun_OutputFolder_name, 'RipleyK_Results', sprintf('Ch%dPooled.xls', chan)), [{'r(max_Lr)'},{'Max_Lr'}], 'Pooled data', 'E6');
-                            xlswrite(fullfile(Fun_OutputFolder_name, 'RipleyK_Results', sprintf('Ch%dPooled.xls', chan)), [Max_r Max_Lr], 'Pooled data', 'E7');
+                            xlswrite(fullfile(Fun_OutputFolder_name, 'RipleyK_Results', sprintf('Ch%dPooled.xls', true_chan)), [{'r(max_Lr)'},{'Max_Lr'}], 'Pooled data', 'E6');
+                            xlswrite(fullfile(Fun_OutputFolder_name, 'RipleyK_Results', sprintf('Ch%dPooled.xls', true_chan)), [Max_r Max_Lr], 'Pooled data', 'E7');
                         catch err
                             disp(err.message);
                         end
