@@ -1199,19 +1199,19 @@ end
             CellData_2 = obj.CellData{2};
             
 % for debugging - introduce shift
-            x1 = CellData_1(:,5);
-            y1 = CellData_1(:,6); 
-            y2 = y1 + 70;
-            x2 = x1 + 86;                        
-            mask = x2>0 & x2<=obj.SizeX*obj.pixelSizenm & y2>0 & y2<=obj.SizeY*obj.pixelSizenm;             
-            x2(mask==0) = x1(mask==0);
-            y2(mask==0) = y1(mask==0);             
-            CellData_2(:,5) = x2;
-            CellData_2(:,6) = y2;
-            x1 = CellData_1(:,5);
-            y1 = CellData_1(:,6);
-            x2 = CellData_2(:,5);
-            y2 = CellData_2(:,6);               
+%             x1 = CellData_1(:,5);
+%             y1 = CellData_1(:,6); 
+%             y2 = y1 + 70;
+%             x2 = x1 + 86;                        
+%             mask = x2>0 & x2<=obj.SizeX*obj.pixelSizenm & y2>0 & y2<=obj.SizeY*obj.pixelSizenm;             
+%             x2(mask==0) = x1(mask==0);
+%             y2(mask==0) = y1(mask==0);             
+%             CellData_2(:,5) = x2;
+%             CellData_2(:,6) = y2;
+%             x1 = CellData_1(:,5);
+%             y1 = CellData_1(:,6);
+%             x2 = CellData_2(:,5);
+%             y2 = CellData_2(:,6);               
 %             figure;plot(x1,y1,'r.',x2,y2,'b.');daspect([1 1 1]);            
 % for debugging - introduce noise            
 
