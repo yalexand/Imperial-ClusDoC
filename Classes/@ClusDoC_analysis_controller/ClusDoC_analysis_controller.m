@@ -1199,19 +1199,19 @@ end
             CellData_2 = obj.CellData{2};
             
 % for debugging - introduce shift
-%             x1 = CellData_1(:,5);
-%             y1 = CellData_1(:,6); 
-%             y2 = y1 + 70;
-%             x2 = x1 + 86;                        
-%             mask = x2>0 & x2<=obj.SizeX*obj.pixelSizenm & y2>0 & y2<=obj.SizeY*obj.pixelSizenm;             
-%             x2(mask==0) = x1(mask==0);
-%             y2(mask==0) = y1(mask==0);             
-%             CellData_2(:,5) = x2;
-%             CellData_2(:,6) = y2;
-%             x1 = CellData_1(:,5);
-%             y1 = CellData_1(:,6);
-%             x2 = CellData_2(:,5);
-%             y2 = CellData_2(:,6);               
+            x1 = CellData_1(:,5);
+            y1 = CellData_1(:,6); 
+            y2 = y1 + 70;
+            x2 = x1 + 86;                        
+            mask = x2>0 & x2<=obj.SizeX*obj.pixelSizenm & y2>0 & y2<=obj.SizeY*obj.pixelSizenm;             
+            x2(mask==0) = x1(mask==0);
+            y2(mask==0) = y1(mask==0);             
+            CellData_2(:,5) = x2;
+            CellData_2(:,6) = y2;
+            x1 = CellData_1(:,5);
+            y1 = CellData_1(:,6);
+            x2 = CellData_2(:,5);
+            y2 = CellData_2(:,6);               
 %             figure;plot(x1,y1,'r.',x2,y2,'b.');daspect([1 1 1]);            
 % for debugging - introduce noise            
 
@@ -1256,10 +1256,14 @@ end
                 dbscanParams, ...
                 obj.NDataColumns);
             
+            DoC_out_CellData = obj.AssignDoCDataToPoints_YA(DoC_out_CellData, clusterIDOut);
+            
             NbThresh = obj.DoC_NbThresh; % minimal number of co-localized points            
             EvalStatisticsOnDBSCANandDoCResults_YA(ClusterTableCh1, 1, DoC_out_dirname, NbThresh);
             EvalStatisticsOnDBSCANandDoCResults_YA(ClusterTableCh2, 2, DoC_out_dirname, NbThresh);
     
+            obj.ExportDoCDataToCSV(DoC_out_CellData,ClusterTable,DoC_out_dirname); % LOC are localisations 
+            
             % not needed, as these ones are saved within "DBSCANonDoCResults_YA" function
             %save([DoC_out_dirname filesep 'ClusterTables.mat'],'ClusterTableCh1','ClusterTableCh2','-v7.3');
                         
@@ -1270,6 +1274,29 @@ end
              
         end        
     end        
+%-------------------------------------------------------------------------%
+function DoC_out_CellData = AssignDoCDataToPoints_YA(obj,DoC_in_CellData,clusterIDOut,~)
+    
+    DoC_out_CellData = DoC_in_CellData;
+    
+        for roiInc = 1:length(obj.ROICoordinates)
+
+            roi = obj.ROICoordinates{roiInc};                        
+            x_roi=roi(:,1);
+            y_roi=roi(:,2);
+            x=DoC_in_CellData(:,5);
+            y=DoC_in_CellData(:,6);            
+                whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi);
+                
+            DoC_out_CellData(whichPointsInROI & DoC_out_CellData(:,12) == 1, obj.NDataColumns+3) = clusterIDOut{roiInc, 1, 1};
+            DoC_out_CellData(whichPointsInROI & DoC_out_CellData(:,12) == 2, obj.NDataColumns+3) = clusterIDOut{roiInc, 1, 2};
+          
+            roi_ind = DoC_out_CellData(:,obj.NDataColumns+1);
+            roi_ind(whichPointsInROI) = roiInc;
+            DoC_out_CellData(:,14) = roi_ind;
+
+        end
+end    
 %-------------------------------------------------------------------------%
 function Save_original_channel2_data_with_XY_registration_corrections(obj,save_dir,dx2dy2,~)
 
@@ -1323,6 +1350,109 @@ function Save_original_channel2_data_with_XY_registration_corrections(obj,save_d
         fprintf( fid, '%s\n', cap);
         fclose(fid);
         dlmwrite(fullfilename,data,'-append','precision','%.3f');
+end
+%-------------------------------------------------------------------------%
+function ExportDoCDataToCSV(obj,LOC,ClusterTable,save_dir,~) % LOC are localisations 
+
+        % 1 Index	
+        % 2 FirstFrame	
+            % 3 NumFrames	
+            % 4 NFramesMissing	
+        % 5 PostX[nm]	
+        % 6 PostY[nm]	
+        % 7 Precision[nm]	
+        % 8 NPhotons	
+        % 9 BkgdVar	
+        % 10 Chi^2	
+        % 11 PSFWidth[nm]	
+        % 12 Channel	
+            % 13 ZSlice	
+        % 14 ROINum	
+            % 15 InOutMask	
+        % 16 ClusterID	
+        % 17 DoCScore	
+        % 18 LrValue	
+        % 19 CrossChanDensity	
+        % 20 LrAboveThreshold	
+        % 21 AllChanDensity
+
+        captions = { ...
+        '"Index"', ... % 1 Index	
+        '"FirstFrame"', ...% 2 FirstFrame	
+        '"NumFrames"', ...    % 3 NumFrames	
+        '"NFramesMissing"', ...    % 4 NFramesMissing	
+        '"PostX[nm]"', ...% 5 PostX[nm]	
+        '"PostY[nm]"', ...% 6 PostY[nm]	
+        '"Precision[nm]"', ...% 7 Precision[nm]	
+        '"NPhotons"', ...% 8 NPhotons	
+        '"BkgdVar"', ...% 9 BkgdVar	
+        '"Chi^2"', ...% 10 Chi^2	
+        '"PSFWidth[nm]"', ...% 11 PSFWidth[nm]	
+        '"Channel"', ...% 12 Channel	
+        '"ZSlice"', ...   % 13 ZSlice	
+        '"ROINum"', ...% 14 ROINum	
+        '"InOutMask"', ...    % 15 InOutMask	
+        '"ClusterID"', ...% 16 ClusterID	
+        '"DoCScore"', ...% 17 DoCScore	
+        '"LrValue"', ...% 18 LrValue	
+        '"CrossChanDensity"', ...% 19 CrossChanDensity	
+        '"LrAboveThreshold"', ...% 20 LrAboveThreshold	
+        '"AllChanDensity"', ...% 21 AllChanDensity
+        };    
+
+                fname = 'DoC_Export_Localisations.csv';
+                fullfilename = [save_dir filesep fname];
+
+                cap = [];
+                for ci=1:numel(captions)
+                    elem = captions{ci};
+                    if ci<numel(captions)
+                        elem = [elem ','];
+                    end
+                    cap = [cap elem];
+                end
+
+                fid = fopen( fullfilename, 'w' );
+                fprintf( fid, '%s\n', cap);
+                fclose(fid);
+                dlmwrite(fullfilename,LOC,'-append','precision','%.3f');
+                
+% clusters.. 
+
+        captions = { ...
+        '"CellNum"', ...
+        '"ROINum"', ...
+        '"Channel"', ...
+        '"ClusterID"', ...
+        '"NPoints"', ...
+        '"Nb"', ...
+        '"MeanDoCScore"', ... 
+        '"Area"', ...
+        '"Circularity"', ...
+        '"TotalAreaDensity"', ...
+        '"AvRelativeDensity"', ... 
+        '"MeanDensity"', ...
+        '"Nb_In"', ...
+        '"NInMask"', ...
+        '"NOutMask"', ...
+        };
+
+        fname = 'DoC_Export_Clusters.csv';
+        fullfilename = [save_dir filesep fname];
+        
+               cap = [];
+                for ci=1:numel(captions)
+                    elem = captions{ci};
+                    if ci<numel(captions)
+                        elem = [elem ','];
+                    end
+                    cap = [cap elem];
+                end
+
+                fid = fopen( fullfilename, 'w' );
+                fprintf( fid, '%s\n', cap);
+                fclose(fid);
+                dlmwrite(fullfilename,ClusterTable,'-append','precision','%.3f');                            
 end    
 %-------------------------------------------------------------------------%    
     end % methods
