@@ -1349,7 +1349,7 @@ function Save_original_channel2_data_with_XY_registration_corrections(obj,save_d
         fid = fopen( fullfilename, 'w' );
         fprintf( fid, '%s\n', cap);
         fclose(fid);
-        dlmwrite(fullfilename,data,'-append','precision','%.3f');
+        dlmwrite(fullfilename,data,'-append','precision','%.4f');
 end
 %-------------------------------------------------------------------------%
 function ExportDoCDataToCSV(obj,LOC,ClusterTable,save_dir,~) % LOC are localisations 
@@ -1415,7 +1415,7 @@ function ExportDoCDataToCSV(obj,LOC,ClusterTable,save_dir,~) % LOC are localisat
                 fid = fopen( fullfilename, 'w' );
                 fprintf( fid, '%s\n', cap);
                 fclose(fid);
-                dlmwrite(fullfilename,LOC,'-append','precision','%.3f');
+                dlmwrite(fullfilename,LOC,'-append','precision','%.5f');
                 
 % clusters.. 
 
@@ -1452,7 +1452,7 @@ function ExportDoCDataToCSV(obj,LOC,ClusterTable,save_dir,~) % LOC are localisat
                 fid = fopen( fullfilename, 'w' );
                 fprintf( fid, '%s\n', cap);
                 fclose(fid);
-                dlmwrite(fullfilename,ClusterTable,'-append','precision','%.3f');                            
+                dlmwrite(fullfilename,ClusterTable,'-append','precision','%.5f');                            
 end    
 %-------------------------------------------------------------------------%    
     end % methods
