@@ -44,8 +44,8 @@ LocArry=sortrows(LocArry,ParaNum);
             Body_text{4} = LocArry(:,3);
             Body_text{5} = LocArry(:,7); % total intensity
 
-            Head_text = '"id","frame","x [pix]","y [pix]","intensity [photon]"';        
-
+            Head_text = {{'"id"';'"frame"';'"x [pix]"';'"y [pix]"';'"intensity [photon]"'}};
+            
             pixelSizenm = handles.pixelSizenm;
             psf_width = handles.WindSTORM_Sigmapix*handles.pixelSizenm;
 
