@@ -1,4 +1,4 @@
-function [v,info] = Analyze_Colocalisation_per_FOV(obj,~)
+function [v,info,out_data] = Analyze_Colocalisation_per_FOV(obj,~)
 
     pixel_size_in_microns = 0.05; % 50 nanometers
     
@@ -47,6 +47,6 @@ function [v,info] = Analyze_Colocalisation_per_FOV(obj,~)
                  '; BIGS jaccard : ' num2str(jaccard(n1_bigs_mask,n2_bigs_mask)), ...
                  '; ICA score : ' num2str(ICA_score), ...
                  ];
-
+    out_data = [jaccard(n1>0,n2>0) jaccard(n1_bigs_mask,n2_bigs_mask) ICA_score];
 end
 

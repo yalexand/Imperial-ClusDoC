@@ -280,8 +280,12 @@ end
         
             goodZENFile = checkZenFile(fullfile(obj.pathName{chan},obj.fileName{chan}));
       
-            if goodZENFile || contains(obj.fileName{chan},'.csv')
-                [importData,original_header,original_data] = ImportFile(fullfile(obj.pathName{chan},obj.fileName{chan}),obj);
+            if goodZENFile || contains(obj.fileName{chan},'.csv') || contains(obj.fileName{chan},'.txt')
+                if goodZENFile || contains(obj.fileName{chan},'.csv')
+                    [importData,original_header,original_data] = ImportFile(fullfile(obj.pathName{chan},obj.fileName{chan}),obj);
+                else % QC_STORM
+                    [importData,original_header,original_data] = Import_QC_STORM_File(fullfile(obj.pathName{chan},obj.fileName{chan}),obj);   
+                end
                                 
                 obj.CellData{chan} = [importData zeros(size(importData, 1), 8)];
 
@@ -559,7 +563,8 @@ end
         catch mError
             
             disp('Ripley K processing exited with errors');
-            rethrow(mError);
+            %rethrow(mError);
+            disp(mError.message);
              
         end        
     end
@@ -1088,7 +1093,15 @@ function [dx2,dy2] = Get_channel2_registration_corrections(obj,~) % translation 
 %                     icy_imshow(ash);             
             
              dx2 = - tform.T(3,1)*nmppix;
-             dy2 = - tform.T(3,2)*nmppix;
+             dy2 = - tform.T(3,2)*nmppix; % to get it in nanometres
+             
+             % if shift is bigger than 3 pixels in original image,
+             % then the registration is failed
+             if max(abs(dx2),abs(dy2))/obj.pixelSizenm >3
+                 disp('registration failed');
+                 dx2 = 0;
+                 dy2 = 0;
+             end
 end
 %-------------------------------------------------------------------------%
    function ash = get_ash(obj,nmppix,chan,varargin)
@@ -1270,7 +1283,8 @@ end
         catch mError
             
             disp('ClusDoC processing exited with errors');
-            rethrow(mError);
+            %rethrow(mError);
+            disp(mError.message);
              
         end        
     end        
