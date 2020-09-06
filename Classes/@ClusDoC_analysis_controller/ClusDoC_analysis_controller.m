@@ -898,8 +898,10 @@ numel(obj.ROICoordinates)
             if (numel(obj.ROICoordinates) > Nrois)
                 obj.ROICoordinates = obj.ROICoordinates(randi(numel(obj.ROICoordinates),1,Nrois));
             end             
-            
-% display 
+
+verbose = false;
+if verbose
+% display
 YMAX = obj.SizeY*obj.pixelSizenm;
 figure('units','normalized','outerposition',[0 0 1 1],'name','ROIs as they go..');
     if strcmp(obj.Square_ROIs_Auto_method,'composite')
@@ -1002,6 +1004,7 @@ figure('units','normalized','outerposition',[0 0 1 1],'name','ROIs as they go..'
                    end
                    hold(ax,'off');  
     end
+end % verbose
 % display            
                                    
 end
