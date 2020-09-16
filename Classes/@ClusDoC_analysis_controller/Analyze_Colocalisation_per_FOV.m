@@ -1,6 +1,6 @@
-function [v,info,out_data] = Analyze_Colocalisation_per_FOV(obj,~)
+function [v,info,out_data] = Analyze_Colocalisation_per_FOV(obj,nmppix)
 
-    pixel_size_in_microns = 0.05; % 50 nanometers
+    pixel_size_in_microns = nmppix/1000; % about 50 nanometers, or 0.05um
     
     try            
         % localisations numbers per pixel
@@ -21,7 +21,7 @@ function [v,info,out_data] = Analyze_Colocalisation_per_FOV(obj,~)
     s = corrimg(mask);
     %ICA_score = mean(log(s));
     ICA_score = mean(log(s))/std(log(s)); % this works as well
-    %ICA_score = mean(s)/std(s);          % this doesn't work (?) 
+    ICA_score_nolog = mean(s)/std(s);          % this doesn't work (?) 
     corrimg = log(1+corrimg);
 
     % this gives nice ICA image
@@ -47,6 +47,6 @@ function [v,info,out_data] = Analyze_Colocalisation_per_FOV(obj,~)
                  '; BIGS jaccard : ' num2str(jaccard(n1_bigs_mask,n2_bigs_mask)), ...
                  '; ICA score : ' num2str(ICA_score), ...
                  ];
-    out_data = [jaccard(n1>0,n2>0) jaccard(n1_bigs_mask,n2_bigs_mask) ICA_score];
+    out_data = [jaccard(n1>0,n2>0) jaccard(n1_bigs_mask,n2_bigs_mask) ICA_score ICA_score_nolog];
 end
 
