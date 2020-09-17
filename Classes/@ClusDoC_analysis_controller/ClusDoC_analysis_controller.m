@@ -1098,9 +1098,9 @@ function [dx2,dy2] = Get_channel2_registration_corrections(obj,~) % translation 
              dx2 = - tform.T(3,1)*nmppix;
              dy2 = - tform.T(3,2)*nmppix; % to get it in nanometres
              
-             % if shift is bigger than 3 pixels in original image,
+             % if shift is bigger than 7 pixels in original image,
              % then the registration is failed
-             if max(abs(dx2),abs(dy2))/obj.pixelSizenm >3
+             if norm([dx2 dy2]) > 1000 % OK if not more than micron in either direction
                  disp('registration failed');
                  dx2 = 0;
                  dy2 = 0;

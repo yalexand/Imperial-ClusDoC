@@ -24,6 +24,15 @@ function [v,info,out_data] = Analyze_Colocalisation_per_FOV(obj,nmppix)
     ICA_score_nolog = mean(s)/std(s);          % this doesn't work (?) 
     corrimg = log(1+corrimg);
 
+    p1 = mean(s);
+        z1 = n1.*mask;
+        z2 = n2.*mask;
+        z1 = sort(z1(mask));
+        z2 = sort(z2(mask));
+        z2d = sort(z2,'descend');
+    p2 = mean(z1.*z2);
+    p3 = mean(z1.*z2d);
+        
     % this gives nice ICA image
 %     s1 = n1(mask);
 %     s2 = n2(mask);
@@ -47,6 +56,6 @@ function [v,info,out_data] = Analyze_Colocalisation_per_FOV(obj,nmppix)
                  '; BIGS jaccard : ' num2str(jaccard(n1_bigs_mask,n2_bigs_mask)), ...
                  '; ICA score : ' num2str(ICA_score), ...
                  ];
-    out_data = [jaccard(n1>0,n2>0) jaccard(n1_bigs_mask,n2_bigs_mask) ICA_score ICA_score_nolog];
+    out_data = [jaccard(n1>0,n2>0) jaccard(n1_bigs_mask,n2_bigs_mask) ICA_score ICA_score_nolog p1 p2 p3];
 end
 
