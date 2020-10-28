@@ -38,6 +38,7 @@ classdef ClusDoC_analysis_controller < handle
         Square_ROIs_Auto_method = 'channel';
         Square_ROIs_Auto_LNT = [200 200]; % loc number thershold - may be interpreted as per_micron or absolute
         Square_ROIs_Auto_HNT = [20000 20000];
+        Square_ROIs_Auto_verbose = false;
         
         Align_channels_nmppix = 4;
         Align_channels_method = 'Matlab_multimodal';
@@ -890,7 +891,7 @@ bad_rois = [];
                             end 
                         end
                   end
-bad_rois
+%bad_rois
 numel(obj.ROICoordinates)
 % check rois
             obj.ROICoordinates = obj.ROICoordinates(setdiff(1:numel(obj.ROICoordinates),bad_rois));            
@@ -899,8 +900,7 @@ numel(obj.ROICoordinates)
                 obj.ROICoordinates = obj.ROICoordinates(randi(numel(obj.ROICoordinates),1,Nrois));
             end             
 
-verbose = false;
-if verbose
+if obj.Square_ROIs_Auto_verbose
 % display
 YMAX = obj.SizeY*obj.pixelSizenm;
 figure('units','normalized','outerposition',[0 0 1 1],'name','ROIs as they go..');
@@ -1471,6 +1471,196 @@ function ExportDoCDataToCSV(obj,LOC,ClusterTable,save_dir,~) % LOC are localisat
                 fclose(fid);
                 dlmwrite(fullfilename,ClusterTable,'-append','precision','%.5f');                            
 end    
+
+
+%-------------------------------------------------------------------------%   
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function Define_Rectangular_ROIs_from_file(obj,fullfilename,chan,super_res_image_pixelSizenm) 
+
+        Nrois = obj.Square_ROIs_Auto_maxNrois;
+    
+        raw_rois = square_ROIs_from_file(fullfilename);
+        n_rois = size(raw_rois,1);
+        obj.ROICoordinates = cell(n_rois,1);
+                    
+        raw_rois = round(raw_rois*super_res_image_pixelSizenm);
+        
+        for k=1:n_rois
+            x0 = raw_rois(k,1);
+            y0 = raw_rois(k,2);
+            W = raw_rois(k,3);
+            H = raw_rois(k,4);
+            %
+            p1 = [x0 y0];
+            p2 = [x0 y0+H];
+            p3 = [x0+W y0+H];
+            p4 = [x0+W y0];
+            p5 = p1;
+            roi_k = [p1;p2;p3;p4;p5]; 
+            %
+            roi_k(:,2) = round(obj.SizeY*obj.pixelSizenm) - roi_k(:,2);
+            %
+            obj.ROICoordinates{k} = roi_k;
+        end
+
+% check rois
+bad_rois = [];
+                   for roiInc = 1:length(obj.ROICoordinates)
+
+                        roi = obj.ROICoordinates{roiInc};
+                        
+                        x_roi=roi(:,1);
+                        y_roi=roi(:,2);
+                        
+                        if strcmp(obj.Square_ROIs_Auto_method,'channel')
+                            x=obj.CellData{chan}(:,5);
+                            y=obj.CellData{chan}(:,6);
+                                whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
+                            dataCropped = obj.CellData{chan}(whichPointsInROI,:);                       
+                            x1=dataCropped(:,5);
+
+                            if numel(x1)<obj.Square_ROIs_Auto_LNT
+                                bad_rois = [bad_rois; roiInc];
+                            end
+                        elseif strcmp(obj.Square_ROIs_Auto_method,'composite')                            
+                            chan = 1;
+                            x=obj.CellData{chan}(:,5);
+                            y=obj.CellData{chan}(:,6);
+                                whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
+                            dataCropped = obj.CellData{chan}(whichPointsInROI,:);                       
+                            x1=dataCropped(:,5);
+                            chan = 2;
+                            x=obj.CellData{chan}(:,5);
+                            y=obj.CellData{chan}(:,6);
+                                whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
+                            dataCropped = obj.CellData{chan}(whichPointsInROI,:);                       
+                            x2=dataCropped(:,5);                                            
+
+                            if numel(x1)<obj.Square_ROIs_Auto_LNT(1) || numel(x2)<obj.Square_ROIs_Auto_LNT(2)
+                                bad_rois = [bad_rois; roiInc];
+                            end 
+                        end
+                  end
+%bad_rois
+numel(obj.ROICoordinates)
+% check rois
+            obj.ROICoordinates = obj.ROICoordinates(setdiff(1:numel(obj.ROICoordinates),bad_rois));            
+            % if too many ROIs, choose random Nrois among defined
+            if (numel(obj.ROICoordinates) > Nrois)
+                obj.ROICoordinates = obj.ROICoordinates(randi(numel(obj.ROICoordinates),1,Nrois));
+            end             
+
+if obj.Square_ROIs_Auto_verbose
+% display
+YMAX = obj.SizeY*obj.pixelSizenm;
+figure('units','normalized','outerposition',[0 0 1 1],'name','ROIs as they go..');
+    if strcmp(obj.Square_ROIs_Auto_method,'composite')
+                        ax = gca;
+                        plot(ax,obj.CellData{1}(:,5),YMAX-obj.CellData{1}(:,6),'r.',obj.CellData{2}(:,5),YMAX-obj.CellData{2}(:,6),'g.');
+% markersize = 4;                        
+% h = scatter(ax,obj.CellData{1}(:,5),YMAX-obj.CellData{1}(:,6),markersize,'red','filled');
+%         alpha = 0.3;
+%         set(h, 'MarkerEdgeAlpha', alpha, 'MarkerFaceAlpha', alpha);
+% hold on;
+% h = scatter(ax,obj.CellData{2}(:,5),YMAX-obj.CellData{2}(:,6),markersize,'green','filled');
+%         alpha = 0.3;
+%         set(h, 'MarkerEdgeAlpha', alpha, 'MarkerFaceAlpha', alpha);
+                        daspect(ax,[1 1 1]); 
+                        grid(ax,'on');
+                        hold(ax,'on');
+                        
+                   for roiInc = 1:length(obj.ROICoordinates)
+
+                        roi = obj.ROICoordinates{roiInc};
+                        
+                        x_roi=roi(:,1);
+                        y_roi=roi(:,2);
+                        
+                        chan = 1;
+                        x=obj.CellData{chan}(:,5);
+                        y=obj.CellData{chan}(:,6);
+                            whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
+                        dataCropped = obj.CellData{chan}(whichPointsInROI,:);                       
+                        x1=dataCropped(:,5);
+                        y1=dataCropped(:,6);
+                        chan = 2;
+                        x=obj.CellData{chan}(:,5);
+                        y=obj.CellData{chan}(:,6);
+                            whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
+                        dataCropped = obj.CellData{chan}(whichPointsInROI,:);                       
+                        x2=dataCropped(:,5);
+                        y2=dataCropped(:,6);                        
+                        
+                        color = [0.2 0.2 0.2+0.79*rand];
+                                               
+                        plot(ax,x_roi,YMAX-y_roi,'marker','.','color',color,'linestyle','-','linewidth',3);
+                        hold(ax,'on');
+                        
+                        if isempty(x1)
+                            plot(ax,x_roi,YMAX-y_roi,'k:','linewidth',7);
+                            hold(ax,'on');
+                            %disp([roiInc 1]);
+                        end 
+                        
+                        if isempty(x2)
+                            plot(ax,x_roi,YMAX-y_roi,'k:','linewidth',7);
+                            hold(ax,'on');
+                            %disp([roiInc 2]);
+                        end                         
+                        
+                        daspect(ax,[1 1 1]); 
+                        grid(ax,'on');                  
+                   end
+                   hold(ax,'off');
+                   
+    elseif strcmp(obj.Square_ROIs_Auto_method,'channel')
+                        ax = gca;
+                        if 1==chan
+                            clor = 'r.';
+                        else
+                            clor = 'g.';
+                        end
+                        plot(ax,obj.CellData{chan}(:,5),YMAX-obj.CellData{chan}(:,6),clor);
+                        daspect(ax,[1 1 1]); 
+                        grid(ax,'on');
+                        hold(ax,'on');
+                        
+                   for roiInc = 1:length(obj.ROICoordinates)
+
+                        roi = obj.ROICoordinates{roiInc};
+                        
+                        x_roi=roi(:,1);
+                        y_roi=roi(:,2);
+                        
+                        x=obj.CellData{chan}(:,5);
+                        y=obj.CellData{chan}(:,6);
+                            whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
+                        dataCropped = obj.CellData{chan}(whichPointsInROI,:);                       
+                        x1=dataCropped(:,5);
+                        
+                        color = [0.2 0.2 0.2+0.79*rand];
+                                               
+                        plot(ax,x_roi,YMAX-y_roi,'marker','.','color',color,'linestyle','-','linewidth',3);
+                        hold(ax,'on');
+                        
+                        if isempty(x1)
+                            plot(ax,x_roi,YMAX-y_roi,'k:','linewidth',7);
+                            hold(ax,'on');
+                            %disp([roiInc 1]);
+                        end 
+                        
+                        daspect(ax,[1 1 1]); 
+                        grid(ax,'on');                  
+                   end
+                   hold(ax,'off');  
+    end
+end % verbose
+% display            
+                                   
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 %-------------------------------------------------------------------------%    
     end % methods
             
