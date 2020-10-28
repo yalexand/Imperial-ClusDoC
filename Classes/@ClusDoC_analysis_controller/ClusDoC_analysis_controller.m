@@ -1479,8 +1479,10 @@ function Define_Rectangular_ROIs_from_file(obj,fullfilename,chan,super_res_image
 
         Nrois = obj.Square_ROIs_Auto_maxNrois;
     
-        raw_rois = square_ROIs_from_file(fullfilename);
+        raw_rois = rectangular_ROIs_from_file(fullfilename);
+        
         n_rois = size(raw_rois,1);
+        
         obj.ROICoordinates = cell(n_rois,1);
                     
         raw_rois = round(raw_rois*super_res_image_pixelSizenm);
