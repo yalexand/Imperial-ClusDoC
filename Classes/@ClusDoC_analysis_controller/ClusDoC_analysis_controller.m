@@ -1477,6 +1477,10 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function Define_Rectangular_ROIs_from_file(obj,fullfilename,chan,super_res_image_pixelSizenm) 
 
+% for rectangular images - [SX SY] are to be SWAPPED re FIJI, ICY etc.    
+%     ac.SizeX = 74;   % 125 in Icy 
+%     ac.SizeY = 125;  % 74  in Icy  
+    
         Nrois = obj.Square_ROIs_Auto_maxNrois;
     
         raw_rois = rectangular_ROIs_from_file(fullfilename);
@@ -1500,7 +1504,7 @@ function Define_Rectangular_ROIs_from_file(obj,fullfilename,chan,super_res_image
             p5 = p1;
             roi_k = [p1;p2;p3;p4;p5]; 
             %
-            roi_k(:,2) = round(obj.SizeY*obj.pixelSizenm) - roi_k(:,2);
+            roi_k(:,2) = round(obj.SizeX*obj.pixelSizenm) - roi_k(:,2);
             %
             obj.ROICoordinates{k} = roi_k;
         end
