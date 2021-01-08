@@ -216,7 +216,7 @@ Result = struct('Correlation_Coloc1_vs_Density1', [], 'Correlation_Coloc2_vs_Den
                     axis tight
                     xlim(Xlimit);
                     ylim(Ylimit);
-                    colorbar
+                    colormap(gca,parula);colorbar
                     caxis([0,1])
                     set(gca, 'box','on','XTickLabel',[],'XTick',[],'YTickLabel',[],'YTick',[])
                     set(gcf,'Color',[1 1 1])
@@ -231,7 +231,7 @@ Result = struct('Correlation_Coloc1_vs_Density1', [], 'Correlation_Coloc2_vs_Den
                     axis tight 
                     xlim(Xlimit);
                     ylim(Ylimit);
-                    colorbar
+                    colormap(gca,parula);colorbar
                     caxis([0,1])
                     set(gca, 'box','on','XTickLabel',[],'XTick',[],'YTickLabel',[],'YTick',[])
                     set(gcf,'Color',[1 1 1])
@@ -246,7 +246,7 @@ Result = struct('Correlation_Coloc1_vs_Density1', [], 'Correlation_Coloc2_vs_Den
                     axis tight 
                     xlim(Xlimit);
                     ylim(Ylimit);
-                    colorbar
+                    colormap(gca,parula);colorbar
                     caxis([-1,1])
                     set(gca, 'box','on','XTickLabel',[],'XTick',[],'YTickLabel',[],'YTick',[])
                     set(gcf,'Color',[1 1 1])
@@ -261,7 +261,7 @@ Result = struct('Correlation_Coloc1_vs_Density1', [], 'Correlation_Coloc2_vs_Den
                     axis tight 
                     xlim(Xlimit);
                     ylim(Ylimit);
-                    colorbar
+                    colormap(gca,parula);colorbar
                     caxis([-1,1])
                     set(gca, 'box','on','XTickLabel',[],'XTick',[],'YTickLabel',[],'YTick',[])
                     set(gcf,'Color',[1 1 1])
