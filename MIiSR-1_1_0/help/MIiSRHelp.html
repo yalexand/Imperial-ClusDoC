@@ -1,0 +1,203 @@
+<!doctype html>
+<html>
+<head>
+	<title>Molecular Interactions in Super Resolution</title>
+</head>
+<body>
+<h1>Molecular Interactions in Super Resolution (MIiSR)</h1>
+<div><hr size="2" width="100%" /></div>
+<h3>MIiSR.m</h3>
+<p>This program is used to manage the analysis of a series of molecular interaction and image segmentation algorithms on a super-resolution image set. These analyses and procedures include:</p>
+<ol start="1" type="1">
+<li>Generation of cropped single-colour and RGB images from single-colour position files.</li>
+<li>Density filtering of the image</li>
+<li>Spatial Association Analysis of molecular interactions between up to 3 different molecular species</li>
+<li>Spatial Statistical Analyses of co-clustering</li>
+<li>Cluster identification by DBSCAN or OPTICS image segmentation</li>
+</ol>
+<p>Multiple regions of interest (ROI's) can be assigned to a single image, and multiple images can be run in a single queue. Note that the super-resolution position files analysed by this program must first be converted to a Matlab-compatible matrices using the included MIiSRconvert utility, which can be started by typing 'MIiSRconvert' into the Matlab command line. Instructions on the use of this utility can be found in the conversion utility's help file.</p>
+<p><strong>Note:</strong> this program is provided as part of an academic publication. Please cite the following article if you use this software:</p>
+<p>Fabiana A. Caetano, Brennan S. Dirk, Joshua H.K. Tam, P. Craig Cavanagh, Maria Goiko, Stephen S.G. Ferguson, Stephen H. Pasternak, Jimmy D. Dikeakos, John R. de Bruyn, Bryan Heit. MIiSR: Analysis of Molecular Interactions in Super-Resolution Imaging Enables the Study of Protein Interactions, Dynamics and Formation of Multi-protein Structures. 2015 <em>PLoS</em><em> Computational Biology</em>.</p>
+<div><hr size="2" width="100%" /></div>
+<h3>Starting MIiSR &amp; GUI Overview</h3>
+<p>To start the MIiSR utility it must be installed in a path accessible by Matlab. Once installed, type "MIiSR' into the Matlab command line, which will open the Conversion Utility GUI. This will open the MIiSR utility:</p>
+<p><img src="MIiSR01.jpg" alt="" width="720" height="458" /></p>
+<div>
+<p><strong>Figure 1:</strong> MIiSR Utility, immediately after start-up</p>
+</div>
+<p>The utility is divided into three columns, each controlling a different aspect of the analysis process. The left column allows the user to load images and define ROI's. The middle column allows the user to control the analyses performed and to manage parallel processing. The right column controls displays the queue of analysis jobs to be performed, and once analysis is started, indicates progress.</p>
+<p>The workflow for the utility is to use the left column to load an image for analysis and select a specific ROI upon which analysis will be conducted. Once an ROI is selected, the middle column is used to determine which analyses are to be performed on the ROI, configure each analysis procedure, and then add the ROI &amp; its analyses to a processing queue. This process can be repeated for multiple ROI's from a single image, and for multiple images. Different analytical options can be selected for each ROI/image. Once all images/ROI's are loaded onto the queue (right panel), processing can be started with the 'Start Queue' button; progress of the analysis is indicated in the queue.</p>
+<div><hr size="2" width="100%" /></div>
+<h3>Channel Panel</h3>
+<p>The <em>Channel</em> panel allows the user to select the image files for each colour channel in the image, and to assign a name to each channel. The name assigned to each panel will be used in subsequent file and folder names, as well as to label axes in graphs produced by the various analysis routines.</p>
+<p><img src="MIiSR02.jpg" alt="" width="579" height="268" /></p>
+<div>
+<p><strong>Figure 2:</strong> Channel panel</p>
+</div>
+<p>To load the first channel, click the 'Add Channel 1' button, and use the file selection window to browse to the folder containing the converted (using MIiSRconvert) super-resolution position file, and select the desired file. Channel is automatically assigned a red colour in the "Select ROI" window. At this time a descriptive name should be entered into the "Name for Channel 1" text box.</p>
+<p>Once the first channel is loaded the 'Add Channel 2' button will become active. This channel is added in the same fashion as channel 1, and will appear green in the "Select ROI" widow. After adding the second channel, the 'Add Channel 3' button will become active, with the channel displayed in blue in the 'Select ROI' window. The addition of the second and third panel are not required, although not all analyses are possible with single-colour images.</p>
+<div><hr size="2" width="100%" /></div>
+<h3>Select ROI Panel</h3>
+<p>The <em>Select ROI</em> panel allows the user to load the positions files selected in the "Channel Panel" into a preview image, and then to select ROIs for further analysis on this image.</p>
+<p>One the files for each colour channel is selected, and a name for each channel entered, the image preview can be loaded by clicking the 'Load Image' button located at the bottom of the Select ROI panel.</p>
+<p>After loading the image an ROI can be selected by clicking the 'New ROI' button. Left-click on the image at one corner of the desired ROI, then drag the mouse to expand the ROI. Upon releasing the left mouse button, the ROI's edges can be fine-tuned by dragging them with the mouse, and the ROI moved on the image by dragging the centre of the ROI. Once the desired ROI size and position is complete, double-click in the centre of the ROI to activate it.</p>
+<p><strong>Important Note:</strong> The SAA, Ripley's and RDF analysis will not produce accurate results if the ROI extends beyond the edge of the cell. As such it is critical that all ROI's used for these analyses are located entirely within the body of the imaged cell/object.</p>
+<p>The current ROI can be cleared using the "delROI' button. To clear the ROI and image, click on the Clear Image button. In both of these cases, any analyses added to the queue will not be removed, allowing these buttons to be used to add multiple ROI's to the analysis queue from a single image, and to add ROI's from multiple images, to the analysis queue.</p>
+<p><img src="MiISR03.jpg" alt="" width="585" height="566" /></p>
+<div>
+<p><strong>Figure 3: </strong>Select ROI panel, displaying a 2-channel image and an active ROI.</p>
+</div>
+<div><hr size="2" width="100%" /></div>
+<h3>Density Filter Panel</h3>
+<p>The density filter panel allows for filtering of the image, where in molecules located in areas below a set density level are removed. This filter functions by determining the regional density in an area of radius determined by the 'Filter Density' textbox. Molecules in each channel are removed if they are in a local region of density equal to the median density of the image plus X standard deviations, where X is the value entered into the <em>Ch1/2/3 </em>textboxes. For example:</p>
+<ul type="disc">
+<li>Ch1 = 0, Filter Distance = 100: Any molecules in channel 1 found in a 100 nm radius local region with less than the median density of channel 1 will be removed.</li>
+<li>Ch1 = 1, Filter Distance = 50: Any molecules in channel 1 found in a 50 nm radius local region with less than (median + 1 SD) the median density of channel 1.</li>
+<li>Ch1 = -0.5, Filter Distance = 200: Any molecules in channel 1 found in a 200 nm radius local region with less than (median - 0.5 SD) the median density of channel 1.</li>
+</ul>
+<p>Leaving any of the Ch1/2/3 textboxes empty, or with '[]' entered, will prevent filtering of that channel.</p>
+<p><strong>Important Note:</strong> This filtering is non-linear and preferentially excludes non-clustered molecules from the data set. As such it should not be used for SAA or Spatial Statistics under most circumstances. This filtering method can greatly improve DBSCAN and OPTICS segmentation.</p>
+<p><img src="MIiSR04.jpg" alt="" width="289" height="86" /></p>
+<div>
+<p><strong>Figure 4:</strong> Density Filter panel.</p>
+</div>
+<div><hr size="2" width="100%" /></div>
+<h3>Spatial Association Analysis Panel</h3>
+<p>The Spatial Association Analysis panel controls SAA analysis of the image. This analysis quantifies intermolecular interactions between two or three image channels. The 'Perform SAA' checkbox will determine if SAA analysis is performed on the current ROI. If selected the user must define the following analysis options:</p>
+<ul type="disc">
+<li>Maximum analysis distance (nm): Maximum intermolecular separation distance to be considered for SAA analysis. This value should be set smaller for higher molecular density images, and larger for lower molecular density images.</li>
+<li>Randomization cycles: Number of random images generated, used to determine if the degree of observed intermolecular interactions are statistically significant.</li>
+<li>Analyzed fraction: Portion of molecules to be analysed. Setting this below 1 will analyze a randomly selected subset of molecules in the image. Performing analysis on a subset of molecules is beneficial in images containing high levels of over-sampling.</li>
+<li>Estimate Randomization Area: If checked, MIiSR will attempt to refine the randomization area by finding a polygon which encloses all points while minimizing molecule-free area(s) included in the ROI. This feature acts to find putative "invisible" (unlabeled) structures within the user-selected ROI.</li>
+<li>Colocalization Criterion Cutoff (CDC) calculations - these can be calculated automatically, or be user-set </li>
+<ul type="circle">
+<li>Calculate CDC checkbox - automatically calculate CDC </li>
+<ul type="square">
+<li>Standard Deviations: Standard deviations of the microscopes precision to be considered when calculating the CDC; smaller values set a more stringent CDC but risks excluding <em>bona fide </em>molecular interactions. Values of 1.65-2.0 are typical.</li>
+<li>Registration Error: Value added to the calculated CDC, used to account for measured chromatic aberration in the microscope system.</li>
+</ul>
+<li>User-Defined CDC: this option must be used for microscope systems which do not provide data on the precision of fluorophore detection. Appropriate values are dependent on the microscope system and fluorophore brightness, but values of 25-30 and 28-36 are typical for 2- and 3-colour images respectively.</li>
+</ul>
+</ul>
+<p><img src="MIiSR05.jpg" alt="" width="296" height="191" /></p>
+<div>
+<p><strong>Figure 5:</strong> Spatial Association Analysis panel.</p>
+</div>
+<div><hr size="2" width="100%" /></div>
+<h3>Spatial Statistics Panel</h3>
+<p>The Spatial Statistics panel performs co-clustering analysis on one or two colour channels. The user selects whether Ripley's and/or Radial Distribution Analysis (RDF) should be performed, sets a maximum intermolecular distance to be considered in the analysis, and defines which channels are to be compared*.</p>
+<p>*For single-channel analyses, 'Channel 1' should be selected as both the <em>Primary </em>and <em>Secondary</em> channel.</p>
+<p><img src="MIiSR06.jpg" alt="" width="295" height="122" /></p>
+<div>
+<p><strong>Figure 6:</strong> Spatial Statistics panel.</p>
+</div>
+<div><hr size="2" width="100%" /></div>
+<h3>Clustering Analysis Panel</h3>
+<p>The clustering analysis panel allows for segmentation of clusters in a single image channel - i.e. individual clusters of molecules, as well as the edges of each cluster, will be computationally identified. The resulting clusters can then be analysed further, with user-prepared scripts, for features such as cluster area, density, etc.</p>
+<p><em><strong>DBSCAN</strong></em><em><strong>:</strong></em> If selected, the user must select a minimum cluster size (in number of molecules) and channel to process. Optionally, a neighbourhood radius for calculations of local density can also be defined. If the latter is left empty, the software will attempt to predict this value based on the median density of the image.</p>
+<p><em><strong>OPTICS:</strong></em> If selected, the user must select a minimum cluster size (in number of molecules) and channel to process. Unlike DBSCAN, OPTICS does not provide a direct output of clusters, and instead produces a reachability distance (RD) plot from which clusters can be segmented through a variety of approaches. One form of automated segmentation is included, and can be run by selecting the 'Hierarchical Segmentation' option. If selected, a value must be set for the Peak Ratio; the minimum ratio between the reachability value of a split point in the RD plot and the mean value of each resulting cluster to be considered a statistically significant split. Values of 0.5 to 0.8 are typical. A detailed explanation of this value can be found in the supplemental materials section of our paper.</p>
+<p><img src="MIiSR07.jpg" alt="" width="293" height="199" /></p>
+<div>
+<p><strong>Figure 7:</strong> Clustering Analysis panel.</p>
+</div>
+<div><hr size="2" width="100%" /></div>
+<h3>Queue Manager</h3>
+<p>Once an ROI has been selected and the analyses for that ROI configured, the ROI and its attached analyses need to be added to the analysis queue. This is done by selecting the 'Add ROI to Queue' button in the Queue Manager panel.</p>
+<p>Once this is completed the analysis setting can be changed for the existing ROI and the ROI + new analysis settings added to the queue with the 'Add ROI to Queue' button. Likewise, a new ROI can be added by deleting the old ROI and establishing a New ROI using the respective buttons in the 'Select ROI' panel. Once the analysis settings are configured appropriately, the new ROI can be added to the queue with the 'Add ROI to Queue' button. Finally, the existing image and ROI can be cleared with the 'Clear Image' button in the Select ROI panel, a new image loaded, and ROI's from the new image added to the queue with the 'Add ROI to Queue' button.</p>
+<p>Items on the queue can be removed by selecting the item to be deleted in the queue, and then clicking the 'Remove Selection from Queue' button in the 'Queue Manager' panel.</p>
+<p><img src="MIiSR08.jpg" alt="" width="295" height="88" /></p>
+<div>
+<p><strong>Figure 8:</strong> Queue Manager Panel</p>
+</div>
+<div><hr size="2" width="100%" /></div>
+<h3>Parallel Processing Management Panel</h3>
+<p>To maximize processing speed, many of the included analyses utilize parallel processing. This is managed using the Parallel Processing Management panel. Generally, the default profile auto-configured when Matlab is installed should be used, but under some circumstances users may wish to manually configure parallel processing - i.e. for very large images, using a smaller number of cores may speed processing by providing a larger amount of memory per core. To prevent parallel processing, a manual value of 1 must be entered.</p>
+<ul type="disc">
+<li>To use the default profile, select the 'Use default profile' checkbox.</li>
+<li>To use a defined number of cores, select the 'Use n Cores' checkbox and enter the desired number of cores in the 'n' textbox: </li>
+<ul type="circle">
+<li>n = 0: Default profile will be used</li>
+<li>n = 1: No parallel processing</li>
+<li>n &gt; 1: Use indicated number of cores (decimal values will be rounded up to the nearest integer)</li>
+</ul>
+</ul>
+<p><strong>Note:</strong> Although any value can be used for the number of cores, using more than the number of physical cores available to the computer should be avoided as this will greatly decrease computational performance.</p>
+<p><strong>Note:</strong> The user interface will become inaccessible while starting or stopping parallel processing.</p>
+<p><img src="MIiSR09.jpg" alt="" width="299" height="149" /></p>
+<div>
+<p><strong>Figure 9:</strong> Parallel Processing Manager</p>
+</div>
+<div><hr size="2" width="100%" /></div>
+<h3>Queue</h3>
+<p>The queue displays the ROI's added to the queue for processing, and during processing, indicates progress. Items in the queue are listed by channel names, followed by the ROI coordinates in square brackets. If the same ROI is being analysed with different analysis settings, a number will be appended to the name in the ROI (e.g. '- 01', '- 02', etc). Highlighted items will be removed from the queue if the "Remove Selection from Queue' button in the Queue Manager panel is clicked.</p>
+<p>Clicking the 'Start Queue' button at the bottom of the queue will begin analysis of all items in the queue. Additional items cannot be added to the queue once processing has begun, so this should not be done until all items are added to the queue.</p>
+<p><strong>Note:</strong> If parallel processing is not started prior to clicking the 'Start Queue' button, parallel processing will automatically be started using the settings defined in the Parallel Processing Manager.</p>
+<p><img src="MIiSR10.jpg" alt="" width="491" height="180" /></p>
+<div>
+<p><strong>Figure 10:</strong> The queue. In this example the first two entries are the same ROI analysed with different analysis settings, and the third item is a different ROI in the same image as the first the first two items. The third entry is an ROI from a new image.</p>
+</div>
+<div><hr size="2" width="100%" /></div>
+<h3>Data</h3>
+<p>Once the 'Start Queue' button is clicked analysis will begin. During this time the computer should not be used for other purposes as this can interfere with graphing. For each item on the queue a folder will be created with the same name as the queue entry; this folder will be located in the same folder as the position file for channel 1, and all graphs and raw data for the ROI will be saved in that folder.</p>
+<p><img src="MIiSR11.jpg" alt="" width="500" height="79" /></p>
+<div>
+<p><strong>Figure 11:</strong> The queue during processing. The first item has completed processing and has been removed from the queue. The second item is being processed, as indicated in the queue.</p>
+</div>
+<p>For each ROI the following will be saved regardless of analysis options selected. 'Filename' indicates the name of the analysis, as indicated in the queue:</p>
+<ul type="disc">
+<li>TIFF images of the original image and ROI, files are named 'Filename.tif' and 'Filename - Cropped.tif' respectively.</li>
+<li>MIiSRdata - Filename.mat: File containing all raw data from the selected analyses; the exact contents of this are described in detail, below</li>
+<li>Graphs: Graphs of data are saved in matlab .fig files, and as PDF's in select cases. These files are named as &lt;analysis type&gt; - &lt;Filename&gt; - &lt;Details&gt;.fig or .pdf. For example, fold-enrichment graphs from SAA analysis would be saved as 'SAA - Filename - Fold Enrichment.fig'</li>
+</ul>
+<p>All of the data contained in these graphs, as well as other data potentially of use, is saved in the MIiSRdata file. When loaded this file contains two variables:</p>
+<ul type="disc">
+<li>Conditions: this structure contains all information used by the sub-scripts for analysis of the data. This variable can be passed to these functions to manually re-process the data using the same settings</li>
+<li>MIiSRdata: a structure containing the results of all analyses; the exact contents of which will be determined by the analysis options selected for that ROI</li>
+</ul>
+<p><img src="MIiSRinfo.jpg" alt="" width="231" height="180" /></p>
+<div>
+<p><strong>Figure 12:</strong> The MIiSRdata structure, displaying all&nbsp;possible entries. Each entry is described below.</p>
+</div>
+<p>The following data can be found in each of the MIiSRdata variables:</p>
+<ul type="disc">
+<li>queueInfo: Settings used for all analyses of the current ROI</li>
+<li>SAAdata: data from the SAA analysis. A full description of all outputs can be found in the header of SAA2col.m and SAA3col.m, but key values are: </li>
+<ul type="circle">
+<li>SAAcutoff: the CDC used for analysis</li>
+<li>distTableIm1/2/3: Distance to nearest neighbour tables for channels 1, 2 and 3</li>
+<li>BarData/eBarData/fBarData: Bar graph values in absolute numbers of interacting molecules, enrichment compared to random, and fold-random</li>
+</ul>
+<li>Spatialdata: Data from spatial statistics: </li>
+<ul type="circle">
+<li>Kr: Ripley's K(r) values (column 1) and derivative of K(r) (column 2)</li>
+<li>Lr: Ripley's L(r) values (column 1) and derivative of L(r) (column 2)</li>
+<li>Hr: Ripley's H(r) values (column 1) and derivative of H(r) (column 2)</li>
+<li>Gr: RDF values</li>
+<li>Xr: Radius values (in nm), for each row of the Ripleys and RDF tables</li>
+</ul>
+<li>DBSCAN: DBSCAN segmentation data </li>
+<ul type="circle">
+<li>k: Minimum cluster size used by DBSCAN algorithm</li>
+<li>Eps: Neighbourhood radius used by DBSCAN algorithm</li>
+<li>Noise: table of X/Y/Z positions of all molecules not assigned to a cluster</li>
+<li>Cluster: structure containing X/Y/Z coordinates and edge points for each identified cluster</li>
+</ul>
+<li>OPTICS: OPTICS segmentation data </li>
+<ul type="circle">
+<li>6 x <em>n</em> table, each row corresponding to a single molecule, each column corresponding to: </li>
+<ul type="square">
+<li>Column 1: Order of molecule <em>n</em> (position of molecule <em>n</em> in pre-segmentation molecule position file)</li>
+<li>Column 2: Reachability Distance of molecule <em>n</em></li>
+<li>Column 3: Core Distance of molecule <em>n</em></li>
+<li>Columns 4/5/6: X/Y/Z coordinates of molecule <em>n</em></li>
+</ul>
+</ul>
+<li>OPTICSsegment: OPTICS segmentation structure. A full description can be found in the header of the hierOPTICVS.m file. Key features include </li>
+<ul type="circle">
+<li>Parent: cluster entry which is the parent to the current cluster</li>
+<li>l/rChild: cluster entries corresponding to the left and right children of the current cluster. Entries will be empty if current cluster is a leaf (terminal cluster)</li>
+</ul>
+</ul>
+</div>
+</body>
+</html>

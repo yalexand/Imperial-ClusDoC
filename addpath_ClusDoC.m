@@ -9,3 +9,4 @@ addpath([thisdir filesep 'ICUtils']);
 addpath([thisdir filesep 'ICUtils' filesep 'Diffusion']);
 addpath([thisdir filesep 'ICUtils' filesep 'icy_matlab' filesep 'matlabcommunicator']);
 addpath([thisdir filesep 'ICUtils' filesep 'icy_matlab' filesep 'matlabxserver']);
+addpath([thisdir filesep 'MIiSR-1_1_0']);

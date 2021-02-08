@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+<head>
+	<title>Molecular Interactions in Super Resolution - Conversion Utility</title>
+</head>
+<body>
+<h1>Molecular Interactions in Super Resolution (MIiSR) - Conversion Utility</h1>
+
+<hr />
+<h3>MIiSRconvert.m</h3>
+
+<p>This program is used to convert a variety of molecule position file formats from text-based files to files compatible with both Matlab and the MIiSR suite of analysis routines. The conversion utility can currently convert the following file formats:</p>
+
+<ul type="disc">
+	<li>QuickPALM position files, saved in the default tab-delineated .xls file format</li>
+	<li>Leica SR GSD position files, exported in the .ASCII format</li>
+	<li>Tab-delineated text files formatted in one of four formats:
+	<ul type="circle">
+		<li>2-column table, formatted as columns of X and Y positions (X/Y formatted)</li>
+		<li>3-column table, formatted as above plus an intensity column (X/Y/I formatted)</li>
+		<li>3-column tables, formatted as columns of X, Y and Z positions (X/Y/Z formatted)</li>
+		<li>4-column table, formatted as above plus an intensity column (X/Y/Z/I formatted)</li>
+	</ul>
+	</li>
+</ul>
+
+<p><strong>Note:</strong> Ideally, images should be acquired with the camera set on photon-counting mode, such that the &#39;intensity&#39; reported in the source files indicates the number of detected photons rather than an arbitrary grey scale value.</p>
+
+<p><strong>Note:</strong> this program is provided as part of an academic publication. Please cite the following article if you use this software:</p>
+
+<p>Fabiana A. Caetano, Brennan S. Dirk, Joshua H.K. Tam, P. Craig Cavanagh, Maria Goiko, Stephen S.G. Ferguson, Stephen H. Pasternak, Jimmy D. Dikeakos, John R. de Bruyn, Bryan Heit. MIiSR: Analysis of Molecular Interactions in Super-Resolution Imaging Enables the Study of Protein Interactions, Dynamics and Formation of Multi-protein Structures. 2015. <em>PLoS</em><em> Computational Biology</em>.</p>
+
+<div>
+<hr size="2" width="100%" /></div>
+
+<h3>Starting and Configuring the Conversion Utility</h3>
+
+<p>To start the conversion utility, type &quot;MIiSRconvert&#39; into the Matlab command line, which will open the Conversion Utility GUI.</p>
+
+<p><img alt="" height="428" src="conv01.jpg" width="500" /></p>
+
+<div>
+<p><strong>Figure 1:</strong> The MIiSr File Conversion Utility</p>
+</div>
+
+<p>The following variables must be set prior to adding files to the conversion queue:</p>
+
+<p><strong>Bin Size:</strong> This adjusts the size of the read/write blocks as files are processed. Larger Bin sizes typically result in faster file conversion, excessively large bin sizes can slow processing through consuming too much memory. Values of 8,000 - 12,000 typically provide the best performance, although smaller values (1,000 - 5,000) are better for computers with less memory, and larger values (15,000-20,000) are better for reading/writing data across a network. This is a global setting and cannot be altered for different files in the queue.</p>
+
+<p><strong>Intensity Filter (Photons):</strong> This setting removes molecules from the dataset which were detected with fewer than the entered number of photons. Low photon numbers degrade the precision of the resulting image. The estimated precision of the photon cut-off is automatically propagated to the &#39;Precision&#39; intensity filter. To prevent filtering set this value to zero.</p>
+
+<p><strong>Intensity Filter (Precision):</strong> This setting removes molecules from the dataset which were detected with a precision greater than the entered precision. The precision cut-off is automatically converted to the number of photons required for that degree of precision and propagated to the &#39;Photons&#39; intensity filter. To prevent filtering set this value to zero.</p>
+
+<p><strong>Scale (nm/pixel):</strong> This setting will convert position files scaled in units of pixels to files scaled in nanometres. If the position files are pre-scaled to nanometres, set this value to 1.</p>
+
+<p><strong>Intensity to Photon Scaling:</strong> All intensity filtering is performed on the number of detected photons. If the image series was not captured using the camera set in photon-counting mode, a scaling value can be entered into this window to convert grey scale intensity into photons. Set this value to 1 to prevent intensity scaling.</p>
+
+<div>
+<hr size="2" width="100%" /></div>
+
+<h3>Adding Files to the Queue</h3>
+
+<p>Files of different formats can be added to the queue, and different intensity filtering and scaling values can be applied to each file.</p>
+
+<p><strong>To add a single file:</strong> First, make sure the correct filtering and scaling values are entered in the &quot;Conversion Settings&quot; panel, then select the desired file type from the <em>Input File Format</em> drop-down menu. Next, click the &quot;Add Single File&quot; button. Browse to the location of the file you wish to add, and select the file to be converted, and click &#39;Open&#39;. The file will then be added to the queue, with the filtering and scaling options indicated in the &quot;Conversion Setting&quot; panel.</p>
+
+<p><img alt="" height="213" src="conv03.jpg" width="252" /></p>
+
+<div>
+<p><strong>Figure 2:</strong> Input File Format drop-down menu.</p>
+</div>
+
+<p><img alt="" height="353" src="conv02.jpg" width="500" /></p>
+
+<div>
+<p><strong>Figure 3:</strong> Adding a single QuickPALM file to the queue.</p>
+</div>
+
+<p><strong>To add all files in a single folder:</strong> First, make sure the correct filtering and scaling values are entered in the &quot;Conversion Settings&quot; panel, then select the desired file type from the <em>Input File Format</em> drop-down menu. Next, click the &quot;Add Single Folder&quot; button. Browse to the folder you wish to add, and click the &quot;Select Folder&quot; button.. All files with the appropriate file extension in the folder will then be added to the queue. The same filtering and scaling options (as indicated in the &quot;Conversion Setting&quot; panel) will be applied to all files.</p>
+
+<p><img alt="" height="353" src="conv04.jpg" width="500" /></p>
+
+<div>
+<p><strong>Figure 4:</strong> Adding a single folder containing X/Y formatted tab-delineated text files to the queue.</p>
+</div>
+
+<p><strong>To add all files in a folder and all sub-folders:</strong> First, make sure the correct filtering and scaling values are entered in the &quot;Conversion Settings&quot; panel, then select the desired file type from the <em>Input File Format</em> drop-down menu. Next, click the &quot;Add Folder &amp; Subfolder&quot; button. Browse to the root folder you wish to add, and click the &quot;Select Folder&quot; button. The software will then search the folder and all subfolders for files with the appropriate file extension and add them to the queue. The same filtering and scaling options (as indicated in the &quot;Conversion Setting&quot; panel) will be applied to all files.</p>
+
+<div>
+<hr size="2" width="100%" /></div>
+
+<h3>Managing the Queue</h3>
+
+<p><img alt="" height="460" src="conv05.jpg" width="302" /></p>
+
+<div>
+<p><strong>Figure 5:</strong> File queue</p>
+</div>
+
+<p>Files in the queue can be deleted using the &#39;Delete Entry&quot; button at the bottom of the queue. If a file was added to the queue with the wrong filtering or scaling information it must be deleted and re-added to the queue. Clicking the &#39;Start&#39; button in the main window will begin the processing of the files in the queue; the conversion utility interface will become inactive at this time, and will close automatically when processing is complete. As files are converted they will be removed from the queue. Do not close the conversion utility window during processing as this will interrupt the conversion process.</p>
+</body>
+</html>

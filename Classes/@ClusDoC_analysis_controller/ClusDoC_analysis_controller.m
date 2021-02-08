@@ -1315,8 +1315,10 @@ function DoC_out_CellData = AssignDoCDataToPoints_YA(obj,DoC_in_CellData,cluster
         end
 end    
 %-------------------------------------------------------------------------%
-function Save_original_channel2_data_with_XY_registration_corrections(obj,save_dir,dx2dy2,~)
+function fname = Save_original_channel2_data_with_XY_registration_corrections(obj,save_dir,dx2dy2,~)
 
+        fname = [];
+    
         nmppix = obj.pixelSizenm;
 
         if strcmp(char(obj.Original_from_file_header{2}{1}(3)),'"x [pix]"') % WindSTORM
