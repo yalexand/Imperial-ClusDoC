@@ -250,7 +250,37 @@ classdef ClusDoC_MIiSR_analysis_controller < ClusDoC_analysis_controller
                end            
         end
 
-                                
+        %-------------------------- 
+        function MIiSR_OPTICS(obj,~)
+               % 
+               OPTICS_out_dirname = cell(2,1);
+               for chan = 1 : obj.Nchannels
+                   fname = strrep(obj.fileName{chan},'.csv','');
+                   fname = strrep(fname,'.txt','');
+                   OPTICS_out_dirname{chan} = [obj.Outputfolder filesep fname '_channel_' num2str(chan) '_MIiSR_Results' filesep  'OPTICSStats'];
+                   if ~exist(OPTICS_out_dirname{chan},'dir')
+                       mkdir( fullfile(obj.Outputfolder,[fname '_channel_' num2str(chan) '_MIiSR_Results'],'OPTICSStats'));
+                   end
+               end
+               %
+               for chan = 1 : obj.Nchannels
+                   OPTICSData = cell(length(obj.ROICoordinates),1);
+                   for roiIter = 1:length(obj.ROICoordinates) % ROI number                        
+                        disp([roiIter length(obj.ROICoordinates)]);
+                        try                                                 
+                            [OPTICStable,Epsilon] = obj.OPTICSStats(roiIter,chan,OPTICS_out_dirname{chan});
+                            OPTICSout{1} = OPTICStable;
+                            OPTICSout{2} = Epsilon;
+                            OPTICSData{roiIter} = OPTICSout;
+                        catch
+                            disp('OPTICSStats - error');
+                            OPTICSData{roiIter} = [];
+                        end
+                   end               
+                   save([OPTICS_out_dirname{chan} filesep 'OPTICSData'],'OPTICSData');
+               end            
+        end
+                                      
     end % methods
 end
 
