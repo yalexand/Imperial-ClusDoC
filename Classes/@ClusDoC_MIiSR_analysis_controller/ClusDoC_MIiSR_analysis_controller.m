@@ -176,10 +176,80 @@ classdef ClusDoC_MIiSR_analysis_controller < ClusDoC_analysis_controller
                SAAstruct = cell(length(obj.ROICoordinates),1);
                for roiIter = 1:length(obj.ROICoordinates) % ROI number                        
                     disp([roiIter length(obj.ROICoordinates)]);
-                    SAAstruct{roiIter} = obj.SAA2col(roiIter,SAA_out_dirname{chan});
+                    try
+                        SAAstruct{roiIter} = obj.SAA2col(roiIter,SAA_out_dirname{chan});
+                    catch
+                        disp('SAA2col - error');
+                        SAAstruct{roiIter} = [];
+                    end
                end
                save([SAA_out_dirname{chan} filesep 'SAAstruct'],'SAAstruct');
         end
+        
+        %-------------------------- 
+        function SpatialData = SpatialStatistics(obj,~)
+               % 
+               SpD_out_dirname = cell(2,1);
+               for chan = 1 : obj.Nchannels
+                   fname = strrep(obj.fileName{chan},'.csv','');
+                   fname = strrep(fname,'.txt','');
+                   SpD_out_dirname{chan} = [obj.Outputfolder filesep fname '_channel_' num2str(chan) '_MIiSR_Results' filesep  'SpatialStats'];
+                   if ~exist(SpD_out_dirname{chan},'dir')
+                       mkdir( fullfile(obj.Outputfolder,[fname '_channel_' num2str(chan) '_MIiSR_Results'],'SpatialStats'));
+                   end
+               end
+               %
+               for chan = 1 : obj.Nchannels
+                   SpatialData = cell(length(obj.ROICoordinates),1);
+                   for roiIter = 1:length(obj.ROICoordinates) % ROI number                        
+                        disp([roiIter length(obj.ROICoordinates)]);
+                        try
+                            if 1==chan
+                                Ch1 = 1;
+                                Ch2 = 2;
+                            else
+                                Ch1 = 2;
+                                Ch2 = 1;                                
+                            end
+                            [SpatialData{roiIter},~] = obj.spatialStats(roiIter,SpD_out_dirname{chan},Ch1,Ch2);
+                        catch
+                            disp('spatialStats - error');
+                            SpatialData{roiIter} = [];
+                        end
+                   end
+                   save([SpD_out_dirname{chan} filesep 'SpatialData'],'SpatialData');
+               end
+        end        
+        
+        %-------------------------- 
+        function MIiSR_DBSCAN(obj,~)
+               % 
+               DBSCAN_out_dirname = cell(2,1);
+               for chan = 1 : obj.Nchannels
+                   fname = strrep(obj.fileName{chan},'.csv','');
+                   fname = strrep(fname,'.txt','');
+                   DBSCAN_out_dirname{chan} = [obj.Outputfolder filesep fname '_channel_' num2str(chan) '_MIiSR_Results' filesep  'DBSCANStats'];
+                   if ~exist(DBSCAN_out_dirname{chan},'dir')
+                       mkdir( fullfile(obj.Outputfolder,[fname '_channel_' num2str(chan) '_MIiSR_Results'],'DBSCANStats'));
+                   end
+               end
+               %
+               for chan = 1 : obj.Nchannels
+                   DBSCANData = cell(length(obj.ROICoordinates),1);
+                   for roiIter = 1:length(obj.ROICoordinates) % ROI number                        
+                        disp([roiIter length(obj.ROICoordinates)]);
+                        try                     
+                            [DBSCANout.DBSCANmat,DBSCANout.DBSCANtable,~] = obj.DBSCANStats(roiIter,chan,DBSCAN_out_dirname{chan});
+                            DBSCANData{roiIter} = DBSCANout;
+                        catch
+                            disp('DBSCANStats - error');
+                            DBSCANData{roiIter} = [];
+                        end
+                   end               
+                   save([DBSCAN_out_dirname{chan} filesep 'DBSCANData'],'DBSCANData');
+               end            
+        end
+
                                 
     end % methods
 end
