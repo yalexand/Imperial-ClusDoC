@@ -90,11 +90,17 @@ function [DBSCANmat, DBSCANtable, eps] = DBSCANStats(obj,roi_index,chan,save_dir
 % x = allPos.Ch(Ch1).Pos(:,1:3);
 % clear allPos;
 
-allPos = obj.get_ROI_data_MIiSR(roi_index,chan);
+if obj.MIiSR_Specs.densityFilter(chan)
+    allPos = obj.densityFilter(roi_index,chan);
+else
+    allPos = obj.get_ROI_data_MIiSR(roi_index,chan);
+end
+
 x = allPos(:,1:3);
 
-k = obj.MIiSR_Specs.DBSCANk;
-Eps = obj.MIiSR_Specs.DBSCANe;
+k = obj.MIiSR_Specs.DBSCANk(chan);
+Eps = obj.MIiSR_Specs.DBSCANe(chan);
+
 plotClusters = true;
                    fName = strrep(obj.fileName{chan},'.csv','');
                    fName = strrep(fName,'.txt','');

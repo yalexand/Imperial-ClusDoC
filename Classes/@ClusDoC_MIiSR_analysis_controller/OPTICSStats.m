@@ -76,13 +76,18 @@ function [OPTICStable, RD, CD, order, Epsilon] = OPTICSStats(obj,roi_index,chan,
 % pXY = allPos.Ch(Ch1).Pos(:,1:3);
 % clear allPos;
 
-allPos = obj.get_ROI_data_MIiSR(roi_index,chan);
+if obj.MIiSR_Specs.densityFilter(chan)
+    allPos = obj.densityFilter(roi_index,chan);
+else
+    allPos = obj.get_ROI_data_MIiSR(roi_index,chan);
+end
+
 pXY = allPos(:,1:3);
 clear('allPos');
 
 nCores = 0;
 
-k = obj.MIiSR_Specs.OPTICSk;
+k = obj.MIiSR_Specs.OPTICSk(chan);
 
 m = size(pXY,1);
 
