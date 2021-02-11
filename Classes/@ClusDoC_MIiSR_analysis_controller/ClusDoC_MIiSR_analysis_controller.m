@@ -125,14 +125,10 @@ classdef ClusDoC_MIiSR_analysis_controller < ClusDoC_analysis_controller
                     uncertainty = PSFwidth./sqrt(I);
                 end
                 %
-                % one of ThnderSTORM fomats may be not corrected for that
-                % under loading
-                y = max(y) - y;
-                %
                 obj.MIiSR_data{channel} = [ x y z I uncertainty];                                                
         end
         
-        %-------------------------- apply registration to NIiSR data
+        %-------------------------- apply registration to MIiSR data
         function Apply_channel2_registration_corrections(obj,dx2dy2,~)            
             Apply_channel2_registration_corrections@ClusDoC_analysis_controller(obj,dx2dy2);            
             X = obj.MIiSR_data{2}(:,1) - dx2dy2(1);
@@ -151,8 +147,10 @@ classdef ClusDoC_MIiSR_analysis_controller < ClusDoC_analysis_controller
                 roi = obj.ROICoordinates{roi_index};                        
                 x_roi=roi(:,1);
                 y_roi=roi(:,2);
+                                
                 x = obj.MIiSR_data{channel}(:,1);
                 y = obj.MIiSR_data{channel}(:,2);
+                                                                
                 whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
                 ROI_data_MIiSR = obj.MIiSR_data{channel}(whichPointsInROI,:);
                 %
@@ -242,13 +240,13 @@ classdef ClusDoC_MIiSR_analysis_controller < ClusDoC_analysis_controller
                    DBSCANData = cell(length(obj.ROICoordinates),1);
                    for roiIter = 1:length(obj.ROICoordinates) % ROI number                        
                         disp([roiIter length(obj.ROICoordinates)]);
-%                        try                     
+                        try                     
                             [DBSCANout.DBSCANmat,DBSCANout.DBSCANtable,~] = obj.DBSCANStats(roiIter,chan,DBSCAN_out_dirname{chan});
                             DBSCANData{roiIter} = DBSCANout;
-%                         catch
-%                             disp('DBSCANStats - error');
-%                             DBSCANData{roiIter} = [];
-%                         end
+                        catch
+                            disp('DBSCANStats - error');
+                            DBSCANData{roiIter} = [];
+                        end
                    end               
                    save([DBSCAN_out_dirname{chan} filesep 'DBSCANData'],'DBSCANData');
                end            

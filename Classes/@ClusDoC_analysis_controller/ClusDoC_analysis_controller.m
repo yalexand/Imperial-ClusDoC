@@ -1278,7 +1278,8 @@ end
             EvalStatisticsOnDBSCANandDoCResults_YA(ClusterTableCh1, 1, DoC_out_dirname, NbThresh);
             EvalStatisticsOnDBSCANandDoCResults_YA(ClusterTableCh2, 2, DoC_out_dirname, NbThresh);
     
-            obj.ExportDoCDataToCSV(DoC_out_CellData,ClusterTable,DoC_out_dirname); % LOC are localisations 
+            % too large
+            % obj.ExportDoCDataToCSV(DoC_out_CellData,ClusterTable,DoC_out_dirname); % LOC are localisations 
             
             % not needed, as these ones are saved within "DBSCANonDoCResults_YA" function
             %save([DoC_out_dirname filesep 'ClusterTables.mat'],'ClusterTableCh1','ClusterTableCh2','-v7.3');
