@@ -750,7 +750,7 @@ end
                 valOut = 1;
     end
 %-------------------------------------------------------------------------%   
-function Define_Square_ROIs_Auto(obj,varargin) 
+function h = Define_Square_ROIs_Auto(obj,varargin) 
             
             if 1 == nargin
                 chan = 1;
@@ -900,10 +900,11 @@ numel(obj.ROICoordinates)
                 obj.ROICoordinates = obj.ROICoordinates(randi(numel(obj.ROICoordinates),1,Nrois));
             end             
 
+h = [];            
 if obj.Square_ROIs_Auto_verbose
 % display
 YMAX = obj.SizeY*obj.pixelSizenm;
-figure('units','normalized','outerposition',[0 0 1 1],'name','ROIs as they go..');
+h = figure('units','normalized','outerposition',[0 0 1 1],'name','ROIs as they go..');
     if strcmp(obj.Square_ROIs_Auto_method,'composite')
                         ax = gca;
                         plot(ax,obj.CellData{1}(:,5),YMAX-obj.CellData{1}(:,6),'r.',obj.CellData{2}(:,5),YMAX-obj.CellData{2}(:,6),'g.');
