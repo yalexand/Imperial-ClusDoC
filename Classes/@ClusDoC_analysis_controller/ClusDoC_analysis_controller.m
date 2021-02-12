@@ -1478,7 +1478,7 @@ end
 
 %-------------------------------------------------------------------------%   
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function Define_Rectangular_ROIs_from_file(obj,fullfilename,chan,super_res_image_pixelSizenm) 
+function h = Define_Rectangular_ROIs_from_file(obj,fullfilename,chan,super_res_image_pixelSizenm) 
 
 % for rectangular images - [SX SY] are to be SWAPPED re FIJI, ICY etc.    
 %     ac.SizeX = 74;   % 125 in Icy 
@@ -1559,10 +1559,11 @@ numel(obj.ROICoordinates)
                 obj.ROICoordinates = obj.ROICoordinates(randi(numel(obj.ROICoordinates),1,Nrois));
             end             
 
+h = [];            
 if obj.Square_ROIs_Auto_verbose
 % display
 YMAX = obj.SizeY*obj.pixelSizenm;
-figure('units','normalized','outerposition',[0 0 1 1],'name','ROIs as they go..');
+h = figure('units','normalized','outerposition',[0 0 1 1],'name','ROIs as they go..');
     if strcmp(obj.Square_ROIs_Auto_method,'composite')
                         ax = gca;
                         plot(ax,obj.CellData{1}(:,5),YMAX-obj.CellData{1}(:,6),'r.',obj.CellData{2}(:,5),YMAX-obj.CellData{2}(:,6),'g.');
