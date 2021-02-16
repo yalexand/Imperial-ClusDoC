@@ -66,7 +66,9 @@ classdef ClusDoC_analysis_controller < handle
     
     ClusterTable = [];
     
-    Chan1Color = [1 0 0]; %red        
+    Chan1Color = [1 0 0]; %red   
+    
+    sgm = []; % segmetnation image
 
     
 %%%%%%%%%%%%%%%%%%%%%%%% DoC                     
@@ -1669,8 +1671,265 @@ end % verbose
 % display            
                                    
 end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%-------------------------------------------------------------------------%
+function Load_Segmentation(obj,fulpathtosegmetnationomage)
+    obj.sgm = imread(fulpathtosegmetnationomage);
+end
+%-------------------------------------------------------------------------%
+function h = Define_Square_ROIs_From_Segmentation(obj,varargin) 
+            
+            if 1 == nargin
+                chan = 1;
+            else
+                chan = varargin{1};
+            end        
+            
+            Nrois = obj.Square_ROIs_Auto_maxNrois;
+            nmppix = obj.pixelSizenm;     
+            anm = obj.Square_ROIs_Auto_anm;
+            
+            if strcmp(obj.Square_ROIs_Auto_method,'channel')
+                                 
+                % to have pixel roughly the size of ROI                 
+                size_of_ROI_as_pixel_in_microns = anm/1000;
+                ROI_numbers = obj.get_localisation_numbers(chan,size_of_ROI_as_pixel_in_microns);                                
+                LNT = obj.Square_ROIs_Auto_LNT(chan);    % low number threshold
+                HNT = obj.Square_ROIs_Auto_HNT(chan);    % high number threshold                
+                numbers_OK  = LNT < ROI_numbers&ROI_numbers < HNT; 
 
+                z = ROI_numbers;          
+                % check every square if it is projectd on segmentation           
+                proj_sgm = zeros(size(z));
+                for k=1:size(z,1)
+                    for m=1:size(z,2)
+                           x = round((m-.5)*size_of_ROI_as_pixel_in_microns*1000/nmppix); % back to original scale
+                           y = round((k-.5)*size_of_ROI_as_pixel_in_microns*1000/nmppix);
+                           proj_sgm(k,m) = obj.sgm(y,x)~=0;
+                    end
+                end                                                
+                z = z.*proj_sgm;                              
+                %
+                obj.ROICoordinates = cell(0);
+                for k=1:size(z,1)
+                    for m=1:size(z,2)
+                        if z(k,m)>0 && numbers_OK(k,m)
+                           x = round((m-0.5)*size_of_ROI_as_pixel_in_microns*1000); % back to nanometers to work with table
+                           y = round((k-0.5)*size_of_ROI_as_pixel_in_microns*1000);                           
+                          d = floor(anm/2)-1;
+                          p1 = [x-d y+d];
+                          p2 = [x+d y+d];
+                          p3 = [x+d y-d];
+                          p4 = [x-d y-d];
+                          p5 = [x-d y+d];                      
+                          roi = [p1;p2;p3;p4;p5];                      
+                         obj.ROICoordinates = [obj.ROICoordinates; roi];
+                        end
+                    end
+                end
+                
+            elseif strcmp(obj.Square_ROIs_Auto_method,'composite')
+                
+                % to have pixel roughly the size of ROI                 
+                size_of_ROI_as_pixel_in_microns = anm/1000;
+                ROI_numbers_1 = obj.get_localisation_numbers(1,size_of_ROI_as_pixel_in_microns);                                
+                LNT_1 = obj.Square_ROIs_Auto_LNT(1);    % low number threshold
+                HNT_1 = obj.Square_ROIs_Auto_HNT(1);    % high number threshold                
+                numbers_OK_1  = LNT_1 < ROI_numbers_1&ROI_numbers_1 < HNT_1; 
+                
+                ROI_numbers_2 = obj.get_localisation_numbers(2,size_of_ROI_as_pixel_in_microns);                                
+                LNT_2 = obj.Square_ROIs_Auto_LNT(2);    % low number threshold
+                HNT_2 = obj.Square_ROIs_Auto_HNT(2);    % high number threshold               
+                numbers_OK_2  = LNT_2 < ROI_numbers_2&ROI_numbers_2 < HNT_2;      
+                                              
+                numbers_OK  = numbers_OK_1 & numbers_OK_2;
+
+                z = ROI_numbers_1; % doesn't matter
+                % check every square if it is projectd on segmentation           
+                proj_sgm = zeros(size(z));
+                for k=1:size(z,1)
+                    for m=1:size(z,2)
+                           x = round((m-.5)*size_of_ROI_as_pixel_in_microns*1000/nmppix); % back to original scale
+                           y = round((k-.5)*size_of_ROI_as_pixel_in_microns*1000/nmppix);
+                           proj_sgm(k,m) = obj.sgm(y,x)~=0;
+                    end
+                end                                                
+                z = z.*proj_sgm;                              
+                %
+                obj.ROICoordinates = cell(0);
+                for k=1:size(z,1)
+                    for m=1:size(z,2)
+                        if z(k,m)>0 && numbers_OK(k,m)
+                           x = round((m-0.5)*size_of_ROI_as_pixel_in_microns*1000); % back to nanometers to work with table
+                           y = round((k-0.5)*size_of_ROI_as_pixel_in_microns*1000);                           
+                          d = floor(anm/2)-1;
+                          p1 = [x-d y+d];
+                          p2 = [x+d y+d];
+                          p3 = [x+d y-d];
+                          p4 = [x-d y-d];
+                          p5 = [x-d y+d];                      
+                          roi = [p1;p2;p3;p4;p5];                      
+                         obj.ROICoordinates = [obj.ROICoordinates; roi];
+                        end
+                    end
+                end
+            end
+
+% check rois
+bad_rois = [];
+                   for roiInc = 1:length(obj.ROICoordinates)
+
+                        roi = obj.ROICoordinates{roiInc};
+                        
+                        x_roi=roi(:,1);
+                        y_roi=roi(:,2);
+                        
+                        if strcmp(obj.Square_ROIs_Auto_method,'channel')
+                            x=obj.CellData{chan}(:,5);
+                            y=obj.CellData{chan}(:,6);
+                                whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
+                            dataCropped = obj.CellData{chan}(whichPointsInROI,:);                       
+                            x1=dataCropped(:,5);
+
+                            if numel(x1)<obj.Square_ROIs_Auto_LNT
+                                bad_rois = [bad_rois; roiInc];
+                            end
+                        elseif strcmp(obj.Square_ROIs_Auto_method,'composite')                            
+                            chan = 1;
+                            x=obj.CellData{chan}(:,5);
+                            y=obj.CellData{chan}(:,6);
+                                whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
+                            dataCropped = obj.CellData{chan}(whichPointsInROI,:);                       
+                            x1=dataCropped(:,5);
+                            chan = 2;
+                            x=obj.CellData{chan}(:,5);
+                            y=obj.CellData{chan}(:,6);
+                                whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
+                            dataCropped = obj.CellData{chan}(whichPointsInROI,:);                       
+                            x2=dataCropped(:,5);                                            
+
+                            if numel(x1)<obj.Square_ROIs_Auto_LNT(1) || numel(x2)<obj.Square_ROIs_Auto_LNT(2)
+                                bad_rois = [bad_rois; roiInc];
+                            end 
+                        end
+                  end
+%bad_rois
+numel(obj.ROICoordinates)
+% check rois
+            obj.ROICoordinates = obj.ROICoordinates(setdiff(1:numel(obj.ROICoordinates),bad_rois));            
+            % if too many ROIs, choose random Nrois among defined
+            if (numel(obj.ROICoordinates) > Nrois)
+                obj.ROICoordinates = obj.ROICoordinates(randi(numel(obj.ROICoordinates),1,Nrois));
+            end             
+
+h = [];            
+if obj.Square_ROIs_Auto_verbose
+% display
+YMAX = obj.SizeY*obj.pixelSizenm;
+h = figure('units','normalized','outerposition',[0 0 1 1],'name','ROIs as they go..');
+    if strcmp(obj.Square_ROIs_Auto_method,'composite')
+                        ax = gca;
+                        plot(ax,obj.CellData{1}(:,5),YMAX-obj.CellData{1}(:,6),'r.',obj.CellData{2}(:,5),YMAX-obj.CellData{2}(:,6),'g.');
+% markersize = 4;                        
+% h = scatter(ax,obj.CellData{1}(:,5),YMAX-obj.CellData{1}(:,6),markersize,'red','filled');
+%         alpha = 0.3;
+%         set(h, 'MarkerEdgeAlpha', alpha, 'MarkerFaceAlpha', alpha);
+% hold on;
+% h = scatter(ax,obj.CellData{2}(:,5),YMAX-obj.CellData{2}(:,6),markersize,'green','filled');
+%         alpha = 0.3;
+%         set(h, 'MarkerEdgeAlpha', alpha, 'MarkerFaceAlpha', alpha);
+                        daspect(ax,[1 1 1]); 
+                        grid(ax,'on');
+                        hold(ax,'on');
+                        
+                   for roiInc = 1:length(obj.ROICoordinates)
+
+                        roi = obj.ROICoordinates{roiInc};
+                        
+                        x_roi=roi(:,1);
+                        y_roi=roi(:,2);
+                        
+                        chan = 1;
+                        x=obj.CellData{chan}(:,5);
+                        y=obj.CellData{chan}(:,6);
+                            whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
+                        dataCropped = obj.CellData{chan}(whichPointsInROI,:);                       
+                        x1=dataCropped(:,5);
+                        y1=dataCropped(:,6);
+                        chan = 2;
+                        x=obj.CellData{chan}(:,5);
+                        y=obj.CellData{chan}(:,6);
+                            whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
+                        dataCropped = obj.CellData{chan}(whichPointsInROI,:);                       
+                        x2=dataCropped(:,5);
+                        y2=dataCropped(:,6);                        
+                        
+                        color = [0.2 0.2 0.2+0.79*rand];
+                                               
+                        plot(ax,x_roi,YMAX-y_roi,'marker','.','color',color,'linestyle','-','linewidth',3);
+                        hold(ax,'on');
+                        
+                        if isempty(x1)
+                            plot(ax,x_roi,YMAX-y_roi,'k:','linewidth',7);
+                            hold(ax,'on');
+                            %disp([roiInc 1]);
+                        end 
+                        
+                        if isempty(x2)
+                            plot(ax,x_roi,YMAX-y_roi,'k:','linewidth',7);
+                            hold(ax,'on');
+                            %disp([roiInc 2]);
+                        end                         
+                        
+                        daspect(ax,[1 1 1]); 
+                        grid(ax,'on');                  
+                   end
+                   hold(ax,'off');
+                   
+    elseif strcmp(obj.Square_ROIs_Auto_method,'channel')
+                        ax = gca;
+                        if 1==chan
+                            clor = 'r.';
+                        else
+                            clor = 'g.';
+                        end
+                        plot(ax,obj.CellData{chan}(:,5),YMAX-obj.CellData{chan}(:,6),clor);
+                        daspect(ax,[1 1 1]); 
+                        grid(ax,'on');
+                        hold(ax,'on');
+                        
+                   for roiInc = 1:length(obj.ROICoordinates)
+
+                        roi = obj.ROICoordinates{roiInc};
+                        
+                        x_roi=roi(:,1);
+                        y_roi=roi(:,2);
+                        
+                        x=obj.CellData{chan}(:,5);
+                        y=obj.CellData{chan}(:,6);
+                            whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
+                        dataCropped = obj.CellData{chan}(whichPointsInROI,:);                       
+                        x1=dataCropped(:,5);
+                        
+                        color = [0.2 0.2 0.2+0.79*rand];
+                                               
+                        plot(ax,x_roi,YMAX-y_roi,'marker','.','color',color,'linestyle','-','linewidth',3);
+                        hold(ax,'on');
+                        
+                        if isempty(x1)
+                            plot(ax,x_roi,YMAX-y_roi,'k:','linewidth',7);
+                            hold(ax,'on');
+                            %disp([roiInc 1]);
+                        end 
+                        
+                        daspect(ax,[1 1 1]); 
+                        grid(ax,'on');                  
+                   end
+                   hold(ax,'off');  
+    end
+end % verbose
+% display                                                       
+end
+%-------------------------------------------------------------------------%
 
 %-------------------------------------------------------------------------%    
     end % methods
