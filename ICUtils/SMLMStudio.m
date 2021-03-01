@@ -22,10 +22,10 @@ function varargout = SMLMStudio(varargin)
 
 % Edit the above text to modify the response to help SMLMStudio
 
-% Last Modified by GUIDE v2.5 24-Feb-2021 08:59:33
+% Last Modified by GUIDE v2.5 01-Mar-2021 15:58:33
 
 % Begin initialization code - DO NOT EDIT
-gui_Singleton = 0;
+gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
                    'gui_OpeningFcn', @SMLMStudio_OpeningFcn, ...
@@ -345,8 +345,8 @@ for k=1:numel(handles.data)
         curves2 = handles.data{k}.RipelyK_Ch2_data;
         
         % normalize - max, mean, or median?
-        curves1 = curves1./max(curves1,[],1);
-        curves2 = curves2./max(curves2,[],1);
+        %curves1 = curves1./max(curves1,[],1);
+        %curves2 = curves2./max(curves2,[],1);
         
         curves_acc{cond_index,1} = [curves_acc{cond_index,1} curves1];
         curves_acc{cond_index,2} = [curves_acc{cond_index,2} curves2];        
@@ -747,11 +747,15 @@ function show_2d_histogram(handles)
         nBins = 50;
         AXES = handles.corr_plot;
                              
-        %histogram2(AXES,sx,sy,[nBins nBins],'DisplayStyle','tile','ShowEmptyBins','on','Normalization','pdf');
-        histogram2(AXES,sx,sy,'DisplayStyle','tile','ShowEmptyBins','on','Normalization','pdf');
-        
-        %histogram2(AXES,sx,sy,'DisplayStyle','bar3','ShowEmptyBins','on','Normalization','pdf');        
-        %set(AXES,'zscale','log');
+        if ~get(handles.bar_histo,'Value')
+            %histogram2(AXES,sx,sy,[nBins nBins],'DisplayStyle','tile','ShowEmptyBins','on','Normalization','pdf');
+            histogram2(AXES,sx,sy,'DisplayStyle','tile','ShowEmptyBins','on','Normalization','pdf');
+        else
+            histogram2(AXES,sx,sy,'DisplayStyle','bar3','ShowEmptyBins','on','Normalization','pdf','FaceColor','flat');                    
+            if get(handles.bar_log,'Value')
+             set(AXES,'zscale','log');
+            end
+        end
         
     xlabel(AXES,XLABEL,'fontsize',8);
     ylabel(AXES,YLABEL,'fontsize',8);         
@@ -983,13 +987,17 @@ for k=1:numel(UC) % over conditions
 end
 
 
+% --- Executes on button press in bar_histo.
+function bar_histo_Callback(hObject, eventdata, handles)
+if get(hObject,'Value')
+    logflag = 'on';
+else
+    logflag = 'off';
+end
+    set(handles.bar_log,'Enable',logflag);
+show_2d_histogram(handles);
 
 
-
-
-
-
-
-
-
-
+% --- Executes on button press in bar_log.
+function bar_log_Callback(hObject, eventdata, handles)
+show_2d_histogram(handles);
