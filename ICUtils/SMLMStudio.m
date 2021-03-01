@@ -84,6 +84,8 @@ handles.statistics_names = {'p-value: KS','p-value: t-test','p-value: Wilcoxon',
 set(handles.statistics_table, 'RowName',handles.statistics_names);
 set(handles.statistics_table, 'ColumnName', {'value'});
 
+set(handles.bar_log,'Enable','off');
+
 handles.DOC_DBSCAN_samples = [];
 
 handles.minmaxlimits = define_minmax(handles);
@@ -475,7 +477,7 @@ function show_plot(hObject,handles) % quantifier, condition
         case 'roi.RDF(MAX)'
             s1 = handles.RDF_max_sample{index1,channel1};
             s2 = handles.RDF_max_sample{index2,channel2};
-            XLABEL = 'distance at RipleyK maximum [nm]';
+            XLABEL = 'distance at RDF maximum [nm]';
             AXESMINMAX = []; %[handles.minmaxlimits(9,1) handles.minmaxlimits(9,2)];            
         case 'roi.xRipley(MAX)'
             s1 = handles.Hr_max_sample{index1,channel1};
