@@ -67,7 +67,7 @@ set(handles.Ch_Y,'String',{'462','647'});
 
 handles.ROI_side = 2000; % [nm], square ROI
 
-handles.param_names = {'cl.DoC','cl.Area','cl.Circularity','cl.Nloc','cl.Density','roi.Ripley','roi.RDF','roi.xRipley','roi.Ripley(MAX)','roi.RDF(MAX)','roi.xRipley(MAX)','roi.SAA','roi.SAA(ratio)'};
+handles.param_names = {'cl.DoC','cl.Area','cl.Circularity','cl.Nloc','cl.Density','roi.Ripley','roi.xRDF','roi.xRipley','roi.Ripley(MAX)','roi.xRDF(MAX)','roi.xRipley(MAX)','roi.SAA','roi.SAA(ratio)'};
 
 set(handles.Q1,'String',handles.param_names);
 set(handles.C1,'String',{'H3K27me3','H3K9ac','H3K9me3'});
@@ -451,7 +451,7 @@ function show_plot(hObject,handles) % quantifier, condition
             if get(handles.legend,'Value')
                 legend(AXES,{[C1 ' ' Q ' channel ' num2str(channel1)],[C2 ' ' Q ' channel ' num2str(channel2)]});
             end
-        case 'roi.RDF'
+        case 'roi.xRDF'
             c1 = handles.RDF_curves{index1,channel1};
             c2 = handles.RDF_curves{index2,channel2};
             XLABEL = 'distance [nm]';
@@ -474,7 +474,7 @@ function show_plot(hObject,handles) % quantifier, condition
             s2 = handles.RipleyK_max_sample{index2,channel2};
             XLABEL = 'distance at RipleyK maximum [nm]';
             AXESMINMAX = [handles.minmaxlimits(9,1) handles.minmaxlimits(9,2)];
-        case 'roi.RDF(MAX)'
+        case 'roi.xRDF(MAX)'
             s1 = handles.RDF_max_sample{index1,channel1};
             s2 = handles.RDF_max_sample{index2,channel2};
             XLABEL = 'distance at RDF maximum [nm]';
@@ -554,7 +554,9 @@ function show_plot(hObject,handles) % quantifier, condition
         if get(handles.legend,'Value')
             legend(AXES,{[C1 ' ' Q ' mean: ' num2str(MEAN1) ' std: ' num2str(STD1)],[C2 ' ' Q ' mean: ' num2str(MEAN2) ' std: ' num2str(STD2)]}, ...
             'FontSize',7.5);
-        end        
+        end 
+    else
+        set(handles.statistics_table,'Data',nan(5,1));
     end
         if get(handles.axes_log,'Value')
          set(AXES,'YScale','log'); % ?
@@ -691,12 +693,12 @@ function show_2d_histogram(handles)
                 logscale_X = true;
                 XLABEL = 'log10(relative localisations density)';
         case 'roi.Ripley'
-        case 'roi.RDF'
+        case 'roi.xRDF'
         case 'roi.xRipley'
         case 'roi.Ripley(MAX)'
             sx = handles.RipleyK_max_sample{index_Y,channel_Y};
             XLABEL = 'distance at RipleyK maximum [nm]';            
-        case 'roi.RDF(MAX)'
+        case 'roi.xRDF(MAX)'
         case 'roi.xRipley(MAX)'
         case 'roi.SAA'
         case 'roi.SAA(ratio)'
@@ -725,12 +727,12 @@ function show_2d_histogram(handles)
                 logscale_Y = true;
                 YLABEL = 'log10(relative localisations density)';
         case 'roi.Ripley'
-        case 'roi.RDF'
+        case 'roi.xRDF'
         case 'roi.xRipley'
         case 'roi.Ripley(MAX)'
             sy = handles.RipleyK_max_sample{index_Y,channel_Y};
             YLABEL = 'distance at RipleyK maximum [nm]';                        
-        case 'roi.RDF(MAX)'
+        case 'roi.xRDF(MAX)'
         case 'roi.xRipley(MAX)'
         case 'roi.SAA'
         case 'roi.SAA(ratio)'
