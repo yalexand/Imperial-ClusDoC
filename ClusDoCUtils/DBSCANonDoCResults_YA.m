@@ -106,7 +106,9 @@ clusterTable = [];
                     % Fig1, fig2 fig3 : handle for figures plot in the
                     % function.
                     
-                    clusterTable = AppendToClusterTableInternal(clusterTable, Ch, c, roiIter, ClusterCh, classOut);
+                    if ~isempty(ClusterCh)
+                        clusterTable = AppendToClusterTableInternal(clusterTable, Ch, c, roiIter, ClusterCh, classOut);
+                    end
                     
                     % Save the plot and data
                     switch Ch
@@ -139,7 +141,7 @@ clusterTable = [];
 %         assignin('base', 'p', cellIter);
 %         assignin('base', 'q', roiIter);
         
-        ExportDBSCANDataToExcelFiles(cellROIPair, ResultCell, Path_name, Ch);
+        ExportDBSCANDataToExcelFiles_YA(cellROIPair, ResultCell, Path_name, Ch);
 
     end % channel
 
@@ -165,7 +167,7 @@ function clusterTableOut = AppendToClusterTableInternal(clusterTable, Ch, cellIt
         end
 
         % Add new data to the clusterTable
-        appendTable = zeros(length(ClusterCh), 15);
+        appendTable = zeros(length(ClusterCh), 16);
         appendTable(:, 1) = cellIter; % CurrentROI
         appendTable(:, 2) = roiIter; % CurrentROI
         appendTable(:, 3) = Ch; % Channel
@@ -186,12 +188,13 @@ function clusterTableOut = AppendToClusterTableInternal(clusterTable, Ch, cellIt
         appendTable(:, 13) = cellfun(@(x) x.Nb_In, ClusterCh); % Nb_In
         appendTable(:, 14) = cellfun(@(x) x.NInsideMask, ClusterCh); % NPointsInsideMask
         appendTable(:, 15) = cellfun(@(x) x.NOutsideMask, ClusterCh); % NPointsInsideMask
+        appendTable(:, 16) = cellfun(@(x) x.Elongation, ClusterCh); % Elongation        
 
         clusterTableOut = [clusterTable; appendTable];
     
     catch mError
         assignin('base', 'ClusterCh', ClusterCh);
-        assignin('base', 'clusterIDList', clusterIDList);
+        %assignin('base', 'clusterIDList', clusterIDList);
         assignin('base', 'appendTable', appendTable);
         assignin('base', 'classOut', classOut);
 

@@ -27,6 +27,9 @@ function EvalStatisticsOnDBSCANandDoCResults_YA(ClusterSmoothTableCh, Ch, output
            MeanNumMolsPerNonColocCluster = cell(row, column);
            NumNonColocClustersPerROI = cell(row, column);
            
+           MeanElongationDofC=cell(row, column);
+           MeanElongation2=cell(row, column);           
+           MeanElongation3=cell(row, column);           
            
 for i=1:column
     
@@ -51,6 +54,9 @@ for i=1:column
            MeanDensityDofC{j,i}=mean(DensityDofC);
            MeanAreaDofC{j,i}=mean(AreaDofC);
            MeanCircularityDofC{j,i}=mean(CircularityDofC);
+           %
+           ElongationDofC=cellfun(@(x) x.Elongation, Cluster_DofC);
+           MeanElongationDofC{j,i}=mean(ElongationDofC);
            
            NumMoleculesPerColocCluster = cellfun(@(x) x.Nb, Cluster_DofC);
            
@@ -69,6 +75,9 @@ for i=1:column
            MeanDensity2{j,i}=mean(Density2);
            MeanArea2{j,i}=mean(Area2);
            MeanCircularity2{j,i}=mean(Circularity2);
+           
+           Elongation2=cellfun(@(x) x.Elongation, Cluster_Other);
+           MeanElongation2{j,i}=mean(Elongation2);
            
            NumMoleculesPerNonColocCluster = cellfun(@(x) x.Nb, Cluster_Other);
            
@@ -91,6 +100,9 @@ for i=1:column
            MeanDensity3{j,i}=mean(Density3);
            MeanCircularity3{j,i}=mean(Circularity3);
                       
+           Elongation3=cellfun(@(x) x.Elongation, A);
+           MeanElongation3{j,i}=mean(Elongation3);           
+           
         else
            MeanDensityDofC{j,i}=[];
            MeanAreaDofC{j,i}=[];
@@ -117,6 +129,10 @@ Result2.Density3=MeanDensity3;
 Result2.Area3=MeanArea3;
 Result2.Circularity3=MeanCircularity3;
 
+Result2.ElongationDofC=MeanElongationDofC;
+Result2.Elongation2=MeanElongation2;
+Result2.Elongation3=MeanElongation3;
+
 switch Ch
     case 1
         ResultCh1=Result2;    
@@ -137,6 +153,9 @@ end
     Density2 = cell2mat(MeanDensity2(:));
     Area2 = cell2mat(MeanArea2(:));
     Circularity2 = cell2mat(MeanCircularity2(:));
+    %
+    ElongationDofC = cell2mat(MeanElongationDofC(:));
+    Elongation2 = cell2mat(MeanElongation2(:));
 
     
     % Density Area Circularity for cluster with Nb<NbThresh 
@@ -149,22 +168,26 @@ end
          {'Average area of colicalised clusters (nm^2)'}, ...	
          {'Average area of non-colicalised clusters (nm^2)'}, ...
          {'Circularity of colocalised clusters'}, ...
-         {'Circularity of non-colicalised clusters'}, ...
+         {'Circularity of non-colocalised clusters'}, ...         
+         {'Elongation of colocalised clusters'}, ...
+         {'Elongation of non-colocalised clusters'}, ...         
          {'Mean number of molecules per colocalised cluster'}, ... % per cluster, colocalized
          {'Mean number of colocalised clusters per ROI'}, ...	   % per ROI, colocalized
 		 {'Mean number of molecules per non-colocalised cluster'}, ... % per cluster, non-colicalised
          {'Mean number of non-colocalised clusters per ROI'}];         % per ROI, colocalized
-    
+   
     Matrix_Result=[DensityDofC...
                     Density2...
                     AreaDofC...
                     Area2...
                     CircularityDofC...
                     Circularity2, ...
+                    ElongationDofC...
+                    Elongation2, ...                    
                     cell2mat(MeanNumMolsPerColocCluster(:)), ...
                     cell2mat(NumColocClustersPerROI(:)), ...
                     cell2mat(MeanNumMolsPerNonColocCluster(:)), ...
-                    cell2mat(NumNonColocClustersPerROI(:))];
+                    cell2mat(NumNonColocClustersPerROI(:))];  
     
     RegionName = strcat('Clus-DoC results');
     

@@ -141,7 +141,7 @@ try
             datathr = Data(dataThreshVector, 1:2);
         end
         
-        if nargout == 9;
+        if nargout == 9
             disp('export dataThreshVector');
             varargout{5} = dataThreshVector;
         end
@@ -160,6 +160,8 @@ try
         SumofSmallContour=[];
         ClusterSmooth=cell(max(class),1);
 
+        SumofContour = [];
+        
         if isempty(class)
             
             % Collection of output variables when DBSCAN returns no
@@ -183,7 +185,7 @@ try
                 [dataT, idxT, DisT, Density20 ] = Lr_fun(xin(:,1), xin(:,2), xin(:,1), xin(:,2) , 20, SizeROI); % Included in FunDBSCAN4DoC_GUIV2
                                                                                                                     % Unsure how this is carried forward
 
-                [ClusImage,  Area, Circularity, Nb, contour, edges, Cutoff_point] = Smoothing_fun4cluster(xin(:,1:2), DBSCANParams, false, false); % 0.1*max intensity 
+                [ClusImage,  Area, Circularity, Nb, contour, edges, Cutoff_point, Elongation] = Smoothing_fun4cluster(xin(:,1:2), DBSCANParams, false, false); % 0.1*max intensity 
 
                 ClusterSmooth{i,1}.ClusterID = i;
                 ClusterSmooth{i,1}.Points = xin(:,1:2);
@@ -194,6 +196,7 @@ try
                 ClusterSmooth{i,1}.Cutoff_point = Cutoff_point;
                 ClusterSmooth{i,1}.Contour = contour;%
                 ClusterSmooth{i,1}.Circularity = Circularity;%
+                ClusterSmooth{i,1}.Elongation = Elongation;%
                 ClusterSmooth{i,1}.TotalAreaDensity = AvDensity;%
                 ClusterSmooth{i,1}.Density_Nb_A = Nb/Area;%
                 ClusterSmooth{i,1}.RelativeDensity_Nb_A=Nb/Area/AvDensity;%
@@ -378,6 +381,7 @@ try
             Result.Area(1) = mean(cell2mat(cellfun(@(x) x.Area(x.Nb > DBSCANParams.Cutoff), ClusterSmooth, 'UniformOutput', false)));
             Result.Mean_Circularity(1) = mean(cell2mat(cellfun(@(x) x.Circularity(x.Nb > DBSCANParams.Cutoff), ClusterSmooth, 'UniformOutput', false)));
             Result.Density = mean(cell2mat(cellfun(@(x) x.Density(x.Nb > DBSCANParams.Cutoff), ClusterSmooth, 'UniformOutput', false)));
+            Result.Mean_Elongation(1) = mean(cell2mat(cellfun(@(x) x.Elongation(x.Nb > DBSCANParams.Cutoff), ClusterSmooth, 'UniformOutput', false)));
             
             if DBSCANParams.UseLr_rThresh
             

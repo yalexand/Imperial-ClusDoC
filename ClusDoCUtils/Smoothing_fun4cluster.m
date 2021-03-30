@@ -1,4 +1,4 @@
-function [ClusImage,  AreaC, Circularity, Nb, Contour, edges, Cutoff_point] = Smoothing_fun4cluster(ClusterOI, DBSCANParams, display1, display2)
+function [ClusImage,  AreaC, Circularity, Nb, Contour, edges, Cutoff_point, Elongation] = Smoothing_fun4cluster(ClusterOI, DBSCANParams, display1, display2)
 
 % Smoothing function for clusters version V2C_1_3
 
@@ -87,10 +87,50 @@ function [ClusImage,  AreaC, Circularity, Nb, Contour, edges, Cutoff_point] = Sm
     Perimeter = sum(sqrt(dx.^2 + dy.^2));
     Circularity = 4*pi*AreaC/Perimeter^2;
 
+    % Elongation
+    %
+    %test code
+    %{
+        DBSCANParams.SmoothingRad = 5;
+        DBSCANParams.epsilon = 6;
+
+        xc = 600;
+        yc = 600;
+        N = 20000;
+        D = 200;
+
+        S = (rand(1,N)*D)';
+
+        p1 = [xc+S yc*ones(size(S))];
+        p2 = [xc*ones(size(S)) yc+S];
+        %
+        p3 = p1; p3(:,2) = p3(:,2) + D;
+        p4 = p2; p4(:,1) = p4(:,1) + D;
+
+        ClusterOI = [p1;p2;p3;p4];
+
+        [ClusImage,  AreaC, Circularity, Nb, Contour, edges, Cutoff_point] = ... 
+            Smoothing_fun4cluster(ClusterOI, DBSCANParams, true, false);    
+    %}
+    %test code
+    %
+    try
+        covPts = cov(ClusterOI);
+        [~,S] = svd(covPts);
+        lengths = sqrt(diag(S));
+        Elongation = min(lengths)/max(lengths);
+        if isnan(Elongation)
+            Elongation = 1;
+        end
+    catch
+        Elongation = 1;
+    end
+            
     %% Display
     % Need to specfy what each of these two plots actually generates
     if display1
         figure;
+        title(gca,['Circularity = ' num2str(Circularity),', Elongation = ' num2str(Elongation)]);
         set(gca, 'NextPlot', 'add');
         imagesc(edges{1}(1:end-1),fliplr(edges{2}(1:end-1)),flipud(ClusImage))
         plot( ClusterOI(:,1), ClusterOI(:,2), 'Marker', '+', 'MarkerSize', 4, ...

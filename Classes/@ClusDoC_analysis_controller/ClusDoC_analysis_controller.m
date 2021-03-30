@@ -449,13 +449,13 @@ end
 
                 if ~all(cellfun(@isempty, Result))
                     
-                    try
+                   try
                     %ExportDBSCANDataToExcelFiles(cellROIPair, Result, obj.DBSCAN.Outputfolder, chan);
-                    ExportDBSCANDataToExcelFiles(cellROIPair, Result, obj.DBSCAN.Outputfolder, 1);
-                    catch err
-                        disp('error in function ExportDBSCANDataToExcelFiles');
-                        disp(err.message);
-                    end
+                    ExportDBSCANDataToExcelFiles_YA(cellROIPair, Result, obj.DBSCAN.Outputfolder, 1);
+                   catch err
+                       disp('error in function ExportDBSCANDataToExcelFiles_YA');
+                       disp(err.message);
+                   end
                 else
                     fprintf(1, 'All cells and ROIs empty.  Skipping export.\n');
                 end
@@ -489,7 +489,7 @@ end
                                 end
 
                                 % Add new data to the clusterTable
-                                appendTable = nan(length(ClusterCh), 15);
+                                appendTable = nan(length(ClusterCh), 16);
                                 appendTable(:, 1) = cellIter; % CurrentROI
                                 appendTable(:, 2) = roiIter; % CurrentROI
                                 appendTable(:, 3) = Ch; % Channel
@@ -521,6 +521,7 @@ end
 
                                 appendTable(:, 14) = cellfun(@(x) x.NInsideMask, ClusterCh); % NPointsInsideMask
                                 appendTable(:, 15) = cellfun(@(x) x.NOutsideMask, ClusterCh); % NPointsInsideMask
+                                appendTable(:, 16) = cellfun(@(x) x.Elongation, ClusterCh); % Elongation                                
 
                                 clusterTableOut = [clusterTable; appendTable];
 
@@ -1458,6 +1459,7 @@ function ExportDoCDataToCSV(obj,LOC,ClusterTable,save_dir,~) % LOC are localisat
         '"Nb_In"', ...
         '"NInMask"', ...
         '"NOutMask"', ...
+        '"Elongation"', ...        
         };
 
         fname = 'DoC_Export_Clusters.csv';
