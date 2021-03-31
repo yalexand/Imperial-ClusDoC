@@ -175,6 +175,11 @@ try
             for i = 1:max(class)
 
                 xin = datathr(class == i,:); % Positions contained in the cluster i
+                
+                if contains_the_same_rows(xin(:,1:2))
+                    ClusterSmooth{i,1} = [];
+                    continue;
+                end                    
 
         %         assignin('base', 'xin', xin);
 
@@ -260,14 +265,11 @@ try
                             ClusterSmooth{i,1}.DensityRatio =0;
                             ClusterSmooth{i,1}.Contour_In = 0; 
                     end
-
+                
+                % remove empty entries
+                ClusterSmooth = ClusterSmooth(~cellfun('isempty',ClusterSmooth));
 
                 end
-
-
-
-
-
 
                 if Nb >= DBSCANParams.Cutoff
                     SumofBigContour = [SumofBigContour; contour; NaN NaN ];
@@ -451,6 +453,13 @@ colorOut = [a, b, c]/255;
 
 end
 
-
+function ret = contains_the_same_rows(x)
+    ret = true;
+    for k=2:size(x,1) 
+        if 2 ~= sum(x(k,:)==x(1,:))
+            ret = false;
+        end
+    end
+end
 
 
