@@ -1,4 +1,4 @@
-function [datathr, ClusterSmooth, SumofContour, classOut, varargout] = DBSCANHandler_YA(Data, DBSCANParams, varargin)
+function [datathr, ClusterSmooth, SumofContour, classOut, varargout] = DBSCANHandler_YA(obj, Data, DBSCANParams, varargin)
 
 % vargout = {fig1Handle, fig2Handle, fig3Handle, Results}
 
@@ -47,7 +47,7 @@ try
         
         classOut = zeros(size(Data, 1), 1);
 
-        if nargin == 3
+        if nargin == 3+1
             % Test mode
             % Fun_DBSCAN_Test
             cellNum = []; % Labeling only
@@ -57,7 +57,7 @@ try
             printOutFig = false;
             clusterColor = rgb(46, 204, 113);
             maskVector = varargin{1};
-        elseif nargin > 3
+        elseif nargin > 3+1
             % FullCalc mode
             % Follow FunDBSCAN_GUIV2
             cellNum = varargin{1}; % Labeling only, Cell number
@@ -70,7 +70,7 @@ try
             
             printOutFigDest = 'DBSCAN Results';
             
-            if nargin == 10
+            if nargin == 10+1
                 Density = varargin{7}; % Data is an input
                 DoCScore = varargin{8};
                 printOutFigDest = 'Clus-DoC Results\DBSCAN Results';
@@ -189,12 +189,14 @@ try
 
                 [dataT, idxT, DisT, Density20 ] = Lr_fun(xin(:,1), xin(:,2), xin(:,1), xin(:,2) , 20, SizeROI); % Included in FunDBSCAN4DoC_GUIV2
                                                                                                                     % Unsure how this is carried forward
-
+                                                                                                                    
                 [ClusImage,  Area, Circularity, Nb, contour, edges, Cutoff_point, Elongation] = Smoothing_fun4cluster(xin(:,1:2), DBSCANParams, false, false); % 0.1*max intensity 
 
                 ClusterSmooth{i,1}.ClusterID = i;
                 ClusterSmooth{i,1}.Points = xin(:,1:2);
-                ClusterSmooth{i,1}.Image = ClusImage;
+                if obj.save_DBSCAN_clusters_images 
+                    ClusterSmooth{i,1}.Image = ClusImage; 
+                end
                 ClusterSmooth{i,1}.Area = Area;%
                 ClusterSmooth{i,1}.Nb = Nb;%
                 ClusterSmooth{i,1}.edges = edges;%
@@ -212,8 +214,16 @@ try
 
                 ClusterSmooth{i,1}.RelativeDensity20 = Density20 / AvDensity;%
 
-
                 ClusterSmooth{i,1}.AvRelativeDensity20 = mean(Density20/AvDensity); %
+                
+                %
+                ClusterSmooth{i,1}.ROICoordinates = obj.ROICoordinates{ROINum};
+                if ~isempty(obj.roi_to_object_lut)
+                    ClusterSmooth{i,1}.ObjectIndex = obj.roi_to_object_lut(ROINum);
+                else
+                    ClusterSmooth{i,1}.ObjectIndex = [];
+                end
+                %
 
                 if DBSCANParams.UseLr_rThresh
                     ClusterSmooth{i,1}.Density = Density(class == i);%
@@ -224,7 +234,7 @@ try
 
                 end
 
-                if nargin == 10 % DoC analysis.  Vector of DoC scores for each point is an input.
+                if nargin == 10+1 % DoC analysis.  Vector of DoC scores for each point is an input.
 
                     ClusterSmooth{i,1}.Density = Density(class == i);%
                     ClusterSmooth{i,1}.MeanDoC = mean(DoCScore(class == i));

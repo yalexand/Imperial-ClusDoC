@@ -68,8 +68,11 @@ classdef ClusDoC_analysis_controller < handle
     
     Chan1Color = [1 0 0]; %red   
     
-    sgm = []; % segmetnation image
-
+    sgm = []; % segmentation image
+    
+    roi_to_object_lut = []; % square ROIs are chosen within "object" 
+    
+    save_DBSCAN_clusters_images = false; % to reduce output results storage size
     
 %%%%%%%%%%%%%%%%%%%%%%%% DoC                     
     % DoC DBSCAN parameters
@@ -416,7 +419,7 @@ end
 %                                 true, true, clusterColor, dataCropped(dataCropped(:,12) == chan, obj.NDataColumns + 2));
                             try
                                 [~, ClusterSmoothTable{roiInc,c}, ~, classOut, ~, ~, ~, Result{roiInc,c}] = ...
-                                    DBSCANHandler_YA(dataCropped(dataCropped(:,12) == 1, 5:6), obj.DBSCAN, c, roiInc, ...
+                                    obj.DBSCANHandler_YA(dataCropped(dataCropped(:,12) == 1, 5:6), obj.DBSCAN, c, roiInc, ...
                                     true, true, clusterColor, dataCropped(dataCropped(:,12) == 1, obj.NDataColumns + 2));                               
                                 
                                 %obj.CellData(whichPointsInROI & (obj.CellData(:,12) == chan), obj.NDataColumns + 3) = classOut;
@@ -1152,7 +1155,7 @@ end
 %-------------------------------------------------------------------------%
     function Analyze_ROIs_DoC(obj,~)
   
-        try                      
+%        try                      
                    % PLACE COLOCALIZATION RESULTS INTO 1 CHANNEL DIRECTORY
                    dbscanParams = struct;
                        fname = strrep(obj.fileName{1},'.csv','');
@@ -1267,14 +1270,12 @@ end
             dbscanParams(1).Outputfolder = [DoC_out_dirname filesep 'DBSCAN Results' filesep 'Ch1'];
             dbscanParams(2).Outputfolder = [DoC_out_dirname filesep 'DBSCAN Results' filesep 'Ch2']; % ths won't be reused;
             %
-            [ClusterTableCh1, ClusterTableCh2, clusterIDOut, ClusterTable] = DBSCANonDoCResults_YA( ...
+            [ClusterTableCh1, ClusterTableCh2, clusterIDOut, ClusterTable] = obj.DBSCANonDoCResults_YA( ...
                 DoC_out_CellData, ...
-                obj.ROICoordinates, ...
                 [DoC_out_dirname filesep 'DBSCAN Results'], ...
                 Chan1Color, ...
                 Chan2Color, ...
-                dbscanParams, ...
-                obj.NDataColumns);
+                dbscanParams);
             
             DoC_out_CellData = obj.AssignDoCDataToPoints_YA(DoC_out_CellData, clusterIDOut);
             
@@ -1288,13 +1289,13 @@ end
             % not needed, as these ones are saved within "DBSCANonDoCResults_YA" function
             %save([DoC_out_dirname filesep 'ClusterTables.mat'],'ClusterTableCh1','ClusterTableCh2','-v7.3');
                         
-        catch mError
-            
-            disp('ClusDoC processing exited with errors');
-            %rethrow(mError);
-            disp(mError.message);
-             
-        end        
+%         catch mError
+%             
+%             disp('ClusDoC processing exited with errors');
+%             %rethrow(mError);
+%             disp(mError.message);
+%              
+%         end        
     end        
 %-------------------------------------------------------------------------%
 function DoC_out_CellData = AssignDoCDataToPoints_YA(obj,DoC_in_CellData,clusterIDOut,~)
@@ -1689,7 +1690,25 @@ function h = Define_Square_ROIs_From_Segmentation(obj,varargin)
             Nrois = obj.Square_ROIs_Auto_maxNrois;
             nmppix = obj.pixelSizenm;     
             anm = obj.Square_ROIs_Auto_anm;
+
+            h = [];
             
+            try
+                objects = obj.sgm;
+                if numel(unique(obj.sgm(:))) == 2 % not labelled
+                    objects = bwlabel(obj.sgm);
+                end
+            catch 
+                disp('Define_Square_ROIs_From_Segmentation: wrong or empty segmentation image, cannot continue'); return;
+            end
+            
+            [sx,sy] = size(objects);
+            if ~(sx==obj.SizeX && sy==obj.SizeY)
+                disp('Define_Square_ROIs_From_Segmentation: wrong segmentation image size, cannot continue'); return;
+            end
+            
+            obj.roi_to_object_lut = [];
+                        
             if strcmp(obj.Square_ROIs_Auto_method,'channel')
                                  
                 % to have pixel roughly the size of ROI                 
@@ -1698,18 +1717,18 @@ function h = Define_Square_ROIs_From_Segmentation(obj,varargin)
                 LNT = obj.Square_ROIs_Auto_LNT(chan);    % low number threshold
                 HNT = obj.Square_ROIs_Auto_HNT(chan);    % high number threshold                
                 numbers_OK  = LNT < ROI_numbers&ROI_numbers < HNT; 
-
+                                    
                 z = ROI_numbers;          
-                % check every square if it is projectd on segmentation           
+                % check every square if it is projected on segmentation           
                 proj_sgm = zeros(size(z));
                 for k=1:size(z,1)
                     for m=1:size(z,2)
                            x = round((m-.5)*size_of_ROI_as_pixel_in_microns*1000/nmppix); % back to original scale
                            y = round((k-.5)*size_of_ROI_as_pixel_in_microns*1000/nmppix);
-                           proj_sgm(k,m) = obj.sgm(y,x)~=0;
+                           proj_sgm(k,m) = objects(y,x);
                     end
                 end                                                
-                z = z.*proj_sgm;                              
+                z = z.*(0~=proj_sgm);
                 %
                 obj.ROICoordinates = cell(0);
                 for k=1:size(z,1)
@@ -1725,6 +1744,7 @@ function h = Define_Square_ROIs_From_Segmentation(obj,varargin)
                           p5 = [x-d y+d];                      
                           roi = [p1;p2;p3;p4;p5];                      
                          obj.ROICoordinates = [obj.ROICoordinates; roi];
+                         obj.roi_to_object_lut = [obj.roi_to_object_lut; proj_sgm(k,m)];
                         end
                     end
                 end
@@ -1752,10 +1772,10 @@ function h = Define_Square_ROIs_From_Segmentation(obj,varargin)
                     for m=1:size(z,2)
                            x = round((m-.5)*size_of_ROI_as_pixel_in_microns*1000/nmppix); % back to original scale
                            y = round((k-.5)*size_of_ROI_as_pixel_in_microns*1000/nmppix);
-                           proj_sgm(k,m) = obj.sgm(y,x)~=0;
+                           proj_sgm(k,m) = objects(y,x);
                     end
                 end                                                
-                z = z.*proj_sgm;                              
+                z = z.*(0~=proj_sgm);                           
                 %
                 obj.ROICoordinates = cell(0);
                 for k=1:size(z,1)
@@ -1771,6 +1791,7 @@ function h = Define_Square_ROIs_From_Segmentation(obj,varargin)
                           p5 = [x-d y+d];                      
                           roi = [p1;p2;p3;p4;p5];                      
                          obj.ROICoordinates = [obj.ROICoordinates; roi];
+                         obj.roi_to_object_lut = [obj.roi_to_object_lut; proj_sgm(k,m)];                         
                         end
                     end
                 end
@@ -1817,10 +1838,13 @@ bad_rois = [];
 %bad_rois
 numel(obj.ROICoordinates)
 % check rois
-            obj.ROICoordinates = obj.ROICoordinates(setdiff(1:numel(obj.ROICoordinates),bad_rois));            
+            obj.ROICoordinates = obj.ROICoordinates(setdiff(1:numel(obj.ROICoordinates),bad_rois));
+            obj.roi_to_object_lut = obj.roi_to_object_lut(setdiff(1:numel(obj.ROICoordinates),bad_rois));
             % if too many ROIs, choose random Nrois among defined
             if (numel(obj.ROICoordinates) > Nrois)
-                obj.ROICoordinates = obj.ROICoordinates(randi(numel(obj.ROICoordinates),1,Nrois));
+                mask = randi(numel(obj.ROICoordinates),1,Nrois);
+                obj.ROICoordinates = obj.ROICoordinates(mask);
+                obj.roi_to_object_lut = obj.roi_to_object_lut(mask);
             end             
 
 h = [];            
