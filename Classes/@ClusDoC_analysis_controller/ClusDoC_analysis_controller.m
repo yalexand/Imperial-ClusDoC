@@ -69,6 +69,7 @@ classdef ClusDoC_analysis_controller < handle
     Chan1Color = [1 0 0]; %red   
     
     sgm = []; % segmentation image
+    sgm_base = [];
     
     roi_to_object_lut = []; % square ROIs are chosen within "object" 
     
@@ -105,6 +106,10 @@ classdef ClusDoC_analysis_controller < handle
         DoC_ColoThres = 0.4;            
         DoC_NbThresh = 10;
 %%%%%%%%%%%%%%%%%%%%%%%% DoC
+
+        Plate = [];
+        Well = [];
+        Condition = [];
         
     end                    
     
@@ -1956,6 +1961,50 @@ end % verbose
 % display                                                       
 end
 %-------------------------------------------------------------------------%
+function analysis_controller = save_setups(obj,~)
+
+    s = obj.fileName{1};
+    s = strrep(strrep(s,'.csv',''),'.txt','');
+    save_full_fname = [obj.Outputfolder filesep 'service_' s '.mat' ];
+    
+    analysis_controller.pixelSizenm = obj.pixelSizenm;
+    analysis_controller.WindSTORM_Sigmapix = obj.WindSTORM_Sigmapix;
+    analysis_controller.Square_ROIs_Auto_anm = obj.Square_ROIs_Auto_anm;
+    analysis_controller.Square_ROIs_Auto_qthresh = obj.Square_ROIs_Auto_qthresh;
+    analysis_controller.Square_ROIs_Auto_maxNrois = obj.Square_ROIs_Auto_maxNrois;
+    analysis_controller.Square_ROIs_Auto_method = obj.Square_ROIs_Auto_method;
+    analysis_controller.Square_ROIs_Auto_LNT = obj.Square_ROIs_Auto_LNT;
+    analysis_controller.Square_ROIs_Auto_HNT = obj.Square_ROIs_Auto_HNT ;      
+    analysis_controller.Align_channels_nmppix = obj.Align_channels_nmppix;
+    analysis_controller.Align_channels_method = obj.Align_channels_method ;       
+    analysis_controller.pathName = obj.pathName;
+    analysis_controller.fileName = obj.fileName ;
+    analysis_controller.NDataColumns = obj.NDataColumns;
+    analysis_controller.SizeX = obj.SizeX;
+    analysis_controller.SizeY = obj.SizeY;
+    analysis_controller.Nchannels = obj.Nchannels;
+    analysis_controller.ROICoordinates = obj.ROICoordinates;
+    analysis_controller.Outputfolder = obj.Outputfolder;   
+    analysis_controller.sgm = obj.sgm;
+    analysis_controller.sgm_base = obj.sgm_base;
+    analysis_controller.roi_to_object_lut = obj.roi_to_object_lut;
+    analysis_controller.DoC_Lr_rRad = obj.DoC_Lr_rRad;
+    analysis_controller.DoC_Rmax = obj.DoC_Rmax;
+    analysis_controller.DoC_Step = obj.DoC_Step;
+    analysis_controller.DoC_ColoThres = obj.DoC_ColoThres;
+    analysis_controller.DoC_NbThresh = obj.DoC_NbThresh;
+    %
+    analysis_controller.DoC_dbscanParams_ch1 = obj.DoC_dbscanParams_ch1;
+    analysis_controller.DoC_dbscanParams_ch2 = obj.DoC_dbscanParams_ch2;
+    analysis_controller.DBSCAN = obj.DBSCAN;
+    analysis_controller.RipleyK = obj.RipleyK;
+    analysis_controller.Plate = obj.Plate;
+    analysis_controller.Plate = obj.Well;
+    analysis_controller.Plate = obj.Condition;
+        
+    save(save_full_fname,'analysis_controller');
+
+end
 
 %-------------------------------------------------------------------------%    
     end % methods
