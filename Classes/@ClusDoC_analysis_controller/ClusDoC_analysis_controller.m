@@ -74,6 +74,7 @@ classdef ClusDoC_analysis_controller < handle
     roi_to_object_lut = []; % square ROIs are chosen within "object" 
     
     save_DBSCAN_clusters_images = false; % to reduce output results storage size
+    save_DBSCAN_clusters_points = true; % to reduce output results storage size even more
     
 %%%%%%%%%%%%%%%%%%%%%%%% DoC                     
     % DoC DBSCAN parameters
@@ -1160,7 +1161,7 @@ end
 %-------------------------------------------------------------------------%
     function Analyze_ROIs_DoC(obj,~)
   
-%        try                      
+        try                      
                    % PLACE COLOCALIZATION RESULTS INTO 1 CHANNEL DIRECTORY
                    dbscanParams = struct;
                        fname = strrep(obj.fileName{1},'.csv','');
@@ -1294,13 +1295,13 @@ end
             % not needed, as these ones are saved within "DBSCANonDoCResults_YA" function
             %save([DoC_out_dirname filesep 'ClusterTables.mat'],'ClusterTableCh1','ClusterTableCh2','-v7.3');
                         
-%         catch mError
-%             
-%             disp('ClusDoC processing exited with errors');
-%             %rethrow(mError);
-%             disp(mError.message);
-%              
-%         end        
+        catch mError
+            
+            disp('ClusDoC processing exited with errors');
+            %rethrow(mError);
+            disp(mError.message);
+            
+        end        
     end        
 %-------------------------------------------------------------------------%
 function DoC_out_CellData = AssignDoCDataToPoints_YA(obj,DoC_in_CellData,clusterIDOut,~)
@@ -1539,7 +1540,7 @@ bad_rois = [];
                             dataCropped = obj.CellData{chan}(whichPointsInROI,:);                       
                             x1=dataCropped(:,5);
 
-                            if numel(x1)<obj.Square_ROIs_Auto_LNT
+                            if numel(x1)<obj.Square_ROIs_Auto_LNT(chan)
                                 bad_rois = [bad_rois; roiInc];
                             end
                         elseif strcmp(obj.Square_ROIs_Auto_method,'composite')                            
@@ -1818,7 +1819,7 @@ bad_rois = [];
                             dataCropped = obj.CellData{chan}(whichPointsInROI,:);                       
                             x1=dataCropped(:,5);
 
-                            if numel(x1)<obj.Square_ROIs_Auto_LNT
+                            if numel(x1)<obj.Square_ROIs_Auto_LNT(chan)
                                 bad_rois = [bad_rois; roiInc];
                             end
                         elseif strcmp(obj.Square_ROIs_Auto_method,'composite')                            
@@ -1965,7 +1966,7 @@ function analysis_controller = save_setups(obj,~)
 
     s = obj.fileName{1};
     s = strrep(strrep(s,'.csv',''),'.txt','');
-    save_full_fname = [obj.Outputfolder filesep 'service_' s '.mat' ];
+    save_full_fname = [obj.Outputfolder filesep 'ClusDoC_service_' s '.mat' ];
     
     analysis_controller.pixelSizenm = obj.pixelSizenm;
     analysis_controller.WindSTORM_Sigmapix = obj.WindSTORM_Sigmapix;
@@ -2005,6 +2006,276 @@ function analysis_controller = save_setups(obj,~)
     save(save_full_fname,'analysis_controller');
 
 end
+
+%%%%%%%%%%%%%%%%%%
+%-------------------------------------------------------------------------%
+function h = Define_Square_ROIs_From_Compatible_Polygon(obj,object_index,ROI,varargin) 
+            
+            if 1 == nargin
+                chan = 1;
+            else
+                chan = varargin{1};
+            end        
+            
+            Nrois = obj.Square_ROIs_Auto_maxNrois;
+            nmppix = obj.pixelSizenm;     
+            anm = obj.Square_ROIs_Auto_anm;
+
+            h = [];
+                        
+            obj.roi_to_object_lut = [];
+                        
+            SX = obj.SizeX*obj.pixelSizenm;
+            SY = obj.SizeY*obj.pixelSizenm;            
+            Nx = floor(SX/anm);
+            Ny = floor(SY/anm);
+            
+            if strcmp(obj.Square_ROIs_Auto_method,'channel')
+                                 
+                LNT = obj.Square_ROIs_Auto_LNT(chan);    % low number threshold
+                HNT = obj.Square_ROIs_Auto_HNT(chan);    % high number threshold                
+                                    
+                obj.ROICoordinates = cell(0);
+                        
+                x=obj.CellData{chan}(:,5);
+                y=obj.CellData{chan}(:,6);
+                
+                for six = 1:Nx
+                    for siy = 1:Ny
+                        x0 = 1 + anm*(six-1);
+                        y0 = 1 + anm*(siy-1);
+                        p1 = [x0 y0];
+                        p2 = [x0 y0+anm];
+                        p3 = [x0+anm y0+anm];
+                        p4 = [x0+anm y0];
+                        p5 = p1;
+                        subROI = [p1;p2;p3;p4;p5];                         
+                        in = inpolygon(subROI(:,1),subROI(:,2),ROI(:,1),ROI(:,2));
+                        %
+                        % look if it satisfies numbers of localizations limitations
+                        x_roi=subROI(:,1);
+                        y_roi=subROI(:,2);
+                        
+                        if 5~=sum(in)
+                            continue;
+                        else
+                            whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
+                            dataCropped = obj.CellData{chan}(whichPointsInROI,:);                       
+                            n_locs = size(dataCropped,1);
+                            if LNT < n_locs&&n_locs < HNT
+                             obj.ROICoordinates = [obj.ROICoordinates; subROI];
+                             obj.roi_to_object_lut = [obj.roi_to_object_lut; object_index];                            
+                            end
+                        end 
+                    end
+                end
+            elseif strcmp(obj.Square_ROIs_Auto_method,'composite')
+
+                x1=obj.CellData{1}(:,5);
+                y1=obj.CellData{1}(:,6);
+                x2=obj.CellData{2}(:,5);
+                y2=obj.CellData{2}(:,6);                
+                
+                LNT_1 = obj.Square_ROIs_Auto_LNT(1);    % low number threshold
+                HNT_1 = obj.Square_ROIs_Auto_HNT(1);    % high number threshold                
+                
+                LNT_2 = obj.Square_ROIs_Auto_LNT(2);    % low number threshold
+                HNT_2 = obj.Square_ROIs_Auto_HNT(2);    % high number threshold               
+
+                for six = 1:Nx
+                    for siy = 1:Ny
+                        x0 = 1 + anm*(six-1);
+                        y0 = 1 + anm*(siy-1);
+                        p1 = [x0 y0];
+                        p2 = [x0 y0+anm];
+                        p3 = [x0+anm y0+anm];
+                        p4 = [x0+anm y0];
+                        p5 = p1;
+                        subROI = [p1;p2;p3;p4;p5];                         
+                        in = inpolygon(subROI(:,1),subROI(:,2),ROI(:,1),ROI(:,2));
+                        % look if it satisfies numbers of localizations limitations
+                        x_roi=subROI(:,1);
+                        y_roi=subROI(:,2);                        
+                        if 5~=sum(in)
+                            continue;
+                        else
+                            whichPointsInROI_1 = x1>=min(x_roi) & x1<=max(x_roi) & y1>=min(y_roi) & y1<=max(y_roi); 
+                            dataCropped_1 = obj.CellData{chan}(whichPointsInROI_1,:);
+                            n_locs_1 = size(dataCropped_1,1);
+                            whichPointsInROI_2 = x2>=min(x_roi) & x2<=max(x_roi) & y2>=min(y_roi) & y2<=max(y_roi); 
+                            dataCropped_2 = obj.CellData{chan}(whichPointsInROI_2,:);
+                            n_locs_2 = size(dataCropped_2,1);
+                            
+                            if (LNT_1 < n_locs_1&&n_locs_1 < HNT_1) && (LNT_2 < n_locs_2&&n_locs_2 < HNT_2)
+                             obj.ROICoordinates = [obj.ROICoordinates; subROI];
+                             obj.roi_to_object_lut = [obj.roi_to_object_lut; object_index];                            
+                            end
+                        end 
+                    end
+                end   
+            end
+
+% check rois
+bad_rois = [];
+                   for roiInc = 1:length(obj.ROICoordinates)
+
+                        roi = obj.ROICoordinates{roiInc};
+                        
+                        x_roi=roi(:,1);
+                        y_roi=roi(:,2);
+                        
+                        if strcmp(obj.Square_ROIs_Auto_method,'channel')
+                            x=obj.CellData{chan}(:,5);
+                            y=obj.CellData{chan}(:,6);
+                                whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
+                            dataCropped = obj.CellData{chan}(whichPointsInROI,:);                       
+                            x1=dataCropped(:,5);
+
+                            if numel(x1)<obj.Square_ROIs_Auto_LNT(chan)
+                                bad_rois = [bad_rois; roiInc];
+                            end
+                        elseif strcmp(obj.Square_ROIs_Auto_method,'composite')                            
+                            chan = 1;
+                            x=obj.CellData{chan}(:,5);
+                            y=obj.CellData{chan}(:,6);
+                                whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
+                            dataCropped = obj.CellData{chan}(whichPointsInROI,:);                       
+                            x1=dataCropped(:,5);
+                            chan = 2;
+                            x=obj.CellData{chan}(:,5);
+                            y=obj.CellData{chan}(:,6);
+                                whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
+                            dataCropped = obj.CellData{chan}(whichPointsInROI,:);                       
+                            x2=dataCropped(:,5);                                            
+
+                            if numel(x1)<obj.Square_ROIs_Auto_LNT(1) || numel(x2)<obj.Square_ROIs_Auto_LNT(2)
+                                bad_rois = [bad_rois; roiInc];
+                            end 
+                        end
+                  end
+%bad_rois
+numel(obj.ROICoordinates)
+% check rois
+            obj.ROICoordinates = obj.ROICoordinates(setdiff(1:numel(obj.ROICoordinates),bad_rois));
+            obj.roi_to_object_lut = obj.roi_to_object_lut(setdiff(1:numel(obj.ROICoordinates),bad_rois));
+            % if too many ROIs, choose random Nrois among defined
+            if (numel(obj.ROICoordinates) > Nrois)
+                mask = randi(numel(obj.ROICoordinates),1,Nrois);
+                obj.ROICoordinates = obj.ROICoordinates(mask);
+                obj.roi_to_object_lut = obj.roi_to_object_lut(mask);
+            end             
+
+h = [];            
+if obj.Square_ROIs_Auto_verbose
+% display
+YMAX = obj.SizeY*obj.pixelSizenm;
+h = figure('units','normalized','outerposition',[0 0 1 1],'name','ROIs as they go..');
+    if strcmp(obj.Square_ROIs_Auto_method,'composite')
+                        ax = gca;
+                        plot(ax,obj.CellData{1}(:,5),YMAX-obj.CellData{1}(:,6),'r.',obj.CellData{2}(:,5),YMAX-obj.CellData{2}(:,6),'g.');
+% markersize = 4;                        
+% h = scatter(ax,obj.CellData{1}(:,5),YMAX-obj.CellData{1}(:,6),markersize,'red','filled');
+%         alpha = 0.3;
+%         set(h, 'MarkerEdgeAlpha', alpha, 'MarkerFaceAlpha', alpha);
+% hold on;
+% h = scatter(ax,obj.CellData{2}(:,5),YMAX-obj.CellData{2}(:,6),markersize,'green','filled');
+%         alpha = 0.3;
+%         set(h, 'MarkerEdgeAlpha', alpha, 'MarkerFaceAlpha', alpha);
+                        daspect(ax,[1 1 1]); 
+                        grid(ax,'on');
+                        hold(ax,'on');
+                        
+                   for roiInc = 1:length(obj.ROICoordinates)
+
+                        roi = obj.ROICoordinates{roiInc};
+                        
+                        x_roi=roi(:,1);
+                        y_roi=roi(:,2);
+                        
+                        chan = 1;
+                        x=obj.CellData{chan}(:,5);
+                        y=obj.CellData{chan}(:,6);
+                            whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
+                        dataCropped = obj.CellData{chan}(whichPointsInROI,:);                       
+                        x1=dataCropped(:,5);
+                        y1=dataCropped(:,6);
+                        chan = 2;
+                        x=obj.CellData{chan}(:,5);
+                        y=obj.CellData{chan}(:,6);
+                            whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
+                        dataCropped = obj.CellData{chan}(whichPointsInROI,:);                       
+                        x2=dataCropped(:,5);
+                        y2=dataCropped(:,6);                        
+                        
+                        color = [0.2 0.2 0.2+0.79*rand];
+                                               
+                        plot(ax,x_roi,YMAX-y_roi,'marker','.','color',color,'linestyle','-','linewidth',3);
+                        hold(ax,'on');
+                        
+                        if isempty(x1)
+                            plot(ax,x_roi,YMAX-y_roi,'k:','linewidth',7);
+                            hold(ax,'on');
+                            %disp([roiInc 1]);
+                        end 
+                        
+                        if isempty(x2)
+                            plot(ax,x_roi,YMAX-y_roi,'k:','linewidth',7);
+                            hold(ax,'on');
+                            %disp([roiInc 2]);
+                        end                         
+                        
+                        daspect(ax,[1 1 1]); 
+                        grid(ax,'on');                  
+                   end
+                   hold(ax,'off');
+                   
+    elseif strcmp(obj.Square_ROIs_Auto_method,'channel')
+                        ax = gca;
+                        if 1==chan
+                            clor = 'r.';
+                        else
+                            clor = 'g.';
+                        end
+                        plot(ax,obj.CellData{chan}(:,5),YMAX-obj.CellData{chan}(:,6),clor);
+                        daspect(ax,[1 1 1]); 
+                        grid(ax,'on');
+                        hold(ax,'on');
+                        
+                   for roiInc = 1:length(obj.ROICoordinates)
+
+                        roi = obj.ROICoordinates{roiInc};
+                        
+                        x_roi=roi(:,1);
+                        y_roi=roi(:,2);
+                        
+                        x=obj.CellData{chan}(:,5);
+                        y=obj.CellData{chan}(:,6);
+                            whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
+                        dataCropped = obj.CellData{chan}(whichPointsInROI,:);                       
+                        x1=dataCropped(:,5);
+                        
+                        color = [0.2 0.2 0.2+0.79*rand];
+                                               
+                        plot(ax,x_roi,YMAX-y_roi,'marker','.','color',color,'linestyle','-','linewidth',3);
+                        hold(ax,'on');
+                        
+                        if isempty(x1)
+                            plot(ax,x_roi,YMAX-y_roi,'k:','linewidth',7);
+                            hold(ax,'on');
+                            %disp([roiInc 1]);
+                        end 
+                        
+                        daspect(ax,[1 1 1]); 
+                        grid(ax,'on');                  
+                   end
+                   hold(ax,'off');  
+    end
+    
+end % verbose
+% display                                                       
+end
+
+%%%%%%%%%%%%%%%%%%
 
 %-------------------------------------------------------------------------%    
     end % methods

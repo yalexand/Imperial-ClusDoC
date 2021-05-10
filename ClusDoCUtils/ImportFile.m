@@ -229,6 +229,7 @@ end
 
             Data = [Body_text{1} Body_text{2} Body_text{3} Body_text{4} Body_text{5} Body_text{6}...
                 Body_text{7} Body_text{8} Body_text{9} Body_text{10} Body_text{11} Body_text{12} Body_text{13}];
+            Data(:,12) = ones(size(Data(:,12))); % YA: otherwise, problems
 
         case 14
             
