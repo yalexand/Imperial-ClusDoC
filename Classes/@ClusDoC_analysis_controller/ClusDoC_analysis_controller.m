@@ -74,7 +74,6 @@ classdef ClusDoC_analysis_controller < handle
     roi_to_object_lut = []; % square ROIs are chosen within "object" 
     
     save_DBSCAN_clusters_images = false; % to reduce output results storage size
-    save_DBSCAN_clusters_points = true; % to reduce output results storage size even more
     
 %%%%%%%%%%%%%%%%%%%%%%%% DoC                     
     % DoC DBSCAN parameters
@@ -1169,18 +1168,18 @@ end
                        DoC_out_dirname = [obj.Outputfolder filesep fname '_channel_' num2str(1) '_ClusDoC_Results' filesep 'DoC'];
                        if ~exist(DoC_out_dirname,'dir')
                            mkdir( fullfile(obj.Outputfolder,[fname '_channel_' num2str(1) '_ClusDoC_Results'],'DoC'));
-                           mkdir(DoC_out_dirname,'DBSCAN_Results');
-                            mkdir([DoC_out_dirname filesep 'DBSCAN_Results'],'Ch1');
-                            mkdir([DoC_out_dirname filesep 'DBSCAN_Results'],'Ch2');
-                            mkdir([DoC_out_dirname filesep 'DBSCAN_Results' filesep 'Ch1'],'Cluster_maps');
-                            mkdir([DoC_out_dirname filesep 'DBSCAN_Results' filesep 'Ch2'],'Cluster_maps');
-                            mkdir([DoC_out_dirname filesep 'DBSCAN_Results' filesep 'Ch1'],'Cluster_density_maps');
-                            mkdir([DoC_out_dirname filesep 'DBSCAN_Results' filesep 'Ch2'],'Cluster_density_maps');
-                            mkdir(DoC_out_dirname,'DoC_histograms');
-                            mkdir(DoC_out_dirname,'DoC_Statistics_and_Plots');
-                            mkdir([DoC_out_dirname filesep 'DoC_Statistics_and_Plots'],'Density_and_DoC_maps');
-                            mkdir([DoC_out_dirname filesep 'DoC_Statistics_and_Plots'],'Raw_data_maps');
-                            mkdir([DoC_out_dirname filesep 'DoC_Statistics_and_Plots'],'Raw_data_maps_with_outliers_removed');
+                           mkdir(DoC_out_dirname,'DBSCAN Results');
+                            mkdir([DoC_out_dirname filesep 'DBSCAN Results'],'Ch1');
+                            mkdir([DoC_out_dirname filesep 'DBSCAN Results'],'Ch2');
+                            mkdir([DoC_out_dirname filesep 'DBSCAN Results' filesep 'Ch1'],'Cluster_maps');
+                            mkdir([DoC_out_dirname filesep 'DBSCAN Results' filesep 'Ch2'],'Cluster_maps');
+                            mkdir([DoC_out_dirname filesep 'DBSCAN Results' filesep 'Ch1'],'Cluster_density_maps');
+                            mkdir([DoC_out_dirname filesep 'DBSCAN Results' filesep 'Ch2'],'Cluster_density_maps');
+                            mkdir(DoC_out_dirname,'DoC histograms');
+                            mkdir(DoC_out_dirname,'DoC Statistics and Plots');
+                            mkdir([DoC_out_dirname filesep 'DoC Statistics and Plots'],'Density and DoC maps');
+                            mkdir([DoC_out_dirname filesep 'DoC Statistics and Plots'],'Raw data maps');
+                            mkdir([DoC_out_dirname filesep 'DoC Statistics and Plots'],'Raw data maps with outliers removed');
                        end
 
             dbscanParams(1).Outputfolder = DoC_out_dirname;
@@ -1273,12 +1272,12 @@ end
 %             [ClusterTableCh1, ClusterTableCh2, clusterIDOut, handles.ClusterTable] = DBSCANonDoCResults(handles.CellData, handles.ROICoordinates, ...
 %                 strcat(handles.Outputfolder, '\Clus-DoC Results'), handles.Chan1Color, handles.Chan2Color, dbscanParams, handles.NDataColumns);
 
-            dbscanParams(1).Outputfolder = [DoC_out_dirname filesep 'DBSCAN_Results' filesep 'Ch1'];
-            dbscanParams(2).Outputfolder = [DoC_out_dirname filesep 'DBSCAN_Results' filesep 'Ch2']; % ths won't be reused;
+            dbscanParams(1).Outputfolder = [DoC_out_dirname filesep 'DBSCAN Results' filesep 'Ch1'];
+            dbscanParams(2).Outputfolder = [DoC_out_dirname filesep 'DBSCAN Results' filesep 'Ch2']; % ths won't be reused;
             %
             [ClusterTableCh1, ClusterTableCh2, clusterIDOut, ClusterTable] = obj.DBSCANonDoCResults_YA( ...
                 DoC_out_CellData, ...
-                [DoC_out_dirname filesep 'DBSCAN_Results'], ...
+                [DoC_out_dirname filesep 'DBSCAN Results'], ...
                 Chan1Color, ...
                 Chan2Color, ...
                 dbscanParams);

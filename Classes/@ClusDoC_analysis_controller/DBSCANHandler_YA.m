@@ -73,7 +73,7 @@ try
             if nargin == 10+1
                 Density = varargin{7}; % Data is an input
                 DoCScore = varargin{8};
-                printOutFigDest = 'Clus-DoC_Results\DBSCAN_Results';
+                printOutFigDest = 'Clus-DoC Results\DBSCAN Results';
             end
 
         end
@@ -193,9 +193,7 @@ try
                 [ClusImage,  Area, Circularity, Nb, contour, edges, Cutoff_point, Elongation] = Smoothing_fun4cluster(xin(:,1:2), DBSCANParams, false, false); % 0.1*max intensity 
 
                 ClusterSmooth{i,1}.ClusterID = i;
-                if obj.save_DBSCAN_clusters_points 
-                    ClusterSmooth{i,1}.Points = xin(:,1:2);
-                end
+                ClusterSmooth{i,1}.Points = xin(:,1:2);
                 if obj.save_DBSCAN_clusters_images 
                     ClusterSmooth{i,1}.Image = ClusImage; 
                 end

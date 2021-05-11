@@ -20,7 +20,8 @@ NDatacolumns = obj.NDataColumns;
 ClusterSmoothTableCh1 = cell(max(cellfun(@length, ROICoordinates)), 1);
 ClusterSmoothTableCh2 = cell(max(cellfun(@length, ROICoordinates)), 1);
 
-ResultCell = cell(max(cellfun(@length, ROICoordinates)), 1);
+%ResultCell = cell(max(cellfun(@length, ROICoordinates)),1);
+ResultCell = cell(max(numel(ROICoordinates),1),1);
 
 clusterIDOut = cell(max(cellfun(@length, ROICoordinates)), 1, 2);
 
@@ -156,7 +157,7 @@ clusterTable = [];
     end % channel
 
 
-save(fullfile(Path_name, 'DBSCAN_Clus-DoC_Results.mat'),'ClusterSmoothTableCh1','ClusterSmoothTableCh2','-v7.3');
+save(fullfile(Path_name, 'DBSCAN Clus-DoC Results.mat'),'ClusterSmoothTableCh1','ClusterSmoothTableCh2','-v7.3');
 end
 
 function clusterTableOut = AppendToClusterTableInternal(clusterTable, Ch, cellIter, roiIter, ClusterCh, classOut)

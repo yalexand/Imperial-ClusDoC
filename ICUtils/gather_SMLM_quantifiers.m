@@ -8,7 +8,6 @@ Ch2_MIiSR_dir = [path_to_data filesep Ch2_name '_channel_2_MIiSR_Results'];
 % ROIs and CLUSTERS
 % DoC
 DBSCAN_DoC_data_fname = [Ch1_ClusDoC_dir filesep 'DoC' filesep 'DBSCAN Results' filesep 'DBSCAN Clus-DoC Results.mat'];
-%DBSCAN_DoC_data_fname = [Ch1_ClusDoC_dir filesep 'DoC' filesep 'DBSCAN_Results' filesep 'DBSCAN_Clus-DoC_Results.mat'];
 
 % ROIs
 % ClusDoC Ripley

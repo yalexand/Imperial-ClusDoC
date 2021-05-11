@@ -189,7 +189,7 @@ end
                     cell2mat(MeanNumMolsPerNonColocCluster(:)), ...
                     cell2mat(NumNonColocClustersPerROI(:))];  
     
-    RegionName = strcat('Clus-DoC_results');
+    RegionName = strcat('Clus-DoC results');
     
  switch Ch
     case 1
