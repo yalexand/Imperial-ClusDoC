@@ -193,11 +193,11 @@ end
     
  switch Ch
     case 1
-        xlswrite(fullfile(outputFolder, 'Clus-DoC Ch1.xls'), Array, RegionName, 'A1');
-        xlswrite(fullfile(outputFolder, 'Clus-DoC Ch1.xls'), Matrix_Result, RegionName, 'A2');
+        xlswrite(fullfile(outputFolder, 'Clus-DoC_Ch1.xls'), Array, RegionName, 'A1');
+        xlswrite(fullfile(outputFolder, 'Clus-DoC_Ch1.xls'), Matrix_Result, RegionName, 'A2');
     case 2
-        xlswrite(fullfile(outputFolder, 'Clus-DoC Ch2.xls'), Array, RegionName, 'A1');
-        xlswrite(fullfile(outputFolder, 'Clus-DoC Ch2.xls'), Matrix_Result, RegionName, 'A2');
+        xlswrite(fullfile(outputFolder, 'Clus-DoC_Ch2.xls'), Array, RegionName, 'A1');
+        xlswrite(fullfile(outputFolder, 'Clus-DoC_Ch2.xls'), Matrix_Result, RegionName, 'A2');
  end
 
 

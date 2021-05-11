@@ -68,12 +68,12 @@ try
             clusterColor = varargin{5};
             maskVector = varargin{6};
             
-            printOutFigDest = 'DBSCAN Results';
+            printOutFigDest = 'DBSCAN_Results';
             
             if nargin == 10+1
                 Density = varargin{7}; % Data is an input
                 DoCScore = varargin{8};
-                printOutFigDest = 'Clus-DoC Results\DBSCAN Results';
+                printOutFigDest = 'Clus-DoC_Results\DBSCAN_Results';
             end
 
         end
@@ -378,7 +378,7 @@ try
             set(fig3, 'Color', [1 1 1], 'Tag', 'ClusDoC');
 
             Name = strcat('Cell',num2str(cellNum),'_Region',num2str(ROINum), '_Norm_Density_map.tif');
-%             print(fullfile(DBSCANParams.Outputfolder, 'DBSCAN Results', ...
+%             print(fullfile(DBSCANParams.Outputfolder, 'DBSCAN_Results', ...
 %                 sprintf('Ch%d', DBSCANParams.CurrentChannel), 'Cluster density maps', Name), fig3, '-dtiff');
             print(fullfile(DBSCANParams.Outputfolder,'Cluster_density_maps', Name), fig3, '-dtiff');
 

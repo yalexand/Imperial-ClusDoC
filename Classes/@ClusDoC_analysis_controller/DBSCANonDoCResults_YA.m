@@ -133,7 +133,7 @@ clusterTable = [];
                     end
 
                     %                         Name1 = sprintf('_Table_%d_Region_%d_', p, q);
-                    %                         Name2 = fullfile(Path_name, 'DBSCAN Results', 'Clus-DoC cluster maps', ...
+                    %                         Name2 = fullfile(Path_name, 'DBSCAN_Results', 'Clus-DoC_cluster_maps', ...
                     %                             sprintf('Ch%d', Ch), sprintf('%sClusters_Ch%d.tif', Name1, Ch));
                     %
                     %                         set(gca, 'box', 'on', 'XTickLabel', [], 'XTick', [], 'YTickLabel', [], 'YTick', [])
@@ -157,7 +157,7 @@ clusterTable = [];
     end % channel
 
 
-save(fullfile(Path_name, 'DBSCAN Clus-DoC Results.mat'),'ClusterSmoothTableCh1','ClusterSmoothTableCh2','-v7.3');
+save(fullfile(Path_name, 'DBSCAN_Clus-DoC_Results.mat'),'ClusterSmoothTableCh1','ClusterSmoothTableCh2','-v7.3');
 end
 
 function clusterTableOut = AppendToClusterTableInternal(clusterTable, Ch, cellIter, roiIter, ClusterCh, classOut)

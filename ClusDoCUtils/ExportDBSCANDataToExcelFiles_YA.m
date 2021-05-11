@@ -33,9 +33,9 @@ function ExportDBSCANDataToExcelFiles_YA(cellROIPair, Result, outputFolder, chan
         disp('Export')
         disp(chan);
 
-        xlswrite(fullfile(outputFolder, 'DBSCAN Results.xls'), cellROIPair, sprintf('Chan%d', chan), 'A2');
-        xlswrite(fullfile(outputFolder, 'DBSCAN Results.xls'), HeaderArray, sprintf('Chan%d', chan), 'A1');
-        xlswrite(fullfile(outputFolder, 'DBSCAN Results.xls'), Matrix_Result, sprintf('Chan%d', chan), 'G2');                
+        xlswrite(fullfile(outputFolder, 'DBSCAN_Results.xls'), cellROIPair, sprintf('Chan%d', chan), 'A2');
+        xlswrite(fullfile(outputFolder, 'DBSCAN_Results.xls'), HeaderArray, sprintf('Chan%d', chan), 'A1');
+        xlswrite(fullfile(outputFolder, 'DBSCAN_Results.xls'), Matrix_Result, sprintf('Chan%d', chan), 'G2');                
         
     catch 
         
@@ -62,6 +62,6 @@ function ExportDBSCANDataToExcelFiles_YA(cellROIPair, Result, outputFolder, chan
         
     end
     
-    save(fullfile(outputFolder, 'DBSCAN Results.mat'), 'cellROIPair','HeaderArray','Matrix_Result');
+    save(fullfile(outputFolder, 'DBSCAN_Results.mat'), 'cellROIPair','HeaderArray','Matrix_Result');
 
 end
