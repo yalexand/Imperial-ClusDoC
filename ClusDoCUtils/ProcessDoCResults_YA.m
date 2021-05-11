@@ -5,7 +5,7 @@ function ResultTable = ProcessDoCResults_YA(CellData, NDatacolumns, ROICoordinat
 %             rmdir('Statistic and Plots for Colocalization','s')
 %         end
 
-f1 = 'DoC_statistics_and_plots';
+f1 = 'DoC_Statistics_and_Plots';
 % 
 % mkdir(fullfile(Path_name, f1));
 % 
