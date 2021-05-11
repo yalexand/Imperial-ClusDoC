@@ -73,7 +73,7 @@ try
             if nargin == 10+1
                 Density = varargin{7}; % Data is an input
                 DoCScore = varargin{8};
-                printOutFigDest = 'Clus-DoC Results\DBSCAN Results';
+                printOutFigDest = 'Clus-DoC_Results\DBSCAN_Results';
             end
 
         end
