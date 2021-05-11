@@ -58,7 +58,7 @@ function [CellData_out, DensityROI] = DoCHandler_YA(ROICoordinates, CellData_in,
 
                 % Save the figure
                 Name = sprintf('Region_%d_Hist', roiIter);
-                print(fullfile(Outputfolder, 'DoC histograms', Name), ...
+                print(fullfile(Outputfolder, 'DoC_histograms', Name), ...
                     handles.handles.DoCFigPerROI, '-dtiff');
 
                 close gcf
@@ -127,11 +127,11 @@ function [CellData_out, DensityROI] = DoCHandler_YA(ROICoordinates, CellData_in,
   
     % Save the figure
     try 
-        print(fullfile(Outputfolder, 'DoC histograms', 'Pooled DoC histogram.tif'), ...
+        print(fullfile(Outputfolder, 'DoC_histograms', 'Pooled_DoC_histogram.tif'), ...
             handles.handles.DoCFig, '-dtiff');
     catch
         currFig = getframe(handles.handles.DoCFig);
-        imwrite(currFig.cdata, fullfile(Outputfolder, 'DoC histograms', 'Pooled DoC histogram.tif'));
+        imwrite(currFig.cdata, fullfile(Outputfolder, 'DoC_histograms', 'Pooled_DoC_histogram.tif'));
     end
 
     close gcf;
