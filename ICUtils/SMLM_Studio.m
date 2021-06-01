@@ -22,7 +22,7 @@ function varargout = SMLM_Studio(varargin)
 
 % Edit the above text to modify the response to help SMLM_Studio
 
-% Last Modified by GUIDE v2.5 05-May-2021 09:34:43
+% Last Modified by GUIDE v2.5 26-May-2021 16:51:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -888,3 +888,108 @@ function stat_vals = calculate_statistics(x1,x2,handles)
     P4 = abs( mean(x1) - mean(x2) )/s;
     P5 = abs(median(x1)-median(x2));
 stat_vals = [P1 P2 P3 P4 P5]';                        
+
+
+% --------------------------------------------------------------------
+function Tools_Callback(hObject, eventdata, handles)
+% hObject    handle to Tools (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function save_clusters_data_Callback(hObject, eventdata, handles)
+     try
+        roi_data = handles.tot_data;
+     catch
+        disp('no data');
+     end
+     if isempty(roi_data), return, end
+
+    cluster_params = {'cl.Area','cl.Nb','cl.Circularity','cl.Elongation','cl.MeanDoC','cl.Density','cl.NormDensity'};
+    is_Elongation = true;
+    is_MeanDoC = true;
+    if ~ismember(handles.param_names,'cl.Elongation')
+        setxor(cluster_params,'cl.Elongation');
+        is_Elongation = false;
+    end
+    if ~ismember(handles.param_names,'cl.MeanDoC')
+        setxor(cluster_params,'cl.MeanDoC');
+        is_MeanDoC = false;
+    end        
+                            %
+                            captions = {'Plate','Condition','Well','FOV','Object','ROI','channel'};
+                            captions = [captions 'Area'];
+                            captions = [captions 'Nb'];
+                            captions = [captions 'Circularity'];
+                                        if is_Elongation
+                                            captions = [captions 'Elongation'];
+                                        end
+                                        if is_MeanDoC
+                                            captions = [captions 'MeanDoC'];
+                                        end
+                            captions = [captions 'loc.Density'];
+                            captions = [captions 'norm loc.Density'];   
+    
+         row_size = numel(captions);
+             
+         s = cell(100000000,row_size); % enough to handle clusters...
+         cnt = 0;
+         tic
+         w = waitbar(0, 'grabbing clusters...');
+         N_rois = numel(roi_data);
+             for k=1:N_rois 
+                 waitbar(k/N_rois,w);
+                    ass = roi_data{k};
+                    if isfield(ass,'DBSCAN_clusters') && ~isempty(ass.DBSCAN_clusters)
+                        %
+                            [P,C,W,F,O,R,c] = get_attributes(ass.token);
+                            index = handles.FOV_ind([':P:' P ':C:' C ':W:' W ':F:' F]);
+                            cind = handles.Chan_ind(c);
+                            norma = handles.FOVs_density(index,cind);
+                            
+                            for cl = 1:numel(ass.DBSCAN_clusters)
+                                cnt=cnt+1;
+                                        s{cnt,1} = P;
+                                        s{cnt,2} = C;
+                                        s{cnt,3} = W;
+                                        s{cnt,4} = F;
+                                        s{cnt,5} = O;
+                                        s{cnt,6} = R;
+                                        s{cnt,7} = c;                                        
+                                        p=1;
+                                        s{cnt,7+p} = ass.DBSCAN_clusters{cl}.Area;
+                                        p=p+1;
+                                        s{cnt,7+p} = ass.DBSCAN_clusters{cl}.Nb;
+                                        p=p+1;                                        
+                                        s{cnt,7+p} = ass.DBSCAN_clusters{cl}.Circularity;
+                                        p=p+1;
+                                        if is_Elongation
+                                            s{cnt,7+p} = ass.DBSCAN_clusters{cl}.Elongation;                                        
+                                            p=p+1;                                        
+                                        end
+                                        if is_MeanDoC
+                                            s{cnt,7+p} = ass.DBSCAN_clusters{cl}.MeanDoC;                                                   
+                                            p=p+1;                                        
+                                        end
+                                        s{cnt,7+p} = ass.DBSCAN_clusters{cl}.Nb/ass.DBSCAN_clusters{cl}.Area;
+                                        p=p+1;                                        
+                                        s{cnt,7+p} = ass.DBSCAN_clusters{cl}.Nb/ass.DBSCAN_clusters{cl}.Area/norma;
+                            end
+                    end  
+             end  
+             waitbar(1, w);
+             close(w);             
+         s = s(1:cnt,:);
+                                             
+        [filename, pathname] = uiputfile('*.csv', 'save clusters data as');
+        fullfilename = [pathname filesep filename];
+        s = [captions; s];
+        cell2csv(fullfilename,s); % very slow
+        toc
+                
+        
+
+
+
+
