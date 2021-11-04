@@ -918,7 +918,7 @@ function save_clusters_data_Callback(hObject, eventdata, handles)
         is_MeanDoC = false;
     end        
                             %
-                            captions = {'Plate','Condition','Well','FOV','Object','ROI','channel'};
+                            captions = {'Plate','Condition','Well','FOV','Object','ROI','channel','Xc','Yc'};
                             captions = [captions 'Area'];
                             captions = [captions 'Nb'];
                             captions = [captions 'Circularity'];
@@ -958,6 +958,10 @@ function save_clusters_data_Callback(hObject, eventdata, handles)
                                         s{cnt,6} = R;
                                         s{cnt,7} = c;                                        
                                         p=1;
+                                        s{cnt,7+p} = ass.DBSCAN_clusters{cl}.Xc;
+                                        p=p+1;
+                                        s{cnt,7+p} = ass.DBSCAN_clusters{cl}.Yc;                                                                                                                        
+                                        p=p+1;
                                         s{cnt,7+p} = ass.DBSCAN_clusters{cl}.Area;
                                         p=p+1;
                                         s{cnt,7+p} = ass.DBSCAN_clusters{cl}.Nb;
