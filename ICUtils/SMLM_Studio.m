@@ -60,7 +60,7 @@ handles.figureName = get(handles.figure1,'Name');
 handles.data = [];
 handles.filenames = [];
 
-handles.param_names = {'cl.DoC','cl.Area','cl.Circularity','cl.Nloc','cl.Density','roi.Ripley','roi.xRDF','roi.xRipley','roi.Ripley(MAX)','roi.xRDF(MAX)','roi.xRipley(MAX)','roi.SAA','roi.SAA(ratio)'};
+handles.param_names = {'cl.DoC','cl.Area','cl.Circularity','cl.Nloc','cl.Density','roi.Ripley','roi.xRDF','roi.xRipley','roi.Ripley(MAX)','roi.xRDF(MAX)','roi.xRipley(MAX)','roi.SAA','roi.SAA(ratio)' 'roi.ClusterDensity'};
 
 set(handles.axes1,'XTick',[]);
 set(handles.axes1,'YTick',[]);
@@ -393,6 +393,22 @@ end
 %
 handles.tot_data = handles.tot_data(1,1:cnt_rois); % less than million..
 
+% check if there are centroid coordinates
+
+there_are_cluster_centroid_coordinates = true;
+        ass = handles.tot_data{1};
+        if isfield(ass,'DBSCAN_clusters') && ~isempty(ass.DBSCAN_clusters{1})
+                if ~isfield(ass.DBSCAN_clusters{1},'Xc')
+                    there_are_cluster_centroid_coordinates = false;                     
+                end
+        end
+%        
+Lmax = 300;
+if there_are_cluster_centroid_coordinates
+    handles.tot_data = get_cluster_density_per_ROI(handles,Lmax);
+    guidata(hObject,handles);
+end
+
 toc/60
 
 handles.Plate = SMLMdata.Plate;
@@ -494,6 +510,11 @@ for k=1:numel(handles.tot_data)
     end
 end
 
+if there_are_cluster_centroid_coordinates
+    handles.param_names  = [handles.param_names; 'roi.ClusterDensity'];
+    guidata(hObject,handles);
+end
+
 set(handles.Q1,'String',handles.param_names);
 set(handles.Q_X,'String',handles.param_names);
 set(handles.Q_Y,'String',handles.param_names);
@@ -556,6 +577,7 @@ for k=1:numel(handles.param_names)
         case 'cl.NormDensity'
         case 'roi.Ripley'
         case 'roi.Ripley(MAX)'
+        case 'roi.ClusterDensity'
     end
 end
 
@@ -641,15 +663,20 @@ function show_plot(hObject,handles)
             end
         case 'roi.Ripley(MAX)'            
             XLABEL = 'distance at RipleyK maximum [nm]';
+        case 'roi.ClusterDensity'
+            XLABEL = 'clusters density estimate [1/nm^2]';            
     end
-            
-    MEAN1 = mean(s1);
-    STD1= std(s1);
-    MEAN2 = mean(s2);
-    STD2 = std(s2);
-            
+                              
     if ~isempty(s1) && ~isempty(s2) && ~strcmp(Q,'roi.Ripley')
         
+        s1 = s1(~isnan(s1));
+        s2 = s2(~isnan(s2));
+    
+        MEAN1 = mean(s1);
+        STD1= std(s1);
+        MEAN2 = mean(s2);
+        STD2 = std(s2);
+                
         stat_vals = calculate_statistics(s1,s2,handles);
         set(handles.statistics_table,'Data',stat_vals);
         guidata(hObject, handles);
@@ -758,6 +785,14 @@ function [s, parameter,param_ind] = select_data(handles,table_token,group_index)
                              s(cnt) = maxval;
                         end
                     end
+                    if strcmp(parameter,'roi.ClusterDensity')
+                        val = ass.ClusterDensity;
+                        if ~isnan(val)
+                            cnt = cnt + 1;                            
+                             s(cnt) = val;
+                        end
+                    end
+                    
              end        
          toc
      if ismember(parameter,cluster_params) || strcmp(parameter,'roi.Ripley(MAX)')
@@ -805,7 +840,10 @@ function show_2d_histogram(handles)
                 logscale_X = true;
                 XLABEL = 'log10(relative localisations density)';                
         case 'roi.Ripley(MAX)'
-            XLABEL = 'distance at RipleyK maximum [nm]';            
+            XLABEL = 'distance at RipleyK maximum [nm]';
+        case 'roi.ClusterDensity'            
+            XLABEL = 'clusters density estimate [1/nm^2]';
+            
     end
     
     logscale_Y = false;
@@ -829,7 +867,9 @@ function show_2d_histogram(handles)
                 logscale_Y = true;
                 YLABEL = 'log10(relative localisations density)';                
         case 'roi.Ripley(MAX)'
-            YLABEL = 'distance at RipleyK maximum [nm]';            
+            YLABEL = 'distance at RipleyK maximum [nm]';
+        case 'roi.ClusterDensity'            
+            YLABEL = 'clusters density estimate [1/nm^2]';            
     end
     %
     if ~isempty(sx) && ~isempty(sy) && length(sx)==length(sy)
@@ -993,6 +1033,73 @@ function save_clusters_data_Callback(hObject, eventdata, handles)
         toc
                 
         
+function ret = get_cluster_density_per_ROI(handles,Lmax)
+ret = cell(size(handles.tot_data));
+for k=1:numel(handles.tot_data)
+    %
+    ass = handles.tot_data{k};
+    ass.ClusterDensity = nan;
+    ret{k} = ass;    
+    try % to calculate clusters density
+    if isfield(ass,'DBSCAN_clusters') && ~isempty(ass.DBSCAN_clusters)
+        % 
+        points = zeros(numel(ass.DBSCAN_clusters),2); % set of points
+        for cl = 1:numel(ass.DBSCAN_clusters)
+            points(cl,:) = [ass.DBSCAN_clusters{cl}.Xc ass.DBSCAN_clusters{cl}.Yc];
+        end
+
+         dt = delaunayTriangulation(points); 
+         if isempty(dt), continue, end
+%         tri = dt.ConnectivityList;
+%         g = digraph(tri, tri(:, [2 3 1]));
+%         A = adjacency(g);
+%         A = A | A';
+%         g = graph(A);
+%         figure(22);        
+%             tri = dt.ConnectivityList;
+%             g = digraph(tri, tri(:, [2 3 1]));
+%             A = adjacency(g);
+%             A = A | A';
+%             g = graph(A);
+%             plot(g);        
+%          figure(23);
+%              IC = incenter(dt);
+%              triplot(dt)
+%              hold(gca,'on');
+%              plot(IC(:,1),IC(:,2),'*r')        
+%              hold(gca,'off');                                                                            
+         
+         EDGES = edges(dt);
+%         figure(22)
+%         cla(gca,'reset');
+         acc = [];
+         for ei=1:size(EDGES,1)
+             v1 = EDGES(ei,1);
+             v2 = EDGES(ei,2);
+             p1 = dt.Points(v1,:);
+             p2 = dt.Points(v2,:);
+             li = norm(p1-p2);             
+             if li<Lmax
+%                 hold('on');
+%             line(gca,[p1(1) p2(1)],[p1(2) p2(2)],'color','b');
+%                 hold('off');
+                 acc = [acc; li];
+             else
+%                  hold('on');
+%              line([p1(1) p2(1)],[p1(2) p2(2)],'color','r');
+%                  hold('off');
+             end
+         end
+         if ~isempty(acc)
+            ass.ClusterDensity = 2/mean(acc)^2;
+            ret{k} = ass;
+         end         
+    end
+    catch
+    end
+end
+
+
 
 
 
