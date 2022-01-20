@@ -370,14 +370,25 @@ handles.tot_data = cell(1,1000000); % million ROIs
 cnt_rois = 0;
 
 for plate = 1:n_plates
-    for w=1:n_wells
-        if isempty(well_to_condition_map(num2str(w))), continue, end
+    for w=1:n_wells        
+        well_is_empty = true;
+        try
+            well_is_empty = isempty(well_to_condition_map(num2str(w)));
+        catch
+            well_is_empty = isempty(well_to_condition_map(SMLMdata.Well{w}));
+        end
         %
         fov = w; % this is lkely wrong, but held for first data reduction cases
         %
         for k = 1:n_max_objects
             for channel = 1:n_channels
-                condition_index = well_to_condition_index_map(num2str(w));
+                %
+                try
+                    condition_index = well_to_condition_index_map(num2str(w));
+                catch
+                    condition_index = well_to_condition_index_map(SMLMdata.Well{w});
+                end
+                %
                 cur_data = SMLMdata.data{plate,condition_index,w,fov,channel,k};
                 if isempty(cur_data), continue, end
                 nrois = numel(cur_data);
@@ -562,7 +573,12 @@ for k=1:numel(handles.param_names)
     set(handles.Q1,'Value',k);
     [s, Q, ~] = select_data(handles,'Q1',1);    
     Q    
+    try
     handles.minmaxlimits(k,:) = [min(s) max(s)];
+    catch
+        disp('error!')
+        disp(handles.param_names{k});
+    end
     toc
     switch handles.param_names{k}
         case 'cl.Area'
