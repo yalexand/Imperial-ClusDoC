@@ -424,14 +424,16 @@ for plate = 1:n_plates
                     condition_index = well_to_condition_index_map(SMLMdata.Well{w});
                 end
                 %
-                cur_data = SMLMdata.data{plate,condition_index,w,fov,channel,k};
-                if isempty(cur_data), continue, end
-                nrois = numel(cur_data);
-                    for r=1:nrois
-                        ass = cur_data{r};
-                        cnt_rois = cnt_rois+1;
-                        handles.tot_data{cnt_rois} = ass;
-                    end
+                if ~isempty(condition_index) && 0 ~= condition_index
+                    cur_data = SMLMdata.data{plate,condition_index,w,fov,channel,k};
+                    if isempty(cur_data), continue, end
+                    nrois = numel(cur_data);
+                        for r=1:nrois
+                            ass = cur_data{r};
+                            cnt_rois = cnt_rois+1;
+                            handles.tot_data{cnt_rois} = ass;
+                        end
+                end
             end                                
         end
     end
