@@ -22,7 +22,7 @@ function varargout = SMLM_Studio(varargin)
 
 % Edit the above text to modify the response to help SMLM_Studio
 
-% Last Modified by GUIDE v2.5 26-May-2021 16:51:10
+% Last Modified by GUIDE v2.5 20-Jan-2022 15:15:20
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -68,8 +68,6 @@ set(handles.corr_plot,'XTick',[]);
 set(handles.corr_plot,'YTick',[]);
 
 handles.statistics_names = {'p-value: KS','p-value: t-test','p-value: Wilcoxon','Cohen"s d','|median diff|'};
-set(handles.statistics_table, 'RowName',handles.statistics_names);
-set(handles.statistics_table, 'ColumnName', {'value'});
 
 set(handles.bar_log,'Enable','off');
 
