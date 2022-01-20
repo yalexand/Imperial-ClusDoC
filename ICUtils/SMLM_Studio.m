@@ -22,7 +22,7 @@ function varargout = SMLM_Studio(varargin)
 
 % Edit the above text to modify the response to help SMLM_Studio
 
-% Last Modified by GUIDE v2.5 20-Jan-2022 15:15:20
+% Last Modified by GUIDE v2.5 20-Jan-2022 18:05:44
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -66,10 +66,13 @@ set(handles.axes1,'XTick',[]);
 set(handles.axes1,'YTick',[]);
 set(handles.corr_plot,'XTick',[]);
 set(handles.corr_plot,'YTick',[]);
+set(handles.corr_plot2,'XTick',[]);
+set(handles.corr_plot2,'YTick',[]);
 
 handles.statistics_names = {'p-value: KS','p-value: t-test','p-value: Wilcoxon','Cohen"s d','|median diff|'};
 
 set(handles.bar_log,'Enable','off');
+set(handles.bar2_log,'Enable','off');
 
 condition = {...
     'C1', ...
@@ -170,7 +173,37 @@ n_max_objects = 6;
     set(handles.Object_table,'CellEditCallback',@table_check_callback);
         set(handles.Object_table2,'CellEditCallback',@table_check_callback);
             set(handles.Object_table3,'CellEditCallback',@table_check_callback);
-                             
+           
+%%%%%%%
+% 2d histo chooser
+   data = [num2cell(true(n_conditions,1)) condition'];
+   set(handles.Condition_table4, 'Data', data, ... 
+         'ColumnEditable',[true,false]);  
+     
+   data = [num2cell(true(n_plates,1)) num2cell((1:n_plates))'];
+   set(handles.Plate_table4, 'Data', data, ... 
+         'ColumnEditable',[true,false]);  
+
+   data = [num2cell(true(n_wells,1)) num2cell((1:n_wells))'];
+   set(handles.Well_table4, 'Data', data, ... 
+         'ColumnEditable',[true,false]);  
+   data = [num2cell(true(n_fovs,1)) num2cell((1:n_fovs))'];
+   set(handles.FOV_table4, 'Data', data, ... 
+         'ColumnEditable',[true,false]);  
+     
+   data = [num2cell(true(n_channels,1)) num2cell((1:n_channels))'];
+   set(handles.Channel_table4, 'Data', data, ... 
+         'ColumnEditable',[true,false]);  
+
+            set(handles.Condition_table4,'CellEditCallback',@table_check_callback);     
+            set(handles.Plate_table4,'CellEditCallback',@table_check_callback);
+            set(handles.Well_table4,'CellEditCallback',@table_check_callback);
+            set(handles.FOV_table4,'CellEditCallback',@table_check_callback);
+            set(handles.Channel_table4,'CellEditCallback',@table_check_callback);
+            set(handles.Object_table4,'CellEditCallback',@table_check_callback);
+%%%%%%%
+            
+            
 handles.data = cell( ...
             n_plates, ...
             n_conditions, ...
@@ -199,12 +232,14 @@ function table_check_callback(hObject,callbackdata)
     
      Tag = get(hObject,'Tag');
      
-     postfix = {'_table','_table2','_table3'};
+     postfix = {'_table','_table2','_table3','_table4'};
      
      if contains(Tag,postfix{2})
          k = 2;
      elseif contains(Tag,postfix{3})
          k = 3;
+     elseif contains(Tag,postfix{4})
+         k = 4;         
      else
          k = 1;
      end
@@ -279,8 +314,10 @@ function table_check_callback(hObject,callbackdata)
     guidata(hObject,handles);
     if ismember(k,[1 2])
         show_plot(hObject,handles);
-    else
+    elseif 3==k
         show_2d_histogram(handles);
+    else
+        show_2d_histogram2(handles);        
     end
           
 % --- Outputs from this function are returned to the command line.
@@ -436,18 +473,21 @@ data = [num2cell(true(n_plates,1)) num2cell((1:n_plates))'];
 set(handles.Plate_table, 'Data', data, 'ColumnEditable',[true,false]);
 set(handles.Plate_table2, 'Data', data, 'ColumnEditable',[true,false]);
 set(handles.Plate_table3, 'Data', data, 'ColumnEditable',[true,false]);
+set(handles.Plate_table4, 'Data', data, 'ColumnEditable',[true,false]);
 %
 data = [num2cell(true(n_conditions,1)) num2cell((1:n_conditions))'];
 data(:,2) = (handles.Condition)';
 set(handles.Condition_table, 'Data', data, 'ColumnEditable',[true,false]);
 set(handles.Condition_table2, 'Data', data, 'ColumnEditable',[true,false]);
 set(handles.Condition_table3, 'Data', data, 'ColumnEditable',[true,false]);
+set(handles.Condition_table4, 'Data', data, 'ColumnEditable',[true,false]);
 
 data = [num2cell(true(n_channels,1)) num2cell((1:n_channels))'];
 data(:,2) = (handles.Channel)';
 set(handles.Channel_table, 'Data', data, 'ColumnEditable',[true,false]);
 set(handles.Channel_table2, 'Data', data, 'ColumnEditable',[true,false]);
 set(handles.Channel_table3, 'Data', data, 'ColumnEditable',[true,false]);
+set(handles.Channel_table4, 'Data', data, 'ColumnEditable',[true,false]);
 
 % less trivial
 %FOVs
@@ -456,6 +496,7 @@ data(:,2) = handles.FOVs;
 set(handles.FOV_table, 'Data', data, 'ColumnEditable',[true,false]);
 set(handles.FOV_table2, 'Data', data, 'ColumnEditable',[true,false]);
 set(handles.FOV_table3, 'Data', data, 'ColumnEditable',[true,false]);
+set(handles.FOV_table4, 'Data', data, 'ColumnEditable',[true,false]);
 
 %Wells
 unique_wells = cell(0);
@@ -470,6 +511,7 @@ data(:,2) = unique_wells;
 set(handles.Well_table, 'Data', data, 'ColumnEditable',[true,false]);
 set(handles.Well_table2, 'Data', data, 'ColumnEditable',[true,false]);
 set(handles.Well_table3, 'Data', data, 'ColumnEditable',[true,false]);
+set(handles.Well_table4, 'Data', data, 'ColumnEditable',[true,false]);
 handles.unique_wells = unique_wells;
 
 %Objects
@@ -485,9 +527,10 @@ data(:,2) = handles.unique_objects;
 set(handles.Object_table, 'Data', data, 'ColumnEditable',[true,false]);
 set(handles.Object_table2, 'Data', data, 'ColumnEditable',[true,false]);
 set(handles.Object_table3, 'Data', data, 'ColumnEditable',[true,false]);
+set(handles.Object_table4, 'Data', data, 'ColumnEditable',[true,false]);
 %Objects
 
-handles.mask = ones(numel(handles.tot_data),3); % mask for 3 choosers
+handles.mask = ones(numel(handles.tot_data),4); % mask for 4 choosers
 
 handles.param_names = cell(0);
 
@@ -527,6 +570,8 @@ end
 set(handles.Q1,'String',handles.param_names);
 set(handles.Q_X,'String',handles.param_names);
 set(handles.Q_Y,'String',handles.param_names);
+set(handles.Q2_X,'String',handles.param_names);
+set(handles.Q2_Y,'String',handles.param_names);
 %
 % needs normalizing clusters' locaization density 
 % by FOV's average localizations density.
@@ -603,6 +648,7 @@ set(handles.figure1, 'Name', [handles.figureName ' : ' handles.fullfilename]);
 
 show_plot(hObject,handles);
 show_2d_histogram(handles);
+show_2d_histogram2(handles);
 
 %--------------------------------------------------------------------
 function [P,C,W,F,O,R,c] = get_attributes(token)
@@ -1118,3 +1164,146 @@ end
 
 
 
+
+
+% --- Executes on selection change in Q2_Y.
+function Q2_Y_Callback(hObject, eventdata, handles)
+show_2d_histogram2(handles); 
+
+
+% --- Executes during object creation, after setting all properties.
+function Q2_Y_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Q2_Y (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in Q2_X.
+function Q2_X_Callback(hObject, eventdata, handles)
+show_2d_histogram2(handles); 
+
+% --- Executes during object creation, after setting all properties.
+function Q2_X_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Q2_X (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in bar2_histo.
+function bar2_histo_Callback(hObject, eventdata, handles)
+show_2d_histogram2(handles); 
+
+% --- Executes on button press in bar2_log.
+function bar2_log_Callback(hObject, eventdata, handles)
+show_2d_histogram2(handles); 
+
+% Hint: get(hObject,'Value') returns toggle state of bar2_log
+
+
+% %---------------------------------------------
+function show_2d_histogram2(handles)
+% 
+    % quantifiers
+    s = get(handles.Q2_X,'String');
+    k = get(handles.Q2_X,'Value');
+    Q_X = s{k};
+    s = get(handles.Q2_Y,'String');
+    k = get(handles.Q2_Y,'Value');
+    Q_Y = s{k};
+    
+    [sx, Q_X, param_ind] = select_data(handles,'Q2_X',4); % group of data - 1,2 for 1D histos, 3 is for 2D histos
+    [sy, Q_Y, ~] = select_data(handles,'Q2_Y',4);
+            
+    YLABEL = [];
+    XLABEL = [];        
+            
+    logscale_X = false;
+    switch Q_X
+        case 'cl.MeanDoC'
+                XLABEL = 'Degree of Co-localising';
+        case 'cl.Area'
+                logscale_X = true;
+                XLABEL = 'log10(Area[{nm}^2])';
+        case 'cl.Circularity'
+                XLABEL = 'Circularity';
+        case 'cl.Elongation'
+                XLABEL = 'Elongation';            
+        case 'cl.Nb'
+                logscale_X = true;
+                XLABEL = 'log10(N)';
+        case 'cl.Density'
+                logscale_X = true;
+                XLABEL = 'log10(localization density [1/{nm}^2])';
+        case 'cl.NormDensity'
+                logscale_X = true;
+                XLABEL = 'log10(relative localisations density)';                
+        case 'roi.Ripley(MAX)'
+            XLABEL = 'distance at RipleyK maximum [nm]';
+        case 'roi.ClusterDensity'            
+            XLABEL = 'clusters density estimate [1/nm^2]';
+            
+    end
+    
+    logscale_Y = false;
+    switch Q_Y
+        case 'cl.MeanDoC'
+                YLABEL = 'Degree of Co-localising';
+        case 'cl.Area'
+                logscale_Y = true;
+                YLABEL = 'log10(Area[{nm}^2])';
+        case 'cl.Circularity'
+                YLABEL = 'Circularity';
+        case 'cl.Elongation'
+                YLABEL = 'Elongation';            
+        case 'cl.Nb'
+                logscale_Y = true;
+                YLABEL = 'log10(N)';
+        case 'cl.Density'
+                logscale_Y = true;
+                YLABEL = 'log10(localization density [1/{nm}^2])';
+        case 'cl.NormDensity'
+                logscale_Y = true;
+                YLABEL = 'log10(relative localisations density)';                
+        case 'roi.Ripley(MAX)'
+            YLABEL = 'distance at RipleyK maximum [nm]';
+        case 'roi.ClusterDensity'            
+            YLABEL = 'clusters density estimate [1/nm^2]';            
+    end
+    %
+    if ~isempty(sx) && ~isempty(sy) && length(sx)==length(sy)
+        if logscale_X
+            sx = log10(sx);
+        end 
+        if logscale_Y
+            sy = log10(sy);
+        end          
+
+        nBins = 50;
+        AXES = handles.corr_plot2;
+                             
+        if ~get(handles.bar2_histo,'Value')
+            %histogram2(AXES,sx,sy,[nBins nBins],'DisplayStyle','tile','ShowEmptyBins','on','Normalization','pdf');
+            histogram2(AXES,sx,sy,'DisplayStyle','tile','ShowEmptyBins','on','Normalization','pdf');
+        else
+            histogram2(AXES,sx,sy,'DisplayStyle','bar3','ShowEmptyBins','on','Normalization','pdf','FaceColor','flat');                    
+            if get(handles.bar_log,'Value')
+             set(AXES,'zscale','log');
+            end
+        end
+        
+    xlabel(AXES,XLABEL,'fontsize',8);
+    ylabel(AXES,YLABEL,'fontsize',8);         
+        
+    end    
