@@ -642,6 +642,11 @@ for k=1:numel(handles.param_names)
     end
 end
 
+set(handles.Q1,'Value',1);
+set(handles.Q_X,'Value',1);
+set(handles.Q_Y,'Value',1);
+set(handles.Q2_X,'Value',1);
+set(handles.Q2_Y,'Value',1);
 %
 % Update handles structure
 guidata(hObject, handles);
