@@ -444,12 +444,20 @@ handles.tot_data = handles.tot_data(1,1:cnt_rois); % less than million..
 % check if there are centroid coordinates
 
 there_are_cluster_centroid_coordinates = true;
-        ass = handles.tot_data{1};
-        if isfield(ass,'DBSCAN_clusters') && ~isempty(ass.DBSCAN_clusters{1})
+    for k = 1:numel(handles.tot_data)
+        BREAK = false;
+        ass = handles.tot_data{k};
+        for m=1:numel(ass.DBSCAN_clusters)
+            if isfield(ass,'DBSCAN_clusters') && ~isempty(ass.DBSCAN_clusters{m})
                 if ~isfield(ass.DBSCAN_clusters{1},'Xc')
                     there_are_cluster_centroid_coordinates = false;                     
+                    BREAK = true;
+                    break;
                 end
+            end
+            if BREAK==true, break, end
         end
+    end
 %        
 Lmax = 300;
 if there_are_cluster_centroid_coordinates
@@ -541,7 +549,7 @@ there_are_clusters = false;
 cluster_params = {'Area','Nb','Circularity','Elongation','MeanDoC'};
 for k=1:numel(handles.tot_data)
         ass = handles.tot_data{k};
-        if isfield(ass,'DBSCAN_clusters') && ~isempty(ass.DBSCAN_clusters{1})
+        if isfield(ass,'DBSCAN_clusters') && ~isempty(ass.DBSCAN_clusters) && ~isempty(ass.DBSCAN_clusters{1})
             for m=1:numel(cluster_params)
                 param_name = cluster_params{m};
                 if isfield(ass.DBSCAN_clusters{1},param_name)
@@ -557,7 +565,7 @@ end
 there_are_Ripley_data = false;
 for k=1:numel(handles.tot_data)
     ass = handles.tot_data{k};
-    if isfield(ass,'RipleyK_val')
+    if isfield(ass,'RipleyK_val') && ~isempty(ass.RipleyK_val)
         handles.param_names = [handles.param_names; 'roi.Ripley'; 'roi.Ripley(MAX)'];
         there_are_Ripley_data = true;
         break;
