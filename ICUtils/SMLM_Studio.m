@@ -60,7 +60,8 @@ handles.figureName = get(handles.figure1,'Name');
 handles.data = [];
 handles.filenames = [];
 
-handles.param_names = {'cl.DoC','cl.Area','cl.Circularity','cl.Nloc','cl.Density','roi.Ripley','roi.xRDF','roi.xRipley','roi.Ripley(MAX)','roi.xRDF(MAX)','roi.xRipley(MAX)','roi.SAA','roi.SAA(ratio)' 'roi.ClusterDensity'};
+handles.param_names = {'cl.DoC','cl.Area','cl.Circularity','cl.Nloc','cl.Density', ... 
+    'roi.Ripley','roi.xRDF','roi.xRipley','roi.Ripley(MAX)','roi.xRDF(MAX)','roi.xRipley(MAX)','roi.SAA','roi.SAA(ratio)' 'roi.ClusterDensityT','roi.ClusterDensity0'};
 
 set(handles.axes1,'XTick',[]);
 set(handles.axes1,'YTick',[]);
@@ -402,6 +403,23 @@ tic
 
 handles.tot_data = cell(1,1000000); % million ROIs
 
+%roi = SMLMdata.objects_ROIs{1, 1}.ROICoordinates{1}; % [nm]
+
+handles.ROI_side = 2000; % default
+
+try
+    rois = SMLMdata.objects_ROIs;
+    rois = reshape(rois,[1 prod(size(rois),'all')]);
+    for k=1:numel(rois)
+        if ~isempty(rois{k})
+            handles.ROI_side = rois{k}.ROICoordinates{1}(2,1) - rois{k}.ROICoordinates{1}(1,1) + 1;
+            break;
+        end
+    end
+catch
+    disp('cannot find specs, - using default ROI size 2000 nm');
+end
+
 cnt_rois = 0;
 
 for plate = 1:n_plates
@@ -573,7 +591,8 @@ for k=1:numel(handles.tot_data)
 end
 
 if there_are_cluster_centroid_coordinates
-    handles.param_names  = [handles.param_names; 'roi.ClusterDensity'];
+    handles.param_names  = [handles.param_names; 'roi.ClusterDensityT'];
+    handles.param_names  = [handles.param_names; 'roi.ClusterDensity0'];
     guidata(hObject,handles);
 end
 
@@ -646,7 +665,8 @@ for k=1:numel(handles.param_names)
         case 'cl.NormDensity'
         case 'roi.Ripley'
         case 'roi.Ripley(MAX)'
-        case 'roi.ClusterDensity'
+        case 'roi.ClusterDensityT'
+        case 'roi.ClusterDensity0'            
     end
 end
 
@@ -738,7 +758,7 @@ function show_plot(hObject,handles)
             end
         case 'roi.Ripley(MAX)'            
             XLABEL = 'distance at RipleyK maximum [nm]';
-        case 'roi.ClusterDensity'
+        case {'roi.ClusterDensityT','roi.ClusterDensity0'}
             XLABEL = 'clusters density estimate [1/nm^2]';            
     end
                               
@@ -860,14 +880,21 @@ function [s, parameter,param_ind] = select_data(handles,table_token,group_index)
                              s(cnt) = maxval;
                         end
                     end
-                    if strcmp(parameter,'roi.ClusterDensity')
-                        val = ass.ClusterDensity;
+                    if strcmp(parameter,'roi.ClusterDensityT')
+                        val = ass.ClusterDensityT;
                         if ~isnan(val)
                             cnt = cnt + 1;                            
                              s(cnt) = val;
                         end
                     end
-                    
+                    if strcmp(parameter,'roi.ClusterDensity0')
+                        val = ass.ClusterDensity0;
+                        if ~isnan(val)
+                            cnt = cnt + 1;                            
+                             s(cnt) = val;
+                        end
+                    end
+                                        
              end        
          toc
      if ismember(parameter,cluster_params) || strcmp(parameter,'roi.Ripley(MAX)')
@@ -916,7 +943,7 @@ function show_2d_histogram(handles)
                 XLABEL = 'log10(relative localisations density)';                
         case 'roi.Ripley(MAX)'
             XLABEL = 'distance at RipleyK maximum [nm]';
-        case 'roi.ClusterDensity'            
+        case {'roi.ClusterDensityT','roi.ClusterDensity0'}
             XLABEL = 'clusters density estimate [1/nm^2]';
             
     end
@@ -943,7 +970,7 @@ function show_2d_histogram(handles)
                 YLABEL = 'log10(relative localisations density)';                
         case 'roi.Ripley(MAX)'
             YLABEL = 'distance at RipleyK maximum [nm]';
-        case 'roi.ClusterDensity'            
+        case {'roi.ClusterDensityT','roi.ClusterDensity0'}     
             YLABEL = 'clusters density estimate [1/nm^2]';            
     end
     %
@@ -1113,7 +1140,8 @@ ret = cell(size(handles.tot_data));
 for k=1:numel(handles.tot_data)
     %
     ass = handles.tot_data{k};
-    ass.ClusterDensity = nan;
+    ass.ClusterDensityT = nan;
+    ass.ClusterDensity0 = nan;
     ret{k} = ass;    
     try % to calculate clusters density
     if isfield(ass,'DBSCAN_clusters') && ~isempty(ass.DBSCAN_clusters)
@@ -1165,8 +1193,9 @@ for k=1:numel(handles.tot_data)
 %                  hold('off');
              end
          end
+         ass.ClusterDensity0 = size(points,1)/handles.ROI_side^2;
          if ~isempty(acc)
-            ass.ClusterDensity = 2/mean(acc)^2;
+            ass.ClusterDensityT = 2/mean(acc)^2;
             ret{k} = ass;
          end         
     end
@@ -1266,7 +1295,7 @@ function show_2d_histogram2(handles)
                 XLABEL = 'log10(relative localisations density)';                
         case 'roi.Ripley(MAX)'
             XLABEL = 'distance at RipleyK maximum [nm]';
-        case 'roi.ClusterDensity'            
+        case 'roi.ClusterDensityT'            
             XLABEL = 'clusters density estimate [1/nm^2]';
             
     end
@@ -1293,7 +1322,7 @@ function show_2d_histogram2(handles)
                 YLABEL = 'log10(relative localisations density)';                
         case 'roi.Ripley(MAX)'
             YLABEL = 'distance at RipleyK maximum [nm]';
-        case 'roi.ClusterDensity'            
+        case 'roi.ClusterDensityT'            
             YLABEL = 'clusters density estimate [1/nm^2]';            
     end
     %
