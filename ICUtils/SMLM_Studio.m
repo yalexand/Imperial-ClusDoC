@@ -1247,7 +1247,13 @@ end
 
 % --- Executes on button press in bar2_histo.
 function bar2_histo_Callback(hObject, eventdata, handles)
-show_2d_histogram2(handles); 
+if get(hObject,'Value')
+    logflag = 'on';
+else
+    logflag = 'off';
+end
+    set(handles.bar2_log,'Enable',logflag);
+show_2d_histogram2(handles);
 
 % --- Executes on button press in bar2_log.
 function bar2_log_Callback(hObject, eventdata, handles)
@@ -1342,7 +1348,7 @@ function show_2d_histogram2(handles)
             histogram2(AXES,sx,sy,'DisplayStyle','tile','ShowEmptyBins','on','Normalization','pdf');
         else
             histogram2(AXES,sx,sy,'DisplayStyle','bar3','ShowEmptyBins','on','Normalization','pdf','FaceColor','flat');                    
-            if get(handles.bar_log,'Value')
+            if get(handles.bar2_log,'Value')
              set(AXES,'zscale','log');
             end
         end
