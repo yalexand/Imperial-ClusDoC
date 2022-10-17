@@ -697,7 +697,6 @@ end
                     chan = 1;
                     
                     Average_Lr_r(:,1) = r;
-                    Average_Lr_r(:,1) = r;
                     Average_Lr_r(:, 2) = squeeze(mean(Lr_r_Result(:,:,chan), 2));
                     Std_Lr_r(:,2) = std(Lr_r_Result(:,:,chan), 0, 2);
 
@@ -2274,8 +2273,244 @@ end % verbose
 % display                                                       
 end
 
-%%%%%%%%%%%%%%%%%%
+%-------------------------------------------------------------------------%
+    function Analyze_ROIs_gr(obj,~) 
+%         try   
+               for chan = 1 : obj.Nchannels                   
+                   fname = strrep(obj.fileName{chan},'.csv','');
+                   fname = strrep(fname,'.txt','');
+                   gr_out_dirname = [obj.Outputfolder filesep fname '_channel_' num2str(chan) '_ClusDoC_Results' filesep  'gr'];
+                   if ~exist(gr_out_dirname,'dir')
+                       mkdir( fullfile(obj.Outputfolder,[fname '_channel_' num2str(chan) '_ClusDoC_Results'],'gr'));
+                       mkdir(gr_out_dirname,'gr_Plots');
+                       mkdir(gr_out_dirname,'gr_Results');
+                   end                                      
+                   [~] = obj.grHandler(gr_out_dirname,chan);            
+               end                                   
+%         catch mError            
+%             disp('g(r) processing exited with errors');
+%             disp(mError.message);             
+%         end        
+    end
+    %-------------------------------------------------------------------------%   
+    function valOut = grHandler(obj,Fun_OutputFolder_name,chan,~)
+        
+        if isempty(obj.ROICoordinates), return, end
+        
+                ArrayHeader = [{'r'},{'g(r)'}];
+                
+                                if 1==chan
+                                    plotColor = 'red';
+                                else
+                                    plotColor = 'green';
+                                end                 
 
+        Start = obj.RipleyK.Start;
+        End = obj.RipleyK.End;
+        Step = obj.RipleyK.Step;
+        
+        nSteps_FFT = obj.RipleyK.End;     
+                                                        
+                    for roiIter = 1:length(obj.ROICoordinates) % ROI number
+                        
+                            disp([roiIter length(obj.ROICoordinates)]);
+                            
+                            roi = obj.ROICoordinates{roiIter};
+                            CurrentROI = roi;
+                            CurrentROI = [CurrentROI(1,1),  CurrentROI(1,2), max(CurrentROI(:,1)) - min(CurrentROI(:,1)), max(CurrentROI(:,2)) - min(CurrentROI(:,2))];
+
+                            x_roi=roi(:,1);
+                            y_roi=roi(:,2);
+                                x=obj.CellData{chan}(:,5);
+                                y=obj.CellData{chan}(:,6);
+                                    whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi); 
+
+                            dataCropped = obj.CellData{chan}(whichPointsInROI, :);
+
+                            if ~isempty(dataCropped)
+                                
+                                size_ROI = CurrentROI(3:4);
+                                A = polyarea(obj.ROICoordinates{roiIter}(:,1), ...
+                                    obj.ROICoordinates{roiIter}(:,2));
+                                
+                                MaxSampledPts = obj.RipleyK.MaxSampledPts;
+                                
+                                assignin('base', 'dataCropped', dataCropped);
+                                assignin('base', 'MaxSampledPts', MaxSampledPts);
+                                if MaxSampledPts < size(dataCropped)
+                                    selectNums = randsample(1:size(dataCropped, 1), MaxSampledPts);
+                                    selectVector = false(size(dataCropped, 1), 1);
+                                    selectVector(selectNums) = true;
+                                else 
+                                    selectVector = true(size(dataCropped, 1), 1);
+                                end
+                                
+                                mode = {'FFT','Ripley'};
+                                for i=1:2                                    
+                                    tic
+                                        if strcmp(mode{i},'FFT')
+                                            coord = dataCropped(:,5:6);
+                                            [r, gr] = grFunFFT(coord,CurrentROI,nSteps_FFT);
+                                        else
+                                            coord = dataCropped(selectVector,5:6);
+                                            [r, gr] = grFun(coord,A,Start,End,Step,size_ROI);
+                                        end
+                                    toc/60
+
+                                        grCh1Fig = figure('color', [1 1 1]);
+                                        grCh1Ax = axes('parent', grCh1Fig);
+                                        plot(grCh1Ax, r, gr, 'color', plotColor, 'linewidth', 2);
+
+                                        xlabel(grCh1Ax, 'r (nm)', 'fontsize', 12);
+                                        ylabel(grCh1Ax, 'g(r)', 'fontsize', 12);
+                                        grid(grCh1Ax,'on');
+
+                                        savenamebase = ['gr_' mode{i} '_Region_' num2str(roiIter)];
+                                        
+%                                         tifsavename = [Fun_OutputFolder_name filesep 'gr_Plots' filesep savenamebase '.tif'];
+%                                         print(tifsavename,grCh1Fig, '-dtiff');   
+                                        
+                                        figsavename = [Fun_OutputFolder_name filesep 'gr_Plots' filesep savenamebase '.fig'];
+                                        savefig(grCh1Fig,figsavename);                                  
+                                        close(grCh1Fig);
+                                        
+                                        xlssavename = [Fun_OutputFolder_name filesep 'gr_Results' filesep savenamebase '.xls'];
+                                        save_Excel_or_else(xlssavename,ArrayHeader,[r gr]);                                         
+                                        
+                                        xlsinfosavename = [Fun_OutputFolder_name filesep 'gr_Results' filesep 'Info_' savenamebase '.xls'];
+                                        save_Excel_or_else(xlsinfosavename,[{'N_locs'},{'Area'}],[size(coord,1), A]);                                        
+                                end
+                            end
+                    end
+                valOut = 1;
+        %------------------------------------------------        
+        function [r, gr] = grFunFFT(coord,CurrentROI,rmax)
+            
+            D = obj.Square_ROIs_Auto_anm;
+            
+            X = coord(:,1);
+            Y = coord(:,2);
+            X0 = CurrentROI(1);
+            Y0 = CurrentROI(2) - D;
+
+            u = zeros(D);
+            %
+                for k=1:length(X)
+                        cur_x = round(X(k))-round(X0);
+                        cur_y = round(Y(k))-round(Y0);
+                        if cur_x>0 && cur_x<=D && cur_y>0 && cur_y<=D
+                            u(cur_x,cur_y) = u(cur_x,cur_y)+1;
+                        end
+                end 
+                
+            [~, r, gr, ~, ~] = get_autocorr(u , ones(size(u)), rmax, false);
+    
+            r = r(2:(rmax+1))';
+            gr = gr(2:(rmax+1))';                              
+        end                
+    end
+   
+%-------------------------------------------------------------------------%
+    function gr_perObject_from_Segmentation_Handler(obj,dir_name,rmax,chan,~)
+                                if 1==chan
+                                    plotColor = 'red';
+                                else
+                                    plotColor = 'green';
+                                end         
+        s = regionprops(obj.sgm,'BoundingBox');
+        
+        bb = round(s(1).BoundingBox);          
+        x0 = bb(1);
+        y0 = bb(2);
+        W = bb(3);
+        H = bb(4);
+        
+        u1 = obj.sgm==1;
+      
+        bb_SR   = round(s(1).BoundingBox*obj.pixelSizenm);
+        x0_SR   = bb_SR(1);
+        y0_SR   = bb_SR(2);
+        W_SR    = bb_SR(3);
+        H_SR    = bb_SR(4);
+
+        p1 = [x0_SR         y0_SR];
+        p2 = [x0_SR         y0_SR+H_SR];
+        p3 = [x0_SR+W_SR    y0_SR+H_SR];
+        p4 = [x0_SR+W_SR    y0_SR];
+        p5 = p1;
+        roi = [p1;p2;p3;p4;p5];  
+        
+        x=obj.CellData{chan}(:,5);
+        y=obj.CellData{chan}(:,6);                                
+        %          
+        x_roi=roi(:,1);
+        y_roi=roi(:,2);            
+        whichPointsInROI = x>=min(x_roi) & x<=max(x_roi) & y>=min(y_roi) & y<=max(y_roi);
+
+        dataCropped = round(obj.CellData{chan}(whichPointsInROI,:));        
+        
+        u0 = uint8(imresize(u1(y0:(y0+H),x0:(x0+W)),obj.pixelSizenm));
+        
+        u = zeros(size(u0),'single');
+        x_SR = dataCropped(:,5);
+        y_SR = dataCropped(:,6);        
+        for m=1:size(dataCropped,1)
+            y_m = x_SR(m) - x0_SR;
+            x_m = y_SR(m) - y0_SR;
+            try            
+                if 0~= u0(x_m,y_m)
+                    u(x_m,y_m) = u(x_m,y_m) + 1;
+                end
+            catch
+%                 disp('error')
+%                 [x_m y_m]
+            end            
+        end
+        
+        % save Object information
+        save_Excel_or_else([dir_name filesep 'Object_info.xls'], ...
+            [{'N_locs'},{'Area'}],[sum(u,'All'), sum(u0,'All')]);        
+        % save binary 1 nm map
+        imwrite(uint8(u0&~u),[dir_name filesep 'Object_nm_map.tif']);
+        
+        tic        
+        [~, r, gr, ~, ~] = get_autocorr(single(u) , single(u0), rmax, false);
+        r = r(2:(rmax+1))';
+        gr = gr(2:(rmax+1))';
+        toc/60 
+
+        xlsname = [dir_name filesep 'perOjbect_gr.xls'];
+        save_Excel_or_else(xlsname,[{'r'},{'g(r)'}],[r, gr]);
+        figname = [dir_name filesep 'perOjbect_gr.fig'];
+        h = figure;
+        ax=gca;
+        plot(ax,r,gr,'color', plotColor, 'linewidth', 2, 'marker','o','markersize',4);
+        xlabel(ax,'distance [nm]','fontsize',14);
+        ylabel(ax,'AU','fontsize',14);
+        grid(ax,'on');
+        savefig(h,figname);
+        close(h);
+        
+    end
+    
+%-------------------------------------------------------------------------%
+    function Analyze_gr_perObject_from_Segmentation(obj,rmax,~)
+  
+        try   
+               for chan = 1 : obj.Nchannels                   
+                   fname = strrep(obj.fileName{chan},'.csv','');
+                   fname = strrep(fname,'.txt','');
+                   gr_out_dirname = [obj.Outputfolder filesep fname '_channel_' num2str(chan) '_ClusDoC_Results' filesep  'gr'];
+                   if ~exist(gr_out_dirname,'dir')
+                       mkdir( fullfile(obj.Outputfolder,[fname '_channel_' num2str(chan) '_ClusDoC_Results'],'gr'));
+                   end                                      
+                   obj.gr_perObject_from_Segmentation_Handler(gr_out_dirname,rmax,chan); 
+               end                                   
+        catch mError            
+            disp('g(r) processing exited with errors');
+            disp(mError.message);             
+        end        
+    end   
 %-------------------------------------------------------------------------%    
     end % methods
             

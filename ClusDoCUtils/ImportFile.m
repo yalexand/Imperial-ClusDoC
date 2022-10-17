@@ -119,24 +119,53 @@ end
     switch length(Body_text)
 
         % YA - another ThunderSTORM format
-        case 8 % ThunderSTORM format.  The user should have chosen the .csv file.  There's an associated XML-ish
+        case {8,9} % ThunderSTORM format.  The user should have chosen the .csv file.  There's an associated XML-ish
                 % .txt file that has metadata and at least the pixel size in it. 
                 % This file must be the same name as the input but with
                 % -protocol.txt appended.
+                %
+                shift = 0;
+                if 9==length(Body_text)
+                    shift = 1;
+                end
                 
-                Data = [(1:length(Body_text{1}))', ...
-                        Body_text{1}, ...                    
-                        ones(length(Body_text{1}), 1), ...
-                        zeros(length(Body_text{1}), 1), ...
-                        Body_text{2}, ... %                          
-                        handles.pixelSizenm*handles.SizeY - Body_text{3}, ... %max(Body_text{3})-Body_text{3}, ... % Body_text{3}, ...
-                        Body_text{8}, ... % precision (uncertainty_xy)
-                        Body_text{5}, ... % intensity
-                        Body_text{7}, ... % bckgstd
-                        ones(length(Body_text{1}), 1), ... % chi square
-                        Body_text{4}, ... % psf width (sigmas)
-                        ones(length(Body_text{1}), 1), ...
-                        ones(length(Body_text{1}), 1)];
+                Nmin = inf; % ?????
+                for k=1:length(Body_text)
+                    if length(Body_text{k})<Nmin
+                        Nmin=length(Body_text{k});
+                    end
+                end                
+                for k=1:length(Body_text)
+                    Body_text{k} = Body_text{k}(1:Nmin);
+                end                
+                %
+                Data = [(1:Nmin)', ...
+                        Body_text{1+shift}, ...                    
+                        ones(Nmin, 1), ...
+                        zeros(Nmin, 1), ...
+                        Body_text{2+shift}, ... %                          
+                        handles.pixelSizenm*handles.SizeY - Body_text{3+shift}, ... %max(Body_text{3})-Body_text{3}, ... % Body_text{3}, ...
+                        Body_text{8+shift}, ... % precision (uncertainty_xy)
+                        Body_text{5+shift}, ... % intensity
+                        Body_text{7+shift}, ... % bckgstd
+                        ones(Nmin, 1), ... % chi square
+                        Body_text{4+shift}, ... % psf width (sigmas)
+                        ones(Nmin, 1), ...
+                        ones(Nmin, 1)];                
+                                                                
+%                 Data = [(1:length(Body_text{1}))', ...
+%                         Body_text{1+shift}, ...                    
+%                         ones(length(Body_text{1}), 1), ...
+%                         zeros(length(Body_text{1}), 1), ...
+%                         Body_text{2+shift}, ... %                          
+%                         handles.pixelSizenm*handles.SizeY - Body_text{3+shift}, ... %max(Body_text{3})-Body_text{3}, ... % Body_text{3}, ...
+%                         Body_text{8+shift}, ... % precision (uncertainty_xy)
+%                         Body_text{5+shift}, ... % intensity
+%                         Body_text{7+shift}, ... % bckgstd
+%                         ones(length(Body_text{1}), 1), ... % chi square
+%                         Body_text{4+shift}, ... % psf width (sigmas)
+%                         ones(length(Body_text{1}), 1), ...
+%                         ones(length(Body_text{1}), 1)];
                 
                 [folderPath, metaDataFile, ~] = fileparts(filepath);
                 mdID = fopen(fullfile(folderPath, strcat(metaDataFile, '-protocol.txt')));
@@ -167,6 +196,16 @@ end
             pixelSizenm = handles.pixelSizenm;
             psf_width = handles.WindSTORM_Sigmapix*handles.pixelSizenm;
 
+                Nmin = inf; % ?????
+                for k=1:length(Body_text)
+                    if length(Body_text{k})<Nmin
+                        Nmin=length(Body_text{k});
+                    end
+                end                
+                for k=1:length(Body_text)
+                    Body_text{k} = Body_text{k}(1:Nmin);
+                end              
+            
                 Data = [(1:length(Body_text{1}))', ... % index
                         Body_text{2}, ... % frame                    
                         ones(length(Body_text{1}), 1), ...
