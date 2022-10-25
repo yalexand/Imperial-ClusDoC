@@ -2275,7 +2275,7 @@ end
 
 %-------------------------------------------------------------------------%
     function Analyze_ROIs_gr(obj,~) 
-%         try   
+        try   
                for chan = 1 : obj.Nchannels                   
                    fname = strrep(obj.fileName{chan},'.csv','');
                    fname = strrep(fname,'.txt','');
@@ -2287,10 +2287,10 @@ end
                    end                                      
                    [~] = obj.grHandler(gr_out_dirname,chan);            
                end                                   
-%         catch mError            
-%             disp('g(r) processing exited with errors');
-%             disp(mError.message);             
-%         end        
+        catch mError            
+            disp('g(r) processing exited with errors');
+            disp(mError.message);             
+        end        
     end
     %-------------------------------------------------------------------------%   
     function valOut = grHandler(obj,Fun_OutputFolder_name,chan,~)
@@ -2344,42 +2344,31 @@ end
                                 else 
                                     selectVector = true(size(dataCropped, 1), 1);
                                 end
-                                
-                                mode = {'FFT','Ripley'};
-                                for i=1:2                                    
-                                    tic
-                                        if strcmp(mode{i},'FFT')
-                                            coord = dataCropped(:,5:6);
-                                            [r, gr] = grFunFFT(coord,CurrentROI,nSteps_FFT);
-                                        else
-                                            coord = dataCropped(selectVector,5:6);
-                                            [r, gr] = grFun(coord,A,Start,End,Step,size_ROI);
-                                        end
-                                    toc/60
-
-                                        grCh1Fig = figure('color', [1 1 1]);
-                                        grCh1Ax = axes('parent', grCh1Fig);
-                                        plot(grCh1Ax, r, gr, 'color', plotColor, 'linewidth', 2);
-
-                                        xlabel(grCh1Ax, 'r (nm)', 'fontsize', 12);
-                                        ylabel(grCh1Ax, 'g(r)', 'fontsize', 12);
-                                        grid(grCh1Ax,'on');
-
-                                        savenamebase = ['gr_' mode{i} '_Region_' num2str(roiIter)];
-                                        
-%                                         tifsavename = [Fun_OutputFolder_name filesep 'gr_Plots' filesep savenamebase '.tif'];
-%                                         print(tifsavename,grCh1Fig, '-dtiff');   
-                                        
-                                        figsavename = [Fun_OutputFolder_name filesep 'gr_Plots' filesep savenamebase '.fig'];
-                                        savefig(grCh1Fig,figsavename);                                  
-                                        close(grCh1Fig);
-                                        
-                                        xlssavename = [Fun_OutputFolder_name filesep 'gr_Results' filesep savenamebase '.xls'];
-                                        save_Excel_or_else(xlssavename,ArrayHeader,[r gr]);                                         
-                                        
-                                        xlsinfosavename = [Fun_OutputFolder_name filesep 'gr_Results' filesep 'Info_' savenamebase '.xls'];
-                                        save_Excel_or_else(xlsinfosavename,[{'N_locs'},{'Area'}],[size(coord,1), A]);                                        
-                                end
+                                                                
+                             coord = dataCropped(:,5:6);
+                             N_locs = size(coord,1);
+                             [r_FFT, gr_FFT] = grFunFFT(coord,CurrentROI,nSteps_FFT); 
+                             coord = dataCropped(selectVector,5:6);
+                             [r_Ripley, gr_Ripley] = grFun(coord,A,Start,End,Step,size_ROI);                             
+                             h = figure;
+                             ax=gca;
+                             plot(ax,r_Ripley,gr_Ripley,'r.-',r_FFT,gr_FFT,'b.-','markersize',12);
+                             grid(ax,'on');
+                             xlabel(ax,'distance [nm]','fontsize', 12);
+                             ylabel(ax,'g(r)','fontsize', 12);
+                             legend(ax,{'Ripley','FFT'});
+                             figsavename = [Fun_OutputFolder_name filesep 'gr_Plots' filesep 'gr_Region_' num2str(roiIter) '.fig'];
+                             savefig(h,figsavename); 
+                             close(h);
+                             %
+                             xlssavename_Ripley = [Fun_OutputFolder_name filesep 'gr_Results' filesep 'gr_Ripley_Region_' num2str(roiIter) '.xls'];
+                             save_Excel_or_else(xlssavename_Ripley,ArrayHeader,[r_Ripley, gr_Ripley]);
+                             xlssavename_FFT    = [Fun_OutputFolder_name filesep 'gr_Results' filesep 'gr_FFT_Region_' num2str(roiIter) '.xls'];
+                             save_Excel_or_else(xlssavename_FFT,ArrayHeader,[r_FFT, gr_FFT]); 
+                             %
+                             xlsinfosavename = [Fun_OutputFolder_name filesep 'gr_Results' filesep 'Info_' num2str(roiIter) '.xls'];
+                             save_Excel_or_else(xlsinfosavename,[{'N_locs'},{'Area'}],[N_locs, A]);                              
+                             %                               
                             end
                     end
                 valOut = 1;
@@ -2449,7 +2438,9 @@ end
 
         dataCropped = round(obj.CellData{chan}(whichPointsInROI,:));        
         
-        u0 = uint8(imresize(u1(y0:(y0+H),x0:(x0+W)),obj.pixelSizenm));
+        xmax = min(x0+W,obj.SizeX);
+        ymax = min(y0+H,obj.SizeY);
+        u0 = uint8(imresize(u1(y0:ymax,x0:xmax),obj.pixelSizenm));
         
         u = zeros(size(u0),'single');
         x_SR = dataCropped(:,5);
@@ -2496,7 +2487,7 @@ end
 %-------------------------------------------------------------------------%
     function Analyze_gr_perObject_from_Segmentation(obj,rmax,~)
   
-        try   
+         try   
                for chan = 1 : obj.Nchannels                   
                    fname = strrep(obj.fileName{chan},'.csv','');
                    fname = strrep(fname,'.txt','');

@@ -494,7 +494,21 @@ handles.Object = SMLMdata.Object;
 handles.Channel = SMLMdata.Channel;
 handles.well_to_condition_map = SMLMdata.well_to_condition_map;
 handles.well_to_condition_index_map = SMLMdata.well_to_condition_index_map;
-handles.Ripley_distance = SMLMdata.Ripley_distance;
+
+try
+    handles.Ripley_distance = SMLMdata.Ripley_distance;
+catch
+    disp('no Ripley data');
+end
+
+try
+    handles.gr_step_Ripley = SMLMdata.gr_step_Ripley;
+    handles.gr_step_FFT = SMLMdata.gr_step_FFT;
+    handles.gr_Ripley_distance = SMLMdata.gr_Ripley_distance;
+    handles.gr_FFT_distance = SMLMdata.gr_FFT_distance;
+catch
+    disp('no g(r) data');
+end
 
 data = [num2cell(true(n_plates,1)) num2cell((1:n_plates))'];
 %data(:,2) = (handles.Plate)'; %? error
@@ -590,6 +604,16 @@ for k=1:numel(handles.tot_data)
     end
 end
 
+there_are_gr_data = false;
+for k=1:numel(handles.tot_data)
+    ass = handles.tot_data{k};
+    if isfield(ass,'gr_Ripley') && ~isempty(ass.RipleyK_val)
+        handles.param_names = [handles.param_names; 'roi.gr_Ripley'; 'roi.gr_FFT'];
+        there_are_gr_data = true;
+        break;
+    end
+end
+
 if there_are_cluster_centroid_coordinates
     handles.param_names  = [handles.param_names; 'roi.ClusterDensityT'];
     handles.param_names  = [handles.param_names; 'roi.ClusterDensity0'];
@@ -665,6 +689,8 @@ for k=1:numel(handles.param_names)
         case 'cl.NormDensity'
         case 'roi.Ripley'
         case 'roi.Ripley(MAX)'
+        case 'roi.gr_Ripley'
+        case 'roi.gr_FFT'            
         case 'roi.ClusterDensityT'
         case 'roi.ClusterDensity0'            
     end
@@ -755,14 +781,26 @@ function show_plot(hObject,handles)
             plot(AXES,handles.Ripley_distance,s1,'b.-',handles.Ripley_distance,s2,'r.-');
             if get(handles.legend,'Value')
                 %legend(AXES,{[C1 ' ' Q ' channel ' num2str(channel1)],[C2 ' ' Q ' channel ' num2str(channel2)]});
+            end            
+        case 'roi.gr_Ripley'
+            XLABEL = 'distance [nm]';
+            plot(AXES,handles.gr_Ripley_distance,s1,'b.-',handles.gr_Ripley_distance,s2,'r.-');
+            if get(handles.legend,'Value')
+                %legend(AXES,{[C1 ' ' Q ' channel ' num2str(channel1)],[C2 ' ' Q ' channel ' num2str(channel2)]});
             end
+        case 'roi.gr_FFT'
+            XLABEL = 'distance [nm]';
+            plot(AXES,handles.gr_FFT_distance,s1,'b.-',handles.gr_FFT_distance,s2,'r.-');
+            if get(handles.legend,'Value')
+                %legend(AXES,{[C1 ' ' Q ' channel ' num2str(channel1)],[C2 ' ' Q ' channel ' num2str(channel2)]});
+            end                                    
         case 'roi.Ripley(MAX)'            
             XLABEL = 'distance at RipleyK maximum [nm]';
         case {'roi.ClusterDensityT','roi.ClusterDensity0'}
             XLABEL = 'clusters density estimate [1/nm^2]';            
     end
                               
-    if ~isempty(s1) && ~isempty(s2) && ~strcmp(Q,'roi.Ripley')
+    if ~isempty(s1) && ~isempty(s2) && ~ismember(Q,{'roi.Ripley','roi.gr_Ripley','roi.gr_FFT'})
         
         s1 = s1(~isnan(s1));
         s2 = s2(~isnan(s2));
@@ -825,6 +863,10 @@ function [s, parameter,param_ind] = select_data(handles,table_token,group_index)
      %
      if strcmp(parameter,'roi.Ripley')
          s = zeros(size(handles.Ripley_distance));
+     elseif strcmp(parameter,'roi.gr_Ripley')
+         s = zeros(size(handles.gr_Ripley_distance));
+     elseif strcmp(parameter,'roi.gr_FFT')
+         s = zeros(size(handles.gr_FFT_distance));
      elseif strcmp(parameter,'roi.Ripley(MAX)')
          s = nan(1,100000000,'single'); % enough to handle clusters...
      else %clusters
@@ -873,6 +915,22 @@ function [s, parameter,param_ind] = select_data(handles,table_token,group_index)
                             cnt = cnt + 1;
                         end
                     end
+                    
+                    if strcmp(parameter,'roi.gr_Ripley')
+                        vals = ass.gr_Ripley;
+                        if ~isempty(vals)
+                            s = s + vals;
+                            cnt = cnt + 1;
+                        end
+                    end
+                    if strcmp(parameter,'roi.gr_FFT')
+                        vals = ass.gr_FFT;
+                        if ~isempty(vals)
+                            s = s + vals;
+                            cnt = cnt + 1;
+                        end
+                    end
+                                                            
                     if strcmp(parameter,'roi.Ripley(MAX)')
                         maxval = handles.RipleyK_data_MAX(k);
                         if ~isnan(maxval)
@@ -900,7 +958,7 @@ function [s, parameter,param_ind] = select_data(handles,table_token,group_index)
      if ismember(parameter,cluster_params) || strcmp(parameter,'roi.Ripley(MAX)')
         s = s(1:cnt);
         numel(s);
-     elseif strcmp(parameter,'roi.Ripley')
+     elseif ismember(parameter,{'roi.Ripley','roi.gr_Ripley','roi.gr_FFT'})
         s = s/cnt; 
      end
 
