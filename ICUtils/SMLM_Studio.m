@@ -22,10 +22,10 @@ function varargout = SMLM_Studio(varargin)
 
 % Edit the above text to modify the response to help SMLM_Studio
 
-% Last Modified by GUIDE v2.5 20-Jan-2022 18:05:44
+% Last Modified by GUIDE v2.5 25-Oct-2022 16:33:16
 
 % Begin initialization code - DO NOT EDIT
-gui_Singleton = 0;
+gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
                    'gui_OpeningFcn', @SMLM_Studio_OpeningFcn, ...
@@ -398,6 +398,13 @@ well_to_condition_index_map = SMLMdata.well_to_condition_index_map;
             n_channels, ...
             n_max_objects] = size(SMLMdata.data);
 tic
+
+% per Object data
+if exist('obj_SMLMdata','var')
+    handles.obj_SMLMdata = obj_SMLMdata;
+    disp('found obj_SMLMdata!');
+end
+%
 
 %cnt_objects = 0;
 
@@ -1415,3 +1422,116 @@ function show_2d_histogram2(handles)
     ylabel(AXES,YLABEL,'fontsize',8);         
         
     end    
+
+
+% --------------------------------------------------------------------
+function fit_per_Object_gr_Callback(hObject, eventdata, handles)
+    if ~isfield(handles,'obj_SMLMdata'), return, end
+    d = handles.obj_SMLMdata;
+    
+    data = d.data;
+    
+    gr_fitting_controls(handles);
+        
+% % 
+% % % handles.Plate = SMLMdata.Plate;
+% % % handles.data = SMLMdata.data;
+% % % handles.Well = SMLMdata.Well;
+% % % handles.Condition = SMLMdata.Condition;
+% % % handles.FOVs = SMLMdata.FOVs;
+% % % handles.Object = SMLMdata.Object;
+% % % handles.Channel = SMLMdata.Channel;
+% % % handles.well_to_condition_map = SMLMdata.well_to_condition_map;
+% % % handles.well_to_condition_index_map = SMLMdata.well_to_condition_index_map;    
+% %         
+% %     [n_plates, ...
+% %     n_conditions, ...
+% %     n_wells, ...
+% %     n_fovs, ...
+% %     n_channels, ...
+% %     n_max_objects] = size(data);    
+% % 
+% % colors = {'r','g','b'};
+% % markers = {'.','.','.'};
+% % 
+% % r = d.gr_Object_distance;
+% % %
+% % step = 1;
+% % ctoff = fix(700/step); % nm
+% % %ctoff = fix(350/step); % nm
+% % r = r(1:ctoff);
+% % 
+% % % h = figure;
+% % % ax = gca;
+% % for plate = 1:n_plates
+% %     for w=1:n_wells        
+% %         well_is_empty = true;
+% %         try
+% %             well_is_empty = isempty(handles.well_to_condition_map(num2str(w)));
+% %         catch
+% %             well_is_empty = isempty(handles.well_to_condition_map(handles.Well{w}));
+% %         end
+% %         %
+% %         fov = w; % this is lkely wrong, but held for first data reduction cases
+% %         %
+% %         for k = 1:n_max_objects
+% %             for channel = 1:n_channels
+% %                 %
+% %                 try
+% %                     condition_index = handles.well_to_condition_index_map(num2str(w));
+% %                 catch
+% %                     condition_index = handles.well_to_condition_index_map(handles.Well{w});
+% %                 end
+% %                 %
+% %                 if ~isempty(condition_index) && 0 ~= condition_index
+% %                     cur_data = data{plate,condition_index,w,fov,channel,k};
+% %                     if isempty(cur_data), continue, end
+% %                     disp([plate w fov k channel])
+% %                     
+% %                     %
+% %                     g_exp = cur_data.gr;
+% %                     % fit za stuff..
+% %                     g_exp = g_exp(1:ctoff);                    
+% %                         %
+% % %                         sprt = 2:length(r);
+% % %                         r = r(sprt);
+% % %                         g_exp = g_exp(sprt);                        
+% %                     num_param = 4;
+% %                     mode = 'Gaussian';
+% %                     mode = 'mixed';
+% %                     [g_fit, L1, L2, n1, n2, p1, p2, N1, N2] = fit_gr(r,g_exp,cur_data.N_locs,cur_data.Area,mode,num_param);
+% %                     %
+% %                     h = figure;
+% %                     ax = gca;                    
+% %                                         
+% %                     semilogy(ax,r,g_exp,'color',colors{condition_index},'marker',markers{condition_index});
+% %                     hold(ax,'on');
+% %                     semilogy(ax,r,g_fit,'k:','linewidth',2);
+% %                     hold(ax,'on');                        
+% %                     
+% %                     hold(ax,'off');
+% %                     grid(ax,'on');
+% %                     xlabel(ax,'distance [nm]');
+% %                     ylabel(ax,'g(r)');                    
+% %                     
+% %                     %
+% %                 end
+% %             end                                
+% %         end
+% %     end
+% % end
+% % % hold(ax,'off');
+% % % grid(ax,'on');
+% % % xlabel(ax,'distance [nm]');
+% % % ylabel(ax,'g(r)');
+% % 
+
+ 
+
+
+        
+    
+    
+    
+    
+    
