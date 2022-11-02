@@ -22,7 +22,7 @@ function varargout = gr_fitting_controls(varargin)
 
 % Edit the above text to modify the response to help gr_fitting_controls
 
-% Last Modified by GUIDE v2.5 01-Nov-2022 13:47:04
+% Last Modified by GUIDE v2.5 02-Nov-2022 16:43:22
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -42,7 +42,6 @@ else
     gui_mainfcn(gui_State, varargin{:});
 end
 % End initialization code - DO NOT EDIT
-
 
 % --- Executes just before gr_fitting_controls is made visible.
 function gr_fitting_controls_OpeningFcn(hObject, eventdata, handles, varargin)
@@ -77,7 +76,7 @@ set(handles.shape_primitives,'String',{'Gaussian','exponential','mixed'});
 
 handles.ATTR = [];
 handles.GR = [];
-handles.FIT = [];
+handles.FITDATA = [];
 handles.N_LOCS = [];
 handles.AREA = [];
         
@@ -99,7 +98,7 @@ for plate = 1:n_plates
             well_is_empty = isempty(handles.SMLM_Studio.well_to_condition_map(handles.SMLM_Studio.Well{w}));
         end
         %
-        fov = w; % this is lkely wrong, but held for first data reduction cases
+        fov = w; % this is likely wrong, but held for first data reduction cases
         %
         for k = 1:n_max_objects
             for channel = 1:n_channels
@@ -117,7 +116,7 @@ for plate = 1:n_plates
                     %
                     g_exp = cur_data.gr;
                     handles.GR = [handles.GR; g_exp'];
-                    handles.ATTR = [handles.ATTR; [plate w fov k channel]];
+                    handles.ATTR = [handles.ATTR; [plate condition_index w channel k]];
                     handles.N_LOCS = [handles.N_LOCS; cur_data.N_locs];
                     handles.AREA = [handles.AREA; cur_data.Area];                    
                 end
@@ -186,7 +185,6 @@ function number_of_parameters_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns number_of_parameters contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from number_of_parameters
 
-
 % --- Executes during object creation, after setting all properties.
 function number_of_parameters_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to number_of_parameters (see GCBO)
@@ -199,7 +197,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
 % --- Executes on selection change in shape_primitives.
 function shape_primitives_Callback(hObject, eventdata, handles)
 % hObject    handle to shape_primitives (see GCBO)
@@ -208,7 +205,6 @@ function shape_primitives_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns shape_primitives contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from shape_primitives
-
 
 % --- Executes during object creation, after setting all properties.
 function shape_primitives_CreateFcn(hObject, eventdata, handles)
@@ -221,7 +217,6 @@ function shape_primitives_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 % --- Executes on button press in fit_and_show_plots.
 function fit_and_show_plots_Callback(hObject, eventdata, handles)
@@ -243,13 +238,26 @@ n_plots = size(handles.GR,1);
 
 [R,C] = MCED(n_plots);
 
-figure('units','normalized','outerposition',[0 0 1 1],'name','g(r) fittings');
+h = figure; %('units','normalized','outerposition',[0 0 1 1],'name','g(r) fittings');
+set(h,'Name',[num2str(num_param) ' parameters fitting, cutoff = ' num2str(ctoff) ' nm, mode ' mode]);
+
+FITDATA = [];
+
+maxgr = max(handles.GR(:));
+mingr = min(handles.GR(:));
+maxr = max(r(1:ctoff));
+
+minlocdensity = min(handles.N_LOCS(:)./handles.AREA(:));
+maxlocdensity = max(handles.N_LOCS(:)./handles.AREA(:));
+
 for k=1:n_plots
-    k
+    %
     g_exp = handles.GR(k,:)';
     condition_index = handles.ATTR(k,2);
     [g_fit, L1, L2, n1, n2, p1, p2, N1, N2, fval] = fit_gr(r(1:ctoff),g_exp(1:ctoff),...
         handles.N_LOCS(k),handles.AREA(k),mode,num_param);
+    %
+    FITDATA = [FITDATA; [handles.N_LOCS(k), handles.AREA(k), L1, L2, n1, n2, p1, p2, N1, N2]];
     %    
     ax = subplot(R,C,k);
                                         
@@ -266,20 +274,122 @@ for k=1:n_plots
     if k==1
         ylabel(ax,'g(r)');
     end
-    legend(ax,[handles.SMLM_Studio.Condition{condition_index} ' : ' num2str(fval)]);
+    %
+    attr = handles.ATTR(k,:); 
+    PP = handles.SMLM_Studio.Plate(attr(1));
+    CC = handles.SMLM_Studio.Condition{attr(2)};    
+    WW = handles.SMLM_Studio.Well{attr(3)};
+    cc = handles.SMLM_Studio.Channel{attr(4)};    
+    OO = handles.SMLM_Studio.Object{attr(5)};
+    sep = ' : ';
+    %L1 = [PP sep CC sep WW sep cc sep OO];
+    L1 = [CC sep WW sep OO];
+    L2 = [num2str(fval) sep, ... 
+         num2str(fix(FITDATA(k,3))) sep, ...
+         num2str(fix(FITDATA(k,4)))];      
+         legend(ax,{L1,L2},'fontsize',8);       
+         axis(ax,[0 maxr, mingr maxgr]);
 end
+
+h=figure;
+set(h,'Name',[num2str(num_param) ' parameters fitting, cutoff = ' num2str(ctoff) ' nm, mode ' mode]);
+ax1 = subplot(3,1,1);
+ax2 = subplot(3,1,2);
+ax3 = subplot(3,1,3);
+%
+n_conditions = length(handles.SMLM_Studio.Condition);
+lwh = 2.5;
+LEGEND = cell(0);
+LEGEND1 = cell(0);
+for condition_index=1:n_conditions
+    mask = condition_index == handles.ATTR(:,2);
+    cd = FITDATA(mask,:); % current data
+    %[handles.N_LOCS(k), handles.AREA(k), L1, L2, n1, n2, p1, p2, N1, N2]
+    Area = cd(:,2)/1e6; % square microns!
+    density = cd(:,1)./cd(:,2);
+    L1 = cd(:,3);
+    L2 = cd(:,4);
+    n1 = cd(:,5);
+    n2 = cd(:,6);
+    p1 = cd(:,7);
+    N1 = cd(:,9);
+    N2 = cd(:,10);
+        
+    loglog(ax1,L1,n1,'color',handles.colors(condition_index,:),'marker','s','linestyle','none','markersize',14,'linewidth',lwh);
+    hold(ax1,'on');
+    loglog(ax1,L2,n2,'color',handles.colors(condition_index,:),'marker','o','linestyle','none','markersize',14,'linewidth',lwh);
+    hold(ax1,'on');
+    LEGEND1 = [LEGEND1 [handles.SMLM_Studio.Condition{condition_index} ' small']];
+    LEGEND1 = [LEGEND1 [handles.SMLM_Studio.Condition{condition_index} ' large']];
+    %
+    semilogy(ax2,Area,N1,'color',handles.colors(condition_index,:),'marker','s','linestyle','none','markersize',14,'linewidth',lwh);
+    hold(ax2,'on');
+    semilogy(ax2,Area,N2,'color',handles.colors(condition_index,:),'marker','o','linestyle','none','markersize',14,'linewidth',lwh);
+    hold(ax2,'on');
+    %
+    semilogx(ax3,density,p1,'color',handles.colors(condition_index,:),'marker','s','linestyle','none','markersize',14,'linewidth',lwh);
+    hold(ax3,'on');                       
+    LEGEND = [LEGEND handles.SMLM_Studio.Condition{condition_index}];
+end
+
+hold(ax1,'off');
+grid(ax1,'on');
+xlabel(ax1,'effective cluster radius [nm]');
+ylabel(ax1,'number of localizations per cluster');
+legend(ax1,LEGEND1);
+
+hold(ax2,'off');
+grid(ax2,'on');
+xlabel(ax2,'nucleus area [\mu^2]');
+ylabel(ax2,'number of clusters');
+
+hold(ax3,'off');
+grid(ax3,'on');
+xlabel(ax3,'localizations density [1/nm^2]');
+ylabel(ax3,'contribution of small clusters');
+legend(ax3,LEGEND);
+axis(ax3,[minlocdensity maxlocdensity, 0 1]);
+
+handles.FITDATA = FITDATA;
+guidata(hObject, handles);
 
 % --- Executes on button press in exit.
 function exit_Callback(hObject, eventdata, handles)
     fh = ancestor(hObject,'figure');     
     delete(fh);
 
-% --- Executes on button press in fit_and_generate_xls.
-function fit_and_generate_xls_Callback(hObject, eventdata, handles)
-% hObject    handle to fit_and_generate_xls (see GCBO)
+% --- Executes on button press in generate_csv.
+function generate_csv_Callback(hObject, eventdata, handles)
+% hObject    handle to generate_csv (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+if isempty(handles.FITDATA), return, end
+
+%[handles.N_LOCS(k), handles.AREA(k), L1, L2, n1, n2, p1, p2, N1, N2]];
+D = [];
+for k = 1:size(handles.FITDATA,1)
+    cd = handles.FITDATA(k,:);
+    attr = handles.ATTR(k,:); 
+    PP = {handles.SMLM_Studio.Plate(attr(1))};
+    CC = {handles.SMLM_Studio.Condition{attr(2)}};    
+    WW = {handles.SMLM_Studio.Well{attr(3)}};
+    cc = {handles.SMLM_Studio.Channel{attr(4)}};    
+    OO = {handles.SMLM_Studio.Object{attr(5)}};
+    
+    rec = [PP CC WW cc OO num2cell(cd)];
+    D = [D; rec];
+end
+
+caption = {'plate','condition','well','channel','object','#locs','Area','Z1','Z2','n1','n2','p1','p2','N1','N2'};
+D = [caption; D];
+xlstempname = [tempname '.csv'];
+cell2csv(xlstempname,D);
+if ispc 
+    winopen(xlstempname);
+else
+    open(xlstempname);
+end
 
 % -------------------------------------------------------------
 function [med1,med2] = MCED(N_)
