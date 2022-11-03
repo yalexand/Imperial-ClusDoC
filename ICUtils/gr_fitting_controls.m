@@ -257,7 +257,9 @@ for k=1:n_plots
     [g_fit, L1, L2, n1, n2, p1, p2, N1, N2, fval] = fit_gr(r(1:ctoff),g_exp(1:ctoff),...
         handles.N_LOCS(k),handles.AREA(k),mode,num_param);
     %
-    FITDATA = [FITDATA; [handles.N_LOCS(k), handles.AREA(k), L1, L2, n1, n2, p1, p2, N1, N2]];
+    maxg = (max(g_fit) + max(g_exp))/2;
+    relerr = fval/maxg;
+    FITDATA = [FITDATA; [handles.N_LOCS(k), handles.AREA(k), L1, L2, n1, n2, p1, p2, N1, N2 maxg relerr]];
     %    
     ax = subplot(R,C,k);
                                         
@@ -284,7 +286,7 @@ for k=1:n_plots
     sep = ' : ';
     %L1 = [PP sep CC sep WW sep cc sep OO];
     L1 = [CC sep WW sep OO];
-    L2 = [num2str(fval) sep, ... 
+    L2 = [num2str(relerr) sep, ... 
          num2str(fix(FITDATA(k,3))) sep, ...
          num2str(fix(FITDATA(k,4)))];      
          legend(ax,{L1,L2},'fontsize',8);       
@@ -293,9 +295,10 @@ end
 
 h=figure;
 set(h,'Name',[num2str(num_param) ' parameters fitting, cutoff = ' num2str(ctoff) ' nm, mode ' mode]);
-ax1 = subplot(3,1,1);
-ax2 = subplot(3,1,2);
-ax3 = subplot(3,1,3);
+ax1 = subplot(1,4,1);
+ax2 = subplot(1,4,2);
+ax3 = subplot(1,4,3);
+ax4 = subplot(1,4,4);
 %
 n_conditions = length(handles.SMLM_Studio.Condition);
 lwh = 2.5;
@@ -314,22 +317,27 @@ for condition_index=1:n_conditions
     p1 = cd(:,7);
     N1 = cd(:,9);
     N2 = cd(:,10);
+    maxg = cd(:,11);
+    relerr = cd(:,12);
         
-    loglog(ax1,L1,n1,'color',handles.colors(condition_index,:),'marker','s','linestyle','none','markersize',14,'linewidth',lwh);
+    loglog(ax1,L1,n1,'color',handles.colors(condition_index,:),'marker','s','linestyle','none','markersize',12,'linewidth',lwh);
     hold(ax1,'on');
-    loglog(ax1,L2,n2,'color',handles.colors(condition_index,:),'marker','o','linestyle','none','markersize',14,'linewidth',lwh);
+    loglog(ax1,L2,n2,'color',handles.colors(condition_index,:),'marker','o','linestyle','none','markersize',12,'linewidth',lwh);
     hold(ax1,'on');
     LEGEND1 = [LEGEND1 [handles.SMLM_Studio.Condition{condition_index} ' small']];
     LEGEND1 = [LEGEND1 [handles.SMLM_Studio.Condition{condition_index} ' large']];
     %
-    semilogy(ax2,Area,N1,'color',handles.colors(condition_index,:),'marker','s','linestyle','none','markersize',14,'linewidth',lwh);
+    semilogy(ax2,Area,N1,'color',handles.colors(condition_index,:),'marker','s','linestyle','none','markersize',12,'linewidth',lwh);
     hold(ax2,'on');
-    semilogy(ax2,Area,N2,'color',handles.colors(condition_index,:),'marker','o','linestyle','none','markersize',14,'linewidth',lwh);
+    semilogy(ax2,Area,N2,'color',handles.colors(condition_index,:),'marker','o','linestyle','none','markersize',12,'linewidth',lwh);
     hold(ax2,'on');
     %
-    semilogx(ax3,density,p1,'color',handles.colors(condition_index,:),'marker','s','linestyle','none','markersize',14,'linewidth',lwh);
+    semilogx(ax3,density,p1,'color',handles.colors(condition_index,:),'marker','*','linestyle','none','markersize',10,'linewidth',lwh);
     hold(ax3,'on');                       
     LEGEND = [LEGEND handles.SMLM_Studio.Condition{condition_index}];
+    
+    plot(ax4,maxg,relerr,'color',handles.colors(condition_index,:),'marker','*','linestyle','none','markersize',10,'linewidth',lwh);
+    hold(ax4,'on');                           
 end
 
 hold(ax1,'off');
@@ -347,8 +355,13 @@ hold(ax3,'off');
 grid(ax3,'on');
 xlabel(ax3,'localizations density [1/nm^2]');
 ylabel(ax3,'contribution of small clusters');
-legend(ax3,LEGEND);
 axis(ax3,[minlocdensity maxlocdensity, 0 1]);
+
+hold(ax4,'off');
+grid(ax4,'on');
+xlabel(ax4,'max(g(r))');
+ylabel(ax4,'fitting error / max(g(r))');
+legend(ax4,LEGEND);
 
 handles.FITDATA = FITDATA;
 guidata(hObject, handles);
@@ -381,7 +394,7 @@ for k = 1:size(handles.FITDATA,1)
     D = [D; rec];
 end
 
-caption = {'plate','condition','well','channel','object','#locs','Area','Z1','Z2','n1','n2','p1','p2','N1','N2'};
+caption = {'plate','condition','well','channel','object','#locs','Area','Z1','Z2','n1','n2','p1','p2','N1','N2','max(g)','fit_err/max(g)'};
 D = [caption; D];
 xlstempname = [tempname '.csv'];
 cell2csv(xlstempname,D);
