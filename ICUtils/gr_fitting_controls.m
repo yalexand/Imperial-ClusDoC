@@ -117,8 +117,16 @@ for plate = 1:n_plates
                     g_exp = cur_data.gr;
                     handles.GR = [handles.GR; g_exp'];
                     handles.ATTR = [handles.ATTR; [plate condition_index w channel k]];
-                    handles.N_LOCS = [handles.N_LOCS; cur_data.N_locs];
-                    handles.AREA = [handles.AREA; cur_data.Area];                    
+                    cur_n_locs = cur_data.N_locs;
+                    if ~isnumeric(cur_n_locs)                        
+                        cur_n_locs = str2double(cur_n_locs);
+                    end                    
+                    handles.N_LOCS = [handles.N_LOCS; cur_n_locs];                   
+                    cur_area = cur_data.Area;
+                    if ~isnumeric(cur_area)                        
+                        cur_area = str2double(cur_area);
+                    end
+                    handles.AREA = [handles.AREA; cur_area];                    
                 end
             end                                
         end
