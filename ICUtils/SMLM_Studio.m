@@ -755,7 +755,9 @@ function show_plot(hObject,handles)
     YLABEL = 'pdf';
     switch Q
         case 'roi.Ripley'
-            YLABEL = 'AU';        
+            YLABEL = 'L(r)-r';  
+        case {'roi.gr_FFT','roi.gr_Ripley'}    
+            YLABEL = 'g(r)';  
     end
     
     AXESMINMAX = [handles.minmaxlimits(param_ind,1) handles.minmaxlimits(param_ind,2)];
