@@ -38,15 +38,19 @@ function [g_fit, L1 L2 n1 n2 p1 p2 N1 N2, fval] = fit_gr(r,g_exp,N_locs,Area,mod
                         if L_min==L1
                             A_min = A1;
                             A_max = A2;
+                            p_min = p1;
                         else
                             A_min = A2;
                             A_max = A1;
+                            p_min = p2;
                         end
 
                         A1 = A_min;
                         L1 = L_min;
                         A2 = A_max;
                         L2 = L_max;
+                        p1 = p_min;
+                        p2 = 1 - p_min;
 
                         n1 = 2*pi*A1*ro*L1^2;
                         n2 = 2*pi*A2*ro*L2^2;
