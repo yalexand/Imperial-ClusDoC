@@ -163,7 +163,7 @@ function distance_cutoff_Callback(hObject, eventdata, handles)
 max_r = max(handles.SMLM_Studio.obj_SMLMdata.gr_Object_distance);
 %
 value = fix(str2double(get(hObject,'String')));
-if ~isnan(value) && value>50 && value <= max_r
+if ~isnan(value) && value>=40 && value <= max_r
     handles.cutoff = value;
     guidata(hObject,handles);
 else
@@ -356,7 +356,7 @@ legend(ax1,LEGEND1);
 
 hold(ax2,'off');
 grid(ax2,'on');
-xlabel(ax2,'nucleus area [\mu^2]');
+xlabel(ax2,'ROI area [\mu^2]');
 ylabel(ax2,'number of clusters');
 
 hold(ax3,'off');
