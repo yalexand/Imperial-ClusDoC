@@ -63,7 +63,7 @@ set(handles.distance_cutoff,'String',num2str(handles.cutoff));
 set(handles.number_of_parameters,'String',{'4','5'});
 set(handles.shape_primitives,'String',{'Gaussian','exponential','mixed'});
 
-        handles.colors = zeros(7,3);
+        handles.colors = zeros(10,3);
         handles.colors(1,:) = [0 0.4470 0.7410];
         handles.colors(2,:) = [0.8500 0.3250 0.0980];
         handles.colors(3,:) = [0.9290 0.6940 0.1250];
@@ -71,8 +71,11 @@ set(handles.shape_primitives,'String',{'Gaussian','exponential','mixed'});
         handles.colors(5,:) = [0.4660 0.6740 0.1880];
         handles.colors(6,:) = [0.3010 0.7450 0.9330];
         handles.colors(7,:) = [0.6350 0.0780 0.1840];
-        handles.markers = {'o','s','^','d','p','*','+'};
-        handles.styles = {'-',':','--','-.','-',':','--'};
+            handles.colors(8,:) = [0 0 1];
+            handles.colors(9,:) = [0 0 0];
+            handles.colors(10,:) = [1 0 0];        
+        handles.markers = {'o','s','^','d','p','*','+','o','s','^'};
+        handles.styles = {'-',':','--','-.','-',':','--','-',':','--'};
 
 handles.ATTR = [];
 handles.GR = [];
