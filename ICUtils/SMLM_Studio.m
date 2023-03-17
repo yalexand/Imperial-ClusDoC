@@ -22,7 +22,7 @@ function varargout = SMLM_Studio(varargin)
 
 % Edit the above text to modify the response to help SMLM_Studio
 
-% Last Modified by GUIDE v2.5 25-Oct-2022 16:33:16
+% Last Modified by GUIDE v2.5 17-Mar-2023 12:30:34
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -806,7 +806,7 @@ function show_plot(hObject,handles)
         case 'roi.Ripley(MAX)'            
             XLABEL = 'distance at RipleyK maximum [nm]';
         case {'roi.ClusterDensityT','roi.ClusterDensity0'}
-            XLABEL = 'clusters density estimate [1/nm^2]';            
+            XLABEL = 'clusters density estimate [1/\mum^2]';
     end
                               
     if ~isempty(s1) && ~isempty(s2) && ~ismember(Q,{'roi.Ripley','roi.gr_Ripley','roi.gr_FFT'})
@@ -964,7 +964,7 @@ function [s, parameter,param_ind] = select_data(handles,table_token,group_index)
                                         
              end        
          toc
-     if ismember(parameter,cluster_params) || strcmp(parameter,'roi.Ripley(MAX)')
+     if ismember(parameter,cluster_params) || ismember(parameter,{'roi.Ripley(MAX)','roi.ClusterDensity0','roi.ClusterDensityT'})
         s = s(1:cnt);
         numel(s);
      elseif ismember(parameter,{'roi.Ripley','roi.gr_Ripley','roi.gr_FFT'})
@@ -1011,7 +1011,7 @@ function show_2d_histogram(handles)
         case 'roi.Ripley(MAX)'
             XLABEL = 'distance at RipleyK maximum [nm]';
         case {'roi.ClusterDensityT','roi.ClusterDensity0'}
-            XLABEL = 'clusters density estimate [1/nm^2]';
+            XLABEL = 'clusters density estimate [1/\mum^2]';
             
     end
     
@@ -1038,34 +1038,35 @@ function show_2d_histogram(handles)
         case 'roi.Ripley(MAX)'
             YLABEL = 'distance at RipleyK maximum [nm]';
         case {'roi.ClusterDensityT','roi.ClusterDensity0'}     
-            YLABEL = 'clusters density estimate [1/nm^2]';            
+            YLABEL = 'clusters density estimate [1/\mum^2]';            
     end
     %
-    if ~isempty(sx) && ~isempty(sy) && length(sx)==length(sy)
-        if logscale_X
-            sx = log10(sx);
-        end 
-        if logscale_Y
-            sy = log10(sy);
-        end          
+    AXES = handles.corr_plot;    
+    if isempty(sx) || isempty(sy) || length(sx)~=length(sy)
+        sx = zeros(1,100);
+        sy = zeros(1,100);
+        XLABEL = '';
+        YLABEL = '';
+    end 
 
-        nBins = 50;
-        AXES = handles.corr_plot;
-                             
-        if ~get(handles.bar_histo,'Value')
-            %histogram2(AXES,sx,sy,[nBins nBins],'DisplayStyle','tile','ShowEmptyBins','on','Normalization','pdf');
-            histogram2(AXES,sx,sy,'DisplayStyle','tile','ShowEmptyBins','on','Normalization','pdf');
-        else
-            histogram2(AXES,sx,sy,'DisplayStyle','bar3','ShowEmptyBins','on','Normalization','pdf','FaceColor','flat');                    
-            if get(handles.bar_log,'Value')
-             set(AXES,'zscale','log');
-            end
+    if logscale_X
+        sx = log10(sx);
+    end 
+    if logscale_Y
+        sy = log10(sy);
+    end          
+                     
+    if ~get(handles.bar_histo,'Value')
+        %histogram2(AXES,sx,sy,[nBins nBins],'DisplayStyle','tile','ShowEmptyBins','on','Normalization','pdf');
+        histogram2(AXES,sx,sy,'DisplayStyle','tile','ShowEmptyBins','on','Normalization','pdf');
+    else
+        histogram2(AXES,sx,sy,'DisplayStyle','bar3','ShowEmptyBins','on','Normalization','pdf','FaceColor','flat');                    
+        if get(handles.bar_log,'Value')
+         set(AXES,'zscale','log');
         end
-        
+    end
     xlabel(AXES,XLABEL,'fontsize',8);
     ylabel(AXES,YLABEL,'fontsize',8);         
-        
-    end    
 
 %--------------------------------------------------------------------
 function Untitled_1_Callback(hObject, eventdata, handles)
@@ -1260,9 +1261,9 @@ for k=1:numel(handles.tot_data)
 %                  hold('off');
              end
          end
-         ass.ClusterDensity0 = size(points,1)/handles.ROI_side^2;
+         ass.ClusterDensity0 = size(points,1)/handles.ROI_side^2*1e6;
          if ~isempty(acc)
-            ass.ClusterDensityT = 2/mean(acc)^2;
+            ass.ClusterDensityT = 2/(pi*mean(acc)^2)*1e6; % per micron^2
             ret{k} = ass;
          end         
     end
@@ -1368,8 +1369,8 @@ function show_2d_histogram2(handles)
                 XLABEL = 'log10(relative localisations density)';                
         case 'roi.Ripley(MAX)'
             XLABEL = 'distance at RipleyK maximum [nm]';
-        case 'roi.ClusterDensityT'            
-            XLABEL = 'clusters density estimate [1/nm^2]';
+        case {'roi.ClusterDensityT','roi.ClusterDensity0'}     
+            XLABEL = 'clusters density estimate [1/\mum^2]';   
             
     end
     
@@ -1395,36 +1396,36 @@ function show_2d_histogram2(handles)
                 YLABEL = 'log10(relative localisations density)';                
         case 'roi.Ripley(MAX)'
             YLABEL = 'distance at RipleyK maximum [nm]';
-        case 'roi.ClusterDensityT'            
-            YLABEL = 'clusters density estimate [1/nm^2]';            
+        case {'roi.ClusterDensityT','roi.ClusterDensity0'}     
+            YLABEL = 'clusters density estimate [1/\mum^2]';              
     end
     %
-    if ~isempty(sx) && ~isempty(sy) && length(sx)==length(sy)
-        if logscale_X
-            sx = log10(sx);
-        end 
-        if logscale_Y
-            sy = log10(sy);
-        end          
+    AXES = handles.corr_plot2;    
+    if isempty(sx) || isempty(sy) || length(sx)~=length(sy)
+        sx = zeros(1,100);
+        sy = zeros(1,100);
+        XLABEL = '';
+        YLABEL = '';
+    end 
 
-        nBins = 50;
-        AXES = handles.corr_plot2;
-                             
-        if ~get(handles.bar2_histo,'Value')
-            %histogram2(AXES,sx,sy,[nBins nBins],'DisplayStyle','tile','ShowEmptyBins','on','Normalization','pdf');
-            histogram2(AXES,sx,sy,'DisplayStyle','tile','ShowEmptyBins','on','Normalization','pdf');
-        else
-            histogram2(AXES,sx,sy,'DisplayStyle','bar3','ShowEmptyBins','on','Normalization','pdf','FaceColor','flat');                    
-            if get(handles.bar2_log,'Value')
-             set(AXES,'zscale','log');
-            end
+    if logscale_X
+        sx = log10(sx);
+    end 
+    if logscale_Y
+        sy = log10(sy);
+    end          
+                     
+    if ~get(handles.bar2_histo,'Value')
+        %histogram2(AXES,sx,sy,[nBins nBins],'DisplayStyle','tile','ShowEmptyBins','on','Normalization','pdf');
+        histogram2(AXES,sx,sy,'DisplayStyle','tile','ShowEmptyBins','on','Normalization','pdf');
+    else
+        histogram2(AXES,sx,sy,'DisplayStyle','bar3','ShowEmptyBins','on','Normalization','pdf','FaceColor','flat');                    
+        if get(handles.bar2_log,'Value')
+         set(AXES,'zscale','log');
         end
-        
+    end
     xlabel(AXES,XLABEL,'fontsize',8);
-    ylabel(AXES,YLABEL,'fontsize',8);         
-        
-    end    
-
+    ylabel(AXES,YLABEL,'fontsize',8); 
 
 % --------------------------------------------------------------------
 function fit_per_Object_gr_Callback(hObject, eventdata, handles)
