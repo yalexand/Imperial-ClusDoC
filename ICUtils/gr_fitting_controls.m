@@ -258,8 +258,8 @@ maxgr = max(handles.GR(:));
 mingr = min(handles.GR(:));
 maxr = max(r(1:ctoff));
 
-minlocdensity = min(handles.N_LOCS(:)./handles.AREA(:));
-maxlocdensity = max(handles.N_LOCS(:)./handles.AREA(:));
+minlocdensity = min(handles.N_LOCS(:)./handles.AREA(:))*1e6; % [um2]!
+maxlocdensity = max(handles.N_LOCS(:)./handles.AREA(:))*1e6;
 
 for k=1:n_plots
     %
@@ -306,13 +306,15 @@ end
 
 h=figure;
 set(h,'Name',[num2str(num_param) ' parameters fitting, cutoff = ' num2str(ctoff) ' nm, mode ' mode]);
-ax1 = subplot(1,4,1);
-ax2 = subplot(1,4,2);
-ax3 = subplot(1,4,3);
-ax4 = subplot(1,4,4);
+ax1 = subplot(2,3,1);
+ax2 = subplot(2,3,2);
+ax3 = subplot(2,3,3);
+ax4 = subplot(2,3,4);
+ax5 = subplot(2,3,5);
+ax6 = subplot(2,3,6);
 %
 n_conditions = length(handles.SMLM_Studio.Condition);
-lwh = 2.5;
+lwh = 2;
 LEGEND = cell(0);
 LEGEND1 = cell(0);
 for condition_index=1:n_conditions
@@ -320,7 +322,7 @@ for condition_index=1:n_conditions
     cd = FITDATA(mask,:); % current data
     %[handles.N_LOCS(k), handles.AREA(k), L1, L2, n1, n2, p1, p2, N1, N2]
     Area = cd(:,2)/1e6; % square microns!
-    density = cd(:,1)./cd(:,2);
+    density = cd(:,1)./cd(:,2)*1e6;
     L1 = cd(:,3);
     L2 = cd(:,4);
     n1 = cd(:,5);
@@ -331,31 +333,37 @@ for condition_index=1:n_conditions
     maxg = cd(:,11);
     relerr = cd(:,12);
         
-    loglog(ax1,L1,n1,'color',handles.colors(condition_index,:),'marker','s','linestyle','none','markersize',12,'linewidth',lwh);
+    loglog(ax1,L1,n1,'color',handles.colors(condition_index,:),'marker','s','linestyle','none','markersize',8,'linewidth',lwh);
     hold(ax1,'on');
-    loglog(ax1,L2,n2,'color',handles.colors(condition_index,:),'marker','o','linestyle','none','markersize',12,'linewidth',lwh);
+    loglog(ax1,L2,n2,'color',handles.colors(condition_index,:),'marker','o','linestyle','none','markersize',8,'linewidth',lwh);
     hold(ax1,'on');
     LEGEND1 = [LEGEND1 [handles.SMLM_Studio.Condition{condition_index} ' small']];
     LEGEND1 = [LEGEND1 [handles.SMLM_Studio.Condition{condition_index} ' large']];
     %
-    semilogy(ax2,Area,N1,'color',handles.colors(condition_index,:),'marker','s','linestyle','none','markersize',12,'linewidth',lwh);
+    semilogy(ax2,Area,N1,'color',handles.colors(condition_index,:),'marker','s','linestyle','none','markersize',8,'linewidth',lwh);
     hold(ax2,'on');
-    semilogy(ax2,Area,N2,'color',handles.colors(condition_index,:),'marker','o','linestyle','none','markersize',12,'linewidth',lwh);
+    semilogy(ax2,Area,N2,'color',handles.colors(condition_index,:),'marker','o','linestyle','none','markersize',8,'linewidth',lwh);
     hold(ax2,'on');
     %
-    semilogx(ax3,density,p1,'color',handles.colors(condition_index,:),'marker','*','linestyle','none','markersize',10,'linewidth',lwh);
+    semilogx(ax3,density,p1,'color',handles.colors(condition_index,:),'marker','.','linestyle','none','markersize',16,'linewidth',lwh);
     hold(ax3,'on');                       
     LEGEND = [LEGEND handles.SMLM_Studio.Condition{condition_index}];
     
-    plot(ax4,maxg,relerr,'color',handles.colors(condition_index,:),'marker','*','linestyle','none','markersize',10,'linewidth',lwh);
-    hold(ax4,'on');                           
+    semilogx(ax4,maxg,relerr,'color',handles.colors(condition_index,:),'marker','.','linestyle','none','markersize',16,'linewidth',lwh);
+    hold(ax4,'on'); 
+
+    loglog(ax5,N1./Area,N2./Area,'color',handles.colors(condition_index,:),'marker','.','linestyle','none','markersize',16,'linewidth',lwh);
+    hold(ax5,'on');
+    %
+    loglog(ax6,n1.*N1./Area,n2.*N2./Area,'color',handles.colors(condition_index,:),'marker','.','linestyle','none','markersize',16,'linewidth',lwh);
+    hold(ax6,'on');
 end
 
 hold(ax1,'off');
 grid(ax1,'on');
 xlabel(ax1,'effective cluster radius [nm]');
 ylabel(ax1,'number of localizations per cluster');
-legend(ax1,LEGEND1);
+legend(ax1,LEGEND1,'location','northwest');
 
 hold(ax2,'off');
 grid(ax2,'on');
@@ -364,7 +372,7 @@ ylabel(ax2,'number of clusters');
 
 hold(ax3,'off');
 grid(ax3,'on');
-xlabel(ax3,'localizations density [1/nm^2]');
+xlabel(ax3,'localizations density [1/\mu^2]');
 ylabel(ax3,'contribution of small clusters');
 axis(ax3,[minlocdensity maxlocdensity, 0 1]);
 
@@ -372,7 +380,17 @@ hold(ax4,'off');
 grid(ax4,'on');
 xlabel(ax4,'max(g(r))');
 ylabel(ax4,'fitting error / max(g(r))');
-legend(ax4,LEGEND);
+
+hold(ax5,'off');
+grid(ax5,'on');
+xlabel(ax5,'density of small clusters [1/\mu^2]');
+ylabel(ax5,'density of large clusters [1/\mu^2]');
+
+hold(ax6,'off');
+grid(ax6,'on');
+xlabel(ax6,'localization density of small clusters [#loc/\mu^2]');
+ylabel(ax6,'localization density of large clusters [#loc/\mu^2]');
+legend(ax6,LEGEND,'location','northeast');
 
 handles.FITDATA = FITDATA;
 guidata(hObject, handles);
