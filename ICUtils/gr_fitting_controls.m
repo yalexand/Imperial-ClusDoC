@@ -374,7 +374,11 @@ hold(ax3,'off');
 grid(ax3,'on');
 xlabel(ax3,'localizations density [1/\mu^2]');
 ylabel(ax3,'contribution of small clusters');
-axis(ax3,[minlocdensity maxlocdensity, 0 1]);
+try
+    axis(ax3,[minlocdensity maxlocdensity, 0 1]);
+catch
+    disp('cannot setup axis range');
+end
 
 hold(ax4,'off');
 grid(ax4,'on');
