@@ -118,6 +118,35 @@ end
 
     switch length(Body_text)
 
+        case 3 % simulated data format
+                    %dhead = '"x","y","index"
+
+%                 Nmin = inf; % ?????
+%                 for k=1:length(Body_text)
+%                     if length(Body_text{k})<Nmin
+%                         Nmin=length(Body_text{k});
+%                     end
+%                 end                
+%                 for k=1:length(Body_text)
+%                     Body_text{k} = Body_text{k}(1:Nmin);
+%                 end              
+            
+                Data = [(1:length(Body_text{1}))', ... % index
+                        ones(length(Body_text{1}), 1), ... % frame                    
+                        ones(length(Body_text{1}), 1), ...
+                        zeros(length(Body_text{1}), 1), ...
+                        Body_text{1}, ...
+                        Body_text{2}, ... %pixelSizenm*(max(Body_text{4})-Body_text{4}), ...                        
+                        zeros(length(Body_text{1}), 1), ... % precision (uncertainty_xy)
+                        zeros(length(Body_text{1}), 1), ... % intensity
+                        zeros(length(Body_text{1}), 1), ... % bckgstd
+                        ones(length(Body_text{1}), 1), ... % chi square
+                        zeros(length(Body_text{1}), 1), ... % psf width [nm]
+                        ones(length(Body_text{1}), 1), ...
+                        ones(length(Body_text{1}), 1)];
+                                                            
+            % simulated data format
+
         % YA - another ThunderSTORM format
         case {8,9} % ThunderSTORM format.  The user should have chosen the .csv file.  There's an associated XML-ish
                 % .txt file that has metadata and at least the pixel size in it. 
