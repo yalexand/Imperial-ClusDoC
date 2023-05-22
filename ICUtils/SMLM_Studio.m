@@ -22,7 +22,7 @@ function varargout = SMLM_Studio(varargin)
 
 % Edit the above text to modify the response to help SMLM_Studio
 
-% Last Modified by GUIDE v2.5 17-Mar-2023 12:30:34
+% Last Modified by GUIDE v2.5 22-May-2023 13:07:58
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -971,7 +971,7 @@ function [s, parameter,param_ind] = select_data(handles,table_token,group_index)
         s = s/cnt; 
      end
 
-% %---------------------------------------------
+% ---------------------------------------------
 function show_2d_histogram(handles)
 % 
     % quantifiers
@@ -1202,7 +1202,7 @@ function save_clusters_data_Callback(hObject, eventdata, handles)
         cell2csv(fullfilename,s); % very slow
         toc
                 
-        
+% --------------------------------------------------------------------        
 function ret = get_cluster_density_per_ROI(handles,Lmax)
 ret = cell(size(handles.tot_data));
 for k=1:numel(handles.tot_data)
@@ -1528,13 +1528,52 @@ function fit_per_Object_gr_Callback(hObject, eventdata, handles)
 % % % xlabel(ax,'distance [nm]');
 % % % ylabel(ax,'g(r)');
 % % 
-
  
+% --------------------------------------------------------------------
+function save_per_ROI_cluster_params_as_CSV_Callback(hObject, eventdata, handles)
+%
+     try
+        roi_data = handles.tot_data;
+     catch
+        disp('no data');
+     end
+     if isempty(roi_data), return, end
 
+     RipleyK_data_MAX = [];
+     try
+        RipleyK_data_MAX = handles.RipleyK_data_MAX;
+     catch
+        disp('no Ripley data');
+     end
+     there_are_clusters_data = isfield(roi_data{1},'DBSCAN_clusters');
 
-        
-    
-    
-    
-    
-    
+     caption = {'plate','condition','well','fov','object_index','roi','channel','roi.Ripley(MAX) [nm]','roi.ClusterDensity0 [1/um2]','roi.ClusterDensityT [1/um2]'};     
+
+     tic
+         s = cell(numel(roi_data),10); % enough to handle ROIs
+         tic
+             for k=1:numel(roi_data)                    
+                    ass = roi_data{k};
+                    [P,C,W,F,O,R,c] = get_attributes(ass.token);
+                    %                                        
+                    s{k,1} = P;
+                    s{k,2} = C;
+                    s{k,3} = W;
+                    s{k,4} = F;
+                    s{k,5} = O;
+                    s{k,6} = R;
+                    s{k,7} = c;
+                    if ~isempty(RipleyK_data_MAX)
+                        s{k,8} = RipleyK_data_MAX(k);
+                    end
+                    if there_are_clusters_data
+                        s{k,9} = ass.ClusterDensity0;
+                        s{k,10} = ass.ClusterDensityT;
+                    end
+             end        
+
+[filename, pathname] = uiputfile('*.csv', 'save clusters data as');
+fullfilename = [pathname filesep filename];
+s = [caption; s];
+cell2csv(fullfilename,s); % very slow
+toc
