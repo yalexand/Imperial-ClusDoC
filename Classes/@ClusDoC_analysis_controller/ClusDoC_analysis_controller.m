@@ -2438,8 +2438,10 @@ end
 
         dataCropped = round(obj.CellData{chan}(whichPointsInROI,:));        
         
-        xmax = min(x0+W,obj.SizeX);
-        ymax = min(y0+H,obj.SizeY);
+%         xmax = min(x0+W,obj.SizeX);
+%         ymax = min(y0+H,obj.SizeY); % ?? worked because always square images?
+        xmax = min(x0+W,obj.SizeY);
+        ymax = min(y0+H,obj.SizeX);
         u0 = uint8(imresize(u1(y0:ymax,x0:xmax),obj.pixelSizenm));
         
         u = zeros(size(u0),'single');
