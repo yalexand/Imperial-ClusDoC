@@ -65,7 +65,7 @@ function f = p_exp(r,L)
 end
 %------------------------------------------------------------------
 function f = p_Gauss(r,L)
-    f = sqrt(2/pi)*exp(-r.^2/(2*L^2));
+    f = 1/sqrt(pi)*exp(-r.^2/(4*L^2));
 end
 %------------------------------------------------------------------
 function [x,fval] = run_fitting_gr_4p(r,g_exp,fun1,fun2,p0)
