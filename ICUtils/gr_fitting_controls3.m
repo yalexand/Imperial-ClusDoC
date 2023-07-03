@@ -22,7 +22,7 @@ function varargout = gr_fitting_controls3(varargin)
 
 % Edit the above text to modify the response to help gr_fitting_controls3
 
-% Last Modified by GUIDE v2.5 27-Jun-2023 12:53:05
+% Last Modified by GUIDE v2.5 03-Jul-2023 12:56:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -57,17 +57,17 @@ handles.cutoff = 300; % nm
 set(handles.distance_cutoff,'String',num2str(handles.cutoff));
 set(handles.number_of_components,'String',{'2','3'});
 set(handles.gr_shape,'String',{'Gaussian','exponential','mixed'});
-set(handles.Gaussian_PCF_size,'String','fit');
-set(handles.amplitudes,'String',{'fitted','non-PCF joint','joint'});
+set(handles.Gaussian_PSF_size,'String','fit');
+set(handles.amplitudes,'String',{'fitted','non-PSF joint','joint'});
 
 % ? does not work`
 set(handles.number_of_components,'HorizontalAlignment','center');
-set(handles.Gaussian_PCF_size,'HorizontalAlignment','center');
+set(handles.Gaussian_PSF_size,'HorizontalAlignment','center');
 
 set(handles.number_of_components,'Value',1);
 set(handles.amplitudes,'String',{'fitted','joint'});
-set(handles.Gaussian_PCF_size,'String','N/A');
-set(handles.Gaussian_PCF_size,'Enable','off');
+set(handles.Gaussian_PSF_size,'String','N/A');
+set(handles.Gaussian_PSF_size,'Enable','off');
 
         handles.colors = zeros(10,3);
         handles.colors(1,:) = [0 0.4470 0.7410];
@@ -173,13 +173,13 @@ function number_of_components_Callback(hObject, eventdata, handles)
     if strcmp('2',str{get(hObject,'Value')})
         set(handles.amplitudes,'String',{'fitted','joint'});
         set(handles.amplitudes,'Value',1);        
-        set(handles.Gaussian_PCF_size,'String','N/A');
-        set(handles.Gaussian_PCF_size,'Enable','off');
+        set(handles.Gaussian_PSF_size,'String','N/A');
+        set(handles.Gaussian_PSF_size,'Enable','off');
     else
-        set(handles.amplitudes,'String',{'fitted','non-PCF joint','joint'});
+        set(handles.amplitudes,'String',{'fitted','non-PSF joint','joint'});
         set(handles.amplitudes,'Value',1);
-        set(handles.Gaussian_PCF_size,'String','fit');
-        set(handles.Gaussian_PCF_size,'Enable','on');        
+        set(handles.Gaussian_PSF_size,'String','fit');
+        set(handles.Gaussian_PSF_size,'Enable','on');        
     end    
     guidata(hObject, handles);
 
@@ -421,7 +421,7 @@ function fit_and_show_plots_Callback(hObject, eventdata, handles)
                 case 'fitted'
                     jointA = false;
                     jointAA = false;        
-                case 'non-PCF joint'
+                case 'non-PSF joint'
                     jointA = true;
                     jointAA = false;                
                 case 'joint'
@@ -430,7 +430,7 @@ function fit_and_show_plots_Callback(hObject, eventdata, handles)
             end        
             
             PSF_sigma = [];
-            value = str2double(get(handles.Gaussian_PCF_size,'String'));
+            value = str2double(get(handles.Gaussian_PSF_size,'String'));
             if ~isnan(value) && value>=5 && value<=40  
                PSF_sigma = value;
             end 
@@ -470,7 +470,7 @@ function fit_and_show_plots_Callback(hObject, eventdata, handles)
 
             % display
             h = figure;
-            figname = [num2str(number_of_components) ' components fitting, cutoff = ' num2str(ctoff) ' nm, mode - ' mode ' , amplitudes - ' current_amplitude, ' , PCF size - ' PSF_sigma_str];
+            figname = [num2str(number_of_components) ' components fitting, cutoff = ' num2str(ctoff) ' nm, mode - ' mode ' , amplitudes - ' current_amplitude, ' , PSF size - ' PSF_sigma_str];
             set(h,'Name',figname);
             %            
             for k=1:n_plots
@@ -750,8 +750,8 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-% --- Executes on selection change in Gaussian_PCF_size.
-function Gaussian_PCF_size_Callback(hObject, eventdata, handles)
+% --- Executes on selection change in Gaussian_PSF_size.
+function Gaussian_PSF_size_Callback(hObject, eventdata, handles)
     %
     value = str2double(get(hObject,'String'));
     if ~isnan(value) && value>=5 && value<=40  
@@ -762,8 +762,8 @@ function Gaussian_PCF_size_Callback(hObject, eventdata, handles)
     guidata(hObject,handles);
         
 % --- Executes during object creation, after setting all properties.
-function Gaussian_PCF_size_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to Gaussian_PCF_size (see GCBO)
+function Gaussian_PSF_size_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Gaussian_PSF_size (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

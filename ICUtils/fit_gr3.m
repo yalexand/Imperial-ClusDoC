@@ -31,7 +31,7 @@ p3 = [];
 
                 if ~jointAA && ~fixed_PSF_sigma && ~jointA          % 8 - remove ?
                     x0 = [1 1 1 7 30 300 0.3 0.3];
-                    [x,fval] = run_fitting_gr_NOT_FPCFD_NOT_JA(r,g_exp,F1,F2,F3,x0);
+                    [x,fval] = run_fitting_gr_NOT_FPSF_NOT_JA(r,g_exp,F1,F2,F3,x0);
                         A1 = x(1);
                         A2 = x(2);
                         A3 = x(3);                        
@@ -42,7 +42,7 @@ p3 = [];
                         p2 = x(8);                                      
                 elseif ~jointAA && ~fixed_PSF_sigma && jointA
                     x0 = [1 1 7 30 300 0.3 0.3];
-                    [x,fval] = run_fitting_gr_NOT_FPCFD_AND_JA(r,g_exp,F1,F2,F3,x0);
+                    [x,fval] = run_fitting_gr_NOT_FPSF_AND_JA(r,g_exp,F1,F2,F3,x0);
                         A1 = x(1);
                         A2 = x(2);
                         A3 = x(2);                        
@@ -53,7 +53,7 @@ p3 = [];
                         p2 = x(7);                        
                 elseif ~jointAA && fixed_PSF_sigma && ~jointA           % 7 - remove ?
                     x0 = [1 1 1 7 300 0.3 0.3];
-                    [x,fval] = run_fitting_gr_AND_FPCFD_NOT_JA(r,g_exp,F1,F2,F3,PSF_sigma,x0);
+                    [x,fval] = run_fitting_gr_AND_FPSF_NOT_JA(r,g_exp,F1,F2,F3,PSF_sigma,x0);
                         A1 = x(1);
                         A2 = x(2);
                         A3 = x(3);                        
@@ -64,7 +64,7 @@ p3 = [];
                         p2 = x(7);                        
                 elseif ~jointAA && fixed_PSF_sigma && jointA
                     x0 = [1 1 7 300 0.3 0.3];
-                    [x,fval] = run_fitting_gr_AND_FPCFD_AND_JA(r,g_exp,F1,F2,F3,PSF_sigma,x0);
+                    [x,fval] = run_fitting_gr_AND_FPSF_AND_JA(r,g_exp,F1,F2,F3,PSF_sigma,x0);
                         A1 = x(1);
                         A2 = x(2);
                         A3 = x(2);                        
@@ -75,7 +75,7 @@ p3 = [];
                         p2 = x(6);                        
                 elseif jointAA && fixed_PSF_sigma 
                     x0 = [1 1 1 30 300];
-                    [x,fval] = run_fitting_gr_AND_FPCFD_AND_JA_ALL(r,g_exp,F1,F2,F3,PSF_sigma,x0);
+                    [x,fval] = run_fitting_gr_AND_FPSF_AND_JA_ALL(r,g_exp,F1,F2,F3,PSF_sigma,x0);
                         A1 = x(1);
                         A2 = x(2);
                         A3 = x(3);                        
@@ -90,7 +90,7 @@ p3 = [];
                         A3 = A; 
                 elseif jointAA && ~fixed_PSF_sigma 
                     x0 = [1 1 1 7 30 300];
-                    [x,fval] = run_fitting_gr_NOT_FPCFD_AND_JA_ALL(r,g_exp,F1,F2,F3,x0);
+                    [x,fval] = run_fitting_gr_NOT_FPSF_AND_JA_ALL(r,g_exp,F1,F2,F3,x0);
                         A1 = x(1);
                         A2 = x(2);
                         A3 = x(3);                        
@@ -140,7 +140,7 @@ function f = p_Gauss(r,L)
 end
 
 %------------------------------------------------------------------
-function [x,fval] = run_fitting_gr_NOT_FPCFD_NOT_JA(r,g_exp,fun1,fun2,fun3,p0)
+function [x,fval] = run_fitting_gr_NOT_FPSF_NOT_JA(r,g_exp,fun1,fun2,fun3,p0)
 % convention
 %     A1
 %     A2
@@ -163,7 +163,7 @@ function [x,fval] = run_fitting_gr_NOT_FPCFD_NOT_JA(r,g_exp,fun1,fun2,fun3,p0)
 end
 
 %------------------------------------------------------------------
-function [x,fval] = run_fitting_gr_NOT_FPCFD_AND_JA(r,g_exp,fun1,fun2,fun3,p0)
+function [x,fval] = run_fitting_gr_NOT_FPSF_AND_JA(r,g_exp,fun1,fun2,fun3,p0)
 % convention
 %     A1
 %     A
@@ -185,7 +185,7 @@ function [x,fval] = run_fitting_gr_NOT_FPCFD_AND_JA(r,g_exp,fun1,fun2,fun3,p0)
 end
 
 %------------------------------------------------------------------
-function [x,fval] = run_fitting_gr_AND_FPCFD_NOT_JA(r,g_exp,fun1,fun2,fun3,PSF_sigma,p0)
+function [x,fval] = run_fitting_gr_AND_FPSF_NOT_JA(r,g_exp,fun1,fun2,fun3,PSF_sigma,p0)
 % convention
 %     A1
 %     A2
@@ -208,7 +208,7 @@ function [x,fval] = run_fitting_gr_AND_FPCFD_NOT_JA(r,g_exp,fun1,fun2,fun3,PSF_s
 end
 
 %------------------------------------------------------------------
-function [x,fval] = run_fitting_gr_AND_FPCFD_AND_JA(r,g_exp,fun1,fun2,fun3,PSF_sigma,p0)
+function [x,fval] = run_fitting_gr_AND_FPSF_AND_JA(r,g_exp,fun1,fun2,fun3,PSF_sigma,p0)
 % convention
 %     A1
 %     A
@@ -230,7 +230,7 @@ function [x,fval] = run_fitting_gr_AND_FPCFD_AND_JA(r,g_exp,fun1,fun2,fun3,PSF_s
 end
 
 %------------------------------------------------------------------
-function [x,fval] = run_fitting_gr_NOT_FPCFD_AND_JA_ALL(r,g_exp,fun1,fun2,fun3,p0)
+function [x,fval] = run_fitting_gr_NOT_FPSF_AND_JA_ALL(r,g_exp,fun1,fun2,fun3,p0)
 % convention
 %     A1
 %     A2
@@ -259,7 +259,7 @@ function [x,fval] = run_fitting_gr_NOT_FPCFD_AND_JA_ALL(r,g_exp,fun1,fun2,fun3,p
 end
 
 %------------------------------------------------------------------
-function [x,fval] = run_fitting_gr_AND_FPCFD_AND_JA_ALL(r,g_exp,fun1,fun2,fun3,PSF_sigma,p0)
+function [x,fval] = run_fitting_gr_AND_FPSF_AND_JA_ALL(r,g_exp,fun1,fun2,fun3,PSF_sigma,p0)
 % convention
 %     A1
 %     A2
