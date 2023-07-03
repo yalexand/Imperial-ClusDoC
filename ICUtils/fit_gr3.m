@@ -197,7 +197,7 @@ function [x,fval] = run_fitting_gr_AND_FPCFD_NOT_JA(r,g_exp,fun1,fun2,fun3,PSF_s
 %     p2
     Nmax = 10000*length(p0);
     options = optimset('MaxFunEvals',Nmax,'MaxIter',Nmax);
-    [x,fval] = fminsearchbnd(@objfun,p0,[0 0 0 5 5 0 0],[inf inf inf 2000 2000 1 1],options);
+    [x,fval] = fminsearchbnd(@objfun,p0,[0 0 0 PSF_sigma PSF_sigma 0 0],[inf inf inf 2000 2000 1 1],options);
     function y = objfun(p)
         g1 = 1 + p(1)*fun1(r,PSF_sigma);
         g2 = 1 + p(2)*fun2(r,p(4));
@@ -219,7 +219,7 @@ function [x,fval] = run_fitting_gr_AND_FPCFD_AND_JA(r,g_exp,fun1,fun2,fun3,PSF_s
 %     p2
     Nmax = 10000*length(p0);
     options = optimset('MaxFunEvals',Nmax,'MaxIter',Nmax);
-    [x,fval] = fminsearchbnd(@objfun,p0,[0 0 5 5 0 0],[inf inf 2000 2000 1 1],options);
+    [x,fval] = fminsearchbnd(@objfun,p0,[0 0 PSF_sigma PSF_sigma 0 0],[inf inf 2000 2000 1 1],options);
     function y = objfun(p)
         g1 = 1 + p(1)*fun1(r,PSF_sigma);
         g2 = 1 + p(2)*fun2(r,p(3));
@@ -269,7 +269,7 @@ function [x,fval] = run_fitting_gr_AND_FPCFD_AND_JA_ALL(r,g_exp,fun1,fun2,fun3,P
 %     L3
     Nmax = 10000*length(p0);
     options = optimset('MaxFunEvals',Nmax,'MaxIter',Nmax);
-    [x,fval] = fminsearchbnd(@objfun,p0,[0 0 0 5 5],[inf inf inf 2000 2000],options);
+    [x,fval] = fminsearchbnd(@objfun,p0,[0 0 0 PSF_sigma PSF_sigma],[inf inf inf 2000 2000],options);
     function y = objfun(p)
         A1 = p(1);
         A2 = p(2);
