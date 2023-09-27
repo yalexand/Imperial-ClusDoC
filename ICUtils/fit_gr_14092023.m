@@ -97,7 +97,7 @@ end
 %------------------------------------------------------------------
 function [x,fval,F_out] = run_fitting_gr_2_COMP(r,g_exp,F_in)
     F_out = F_in;
-    p0 = [20 50 100 100];    
+    p0 = [30 100 1000 1000];    
     Nmax = 10000*length(p0);
     options = optimset('MaxFunEvals',Nmax,'MaxIter',Nmax);
     [x,fval] = fminsearchbnd(@objfun,p0,[5 5 0 0],[2000 2000 inf inf],options);
@@ -138,7 +138,7 @@ end
 %------------------------------------------------------------------
 function [x,fval,F_out] = run_fitting_gr_3_COMP(r,g_exp,F_in)
     F_out = F_in;
-    p0 = [20 50 100 100 100 100];    
+    p0 = [20 50 100 1000 1000 1000];    
     Nmax = 10000*length(p0);
     options = optimset('MaxFunEvals',Nmax,'MaxIter',Nmax);
     [x,fval] = fminsearchbnd(@objfun,p0,[5 5 5 0 0 0],[50 2000 2000 inf inf inf],options);
@@ -155,7 +155,7 @@ end
 %------------------------------------------------------------------
 function [x,fval,F_out] = run_fitting_gr_3_COMP_FPSF(r,g_exp,F_in,PSF_sigma)
     F_out = F_in;
-    p0 = [20 100 100 100 100];    
+    p0 = [20 100 1000 1000 1000];    
     Nmax = 10000*length(p0);
     options = optimset('MaxFunEvals',Nmax,'MaxIter',Nmax);
     [x,fval] = fminsearchbnd(@objfun,p0,[5 5 0 0 0],[50 2000 inf inf inf],options);
