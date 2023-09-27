@@ -699,6 +699,11 @@ function generate_CSV_Callback(hObject, eventdata, handles)
     end
     
 D = [caption; D];
+
+if strcmp('3',str{get(handles.number_of_components,'Value')}) % fix excessive legacy columns
+    D(:,14:16)=[];
+end
+
 xlstempname = [tempname '.csv'];
 cell2csv(xlstempname,D);
 if ispc 
