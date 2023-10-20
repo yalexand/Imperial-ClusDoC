@@ -350,65 +350,127 @@ function fit_and_show_plots_Callback(hObject, eventdata, handles)
                 ClP1_1 = cd(:,15);
                 ClP1_2 = cd(:,16);
                 ClP2_1 = cd(:,17);
-                ClP2_2 = cd(:,18);      
+                ClP2_2 = cd(:,18);     
+
                 
-                loglog(ax1,L1,n1,'color',handles.colors(condition_index,:),'marker','s','linestyle','none','markersize',8,'linewidth',lwh);
+%                 loglog(ax1,L1,n1,'color',handles.colors(condition_index,:),'marker','s','linestyle','none','markersize',8,'linewidth',lwh);
+%                 hold(ax1,'on');
+%                 loglog(ax1,L2,n2,'color',handles.colors(condition_index,:),'marker','o','linestyle','none','markersize',8,'linewidth',lwh);
+%                 hold(ax1,'on');
+%                 LEGEND1 = [LEGEND1 [handles.SMLM_Studio.Condition{condition_index} ' small']];
+%                 LEGEND1 = [LEGEND1 [handles.SMLM_Studio.Condition{condition_index} ' large']];
+%                 %
+%                 semilogy(ax2,Area,N1,'color',handles.colors(condition_index,:),'marker','s','linestyle','none','markersize',8,'linewidth',lwh);
+%                 hold(ax2,'on');
+%                 semilogy(ax2,Area,N2,'color',handles.colors(condition_index,:),'marker','o','linestyle','none','markersize',8,'linewidth',lwh);
+%                 hold(ax2,'on');
+%                 %
+%                 loglog(ax3,ClP1_1,ClP1_2,'color',handles.colors(condition_index,:),'marker','.','linestyle','none','markersize',16,'linewidth',lwh);
+%                 hold(ax3,'on');                       
+%                 LEGEND = [LEGEND handles.SMLM_Studio.Condition{condition_index}];
+% 
+%                 semilogx(ax4,maxg,relerr,'color',handles.colors(condition_index,:),'marker','.','linestyle','none','markersize',16,'linewidth',lwh);
+%                 hold(ax4,'on'); 
+% 
+%                 loglog(ax5,N1./Area,N2./Area,'color',handles.colors(condition_index,:),'marker','.','linestyle','none','markersize',16,'linewidth',lwh);
+%                 hold(ax5,'on');
+%                 %
+%                 loglog(ax6,n1.*N1./Area,n2.*N2./Area,'color',handles.colors(condition_index,:),'marker','.','linestyle','none','markersize',16,'linewidth',lwh);
+%                 hold(ax6,'on');
+
+                loglog(ax1,L1,ClP1_1,'color',handles.colors(condition_index,:),'marker','s','linestyle','none','markersize',8,'linewidth',lwh);
                 hold(ax1,'on');
-                loglog(ax1,L2,n2,'color',handles.colors(condition_index,:),'marker','o','linestyle','none','markersize',8,'linewidth',lwh);
+                loglog(ax1,L2,ClP1_2,'color',handles.colors(condition_index,:),'marker','o','linestyle','none','markersize',8,'linewidth',lwh);
                 hold(ax1,'on');
                 LEGEND1 = [LEGEND1 [handles.SMLM_Studio.Condition{condition_index} ' small']];
                 LEGEND1 = [LEGEND1 [handles.SMLM_Studio.Condition{condition_index} ' large']];
-                %
-                semilogy(ax2,Area,N1,'color',handles.colors(condition_index,:),'marker','s','linestyle','none','markersize',8,'linewidth',lwh);
-                hold(ax2,'on');
-                semilogy(ax2,Area,N2,'color',handles.colors(condition_index,:),'marker','o','linestyle','none','markersize',8,'linewidth',lwh);
-                hold(ax2,'on');
-                %
-                loglog(ax3,ClP1_1,ClP1_2,'color',handles.colors(condition_index,:),'marker','.','linestyle','none','markersize',16,'linewidth',lwh);
-                hold(ax3,'on');                       
+
+                loglog(ax2,ClP1_1,ClP1_2,'color',handles.colors(condition_index,:),'marker','.','linestyle','none','markersize',16,'linewidth',lwh);
+                hold(ax2,'on');                       
                 LEGEND = [LEGEND handles.SMLM_Studio.Condition{condition_index}];
 
-                semilogx(ax4,maxg,relerr,'color',handles.colors(condition_index,:),'marker','.','linestyle','none','markersize',16,'linewidth',lwh);
-                hold(ax4,'on'); 
+                loglog(ax5,density,Area,'color',handles.colors(condition_index,:),'marker','.','linestyle','none','markersize',16,'linewidth',lwh);
+                hold(ax5,'on');                       
+                LEGEND = [LEGEND handles.SMLM_Studio.Condition{condition_index}];
 
-                loglog(ax5,N1./Area,N2./Area,'color',handles.colors(condition_index,:),'marker','.','linestyle','none','markersize',16,'linewidth',lwh);
-                hold(ax5,'on');
-                %
-                loglog(ax6,n1.*N1./Area,n2.*N2./Area,'color',handles.colors(condition_index,:),'marker','.','linestyle','none','markersize',16,'linewidth',lwh);
-                hold(ax6,'on');
+                semilogx(ax6,maxg,relerr,'color',handles.colors(condition_index,:),'marker','.','linestyle','none','markersize',16,'linewidth',lwh);
+                hold(ax6,'on'); 
+
+                loglog(ax4,density,L1,'color',handles.colors(condition_index,:),'marker','s','linestyle','none','markersize',8,'linewidth',lwh);
+                hold(ax4,'on');
+                loglog(ax4,density,L2,'color',handles.colors(condition_index,:),'marker','o','linestyle','none','markersize',8,'linewidth',lwh);
+                hold(ax4,'on');
+
+                loglog(ax3,ClP2_1,ClP2_2,'color',handles.colors(condition_index,:),'marker','.','linestyle','none','markersize',16,'linewidth',lwh);
+                hold(ax3,'on');                       
+                LEGEND = [LEGEND handles.SMLM_Studio.Condition{condition_index}];                
+                                
             end
 
             hold(ax1,'off');
             grid(ax1,'on');
             xlabel(ax1,'effective cluster radius [nm]');
-            ylabel(ax1,'number of localizations per cluster');
+            ylabel(ax1,'A\cdot\rho_{avr}');
             legend(ax1,LEGEND1,'location','northwest');
 
             hold(ax2,'off');
             grid(ax2,'on');
-            xlabel(ax2,'ROI area [\mu^2]');
-            ylabel(ax2,'number of clusters');
-
-            hold(ax3,'off');
-            grid(ax3,'on');
-            xlabel(ax3,'A_1\cdot\rho_{avr}');
-            ylabel(ax3,'A_2\cdot\rho_{avr}');
-
-            hold(ax4,'off');
-            grid(ax4,'on');
-            xlabel(ax4,'max(g(r))');
-            ylabel(ax4,'fitting error / max(g(r))');
+            xlabel(ax2,'A_1\cdot\rho_{avr}');
+            ylabel(ax2,'A_2\cdot\rho_{avr}');            
 
             hold(ax5,'off');
             grid(ax5,'on');
-            xlabel(ax5,'density of small clusters [1/\mu^2]');
-            ylabel(ax5,'density of large clusters [1/\mu^2]');
+            xlabel(ax5,'localization density [1/\mu^2]');
+            ylabel(ax5,'ROI area [\mu^2]');            
 
             hold(ax6,'off');
             grid(ax6,'on');
-            xlabel(ax6,'localization density of small clusters [#loc/\mu^2]');
-            ylabel(ax6,'localization density of large clusters [#loc/\mu^2]');
-            legend(ax6,LEGEND,'location','northeast');
+            xlabel(ax6,'max(g(r))');
+            ylabel(ax6,'fitting error / max(g(r))');
+            
+            hold(ax4,'off');
+            grid(ax4,'on');            
+            xlabel(ax4,'localization density [1/\mu^2]');
+            ylabel(ax4,'effective cluster radius [nm]');            
+
+            hold(ax3,'off');
+            grid(ax3,'on');
+            xlabel(ax3,'A_1\cdot\rho_{avr}/\zeta_1^2');
+            ylabel(ax3,'A_2\cdot\rho_{avr}/\zeta_2^2');            
+            
+
+
+%             hold(ax1,'off');
+%             grid(ax1,'on');
+%             xlabel(ax1,'effective cluster radius [nm]');
+%             ylabel(ax1,'number of localizations per cluster');
+%             legend(ax1,LEGEND1,'location','northwest');
+% 
+%             hold(ax2,'off');
+%             grid(ax2,'on');
+%             xlabel(ax2,'ROI area [\mu^2]');
+%             ylabel(ax2,'number of clusters');
+% 
+%             hold(ax3,'off');
+%             grid(ax3,'on');
+%             xlabel(ax3,'A_1\cdot\rho_{avr}');
+%             ylabel(ax3,'A_2\cdot\rho_{avr}');
+% 
+%             hold(ax4,'off');
+%             grid(ax4,'on');
+%             xlabel(ax4,'max(g(r))');
+%             ylabel(ax4,'fitting error / max(g(r))');
+% 
+%             hold(ax5,'off');
+%             grid(ax5,'on');
+%             xlabel(ax5,'density of small clusters [1/\mu^2]');
+%             ylabel(ax5,'density of large clusters [1/\mu^2]');
+% 
+%             hold(ax6,'off');
+%             grid(ax6,'on');
+%             xlabel(ax6,'localization density of small clusters [#loc/\mu^2]');
+%             ylabel(ax6,'localization density of large clusters [#loc/\mu^2]');
+%             legend(ax6,LEGEND,'location','northeast');
     else %3
            % 3 - component fitting                 
             PSF_sigma = [];
