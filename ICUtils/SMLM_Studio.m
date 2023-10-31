@@ -1431,7 +1431,8 @@ function show_2d_histogram2(handles)
 function fit_per_Object_gr_Callback(hObject, eventdata, handles)
     %if ~isfield(handles,'obj_SMLMdata'), return, end        
     %gr_fitting_controls3(handles);    
-    gr_fitting_controls_14092023(handles);    
+    %gr_fitting_controls_14092023(handles);    
+    gr_fitting_controls_new_2c_5p(handles);    
  
 % --------------------------------------------------------------------
 function save_per_ROI_cluster_params_as_CSV_Callback(hObject, eventdata, handles)
