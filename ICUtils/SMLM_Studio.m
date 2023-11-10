@@ -22,7 +22,7 @@ function varargout = SMLM_Studio(varargin)
 
 % Edit the above text to modify the response to help SMLM_Studio
 
-% Last Modified by GUIDE v2.5 19-Oct-2023 14:54:53
+% Last Modified by GUIDE v2.5 08-Nov-2023 17:23:37
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1429,11 +1429,7 @@ function show_2d_histogram2(handles)
 
 % --------------------------------------------------------------------
 function fit_per_Object_gr_Callback(hObject, eventdata, handles)
-    %if ~isfield(handles,'obj_SMLMdata'), return, end        
-    %gr_fitting_controls3(handles);    
-    %gr_fitting_controls_14092023(handles);    
-    gr_fitting_controls_new_2c_5p(handles);    
- 
+   
 % --------------------------------------------------------------------
 function save_per_ROI_cluster_params_as_CSV_Callback(hObject, eventdata, handles)
 %
@@ -1491,3 +1487,19 @@ function axes1_2_clipboard_Callback(hObject, eventdata, handles)
      newHandle = copyobj(currAxes,newFig);
      print(newFig,'-dmeta');
      delete(newFig);
+
+% --------------------------------------------------------------------
+function fit_per_Object_gr_Amplitude_based_Callback(hObject, eventdata, handles)
+    %if ~isfield(handles,'obj_SMLMdata'), return, end        
+    gr_fitting_controls_14092023(handles);        
+
+% --------------------------------------------------------------------
+function fit_per_Object_gr_2c_5p_Callback(hObject, eventdata, handles)
+    if ~isfield(handles,'obj_SMLMdata'), return, end        
+    gr_fitting_controls_new_2c_5p(handles);  
+
+% --------------------------------------------------------------------
+function fit_per_Object_gr_1c_Callback(hObject, eventdata, handles)
+    if ~isfield(handles,'obj_SMLMdata'), return, end        
+    %gr_fitting_controls3(handles);    
+    gr_fitting_controls_new_1c(handles);    

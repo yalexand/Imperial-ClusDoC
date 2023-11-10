@@ -22,7 +22,7 @@ function varargout = gr_fitting_controls_14092023(varargin)
 
 % Edit the above text to modify the response to help gr_fitting_controls_14092023
 
-% Last Modified by GUIDE v2.5 14-Sep-2023 13:48:48
+% Last Modified by GUIDE v2.5 09-Nov-2023 11:39:12
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
