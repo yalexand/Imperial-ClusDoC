@@ -472,15 +472,17 @@ there_are_cluster_centroid_coordinates = true;
     for k = 1:numel(handles.tot_data)
         BREAK = false;
         ass = handles.tot_data{k};
-        for m=1:numel(ass.DBSCAN_clusters)
-            if isfield(ass,'DBSCAN_clusters') && ~isempty(ass.DBSCAN_clusters{m})
-                if ~isfield(ass.DBSCAN_clusters{1},'Xc')
-                    there_are_cluster_centroid_coordinates = false;                     
-                    BREAK = true;
-                    break;
+        if isfield(ass,'DBSCAN_clusters')
+            for m=1:numel(ass.DBSCAN_clusters)
+                if isfield(ass,'DBSCAN_clusters') && ~isempty(ass.DBSCAN_clusters{m})
+                    if ~isfield(ass.DBSCAN_clusters{1},'Xc')
+                        there_are_cluster_centroid_coordinates = false;                     
+                        BREAK = true;
+                        break;
+                    end
                 end
+                if BREAK==true, break, end
             end
-            if BREAK==true, break, end
         end
     end
 %        

@@ -382,20 +382,8 @@ uiresume(handles.figure1);
 % Hints: get(hObject,'String') returns contents of distance_cutoff as text
 %        str2double(get(hObject,'String')) returns contents of distance_cutoff as a double
 
-
 % --- Executes during object creation, after setting all properties.
 function distance_cutoff_CreateFcn(hObject, eventdata, handles)
-max_r = max(handles.SMLM_Studio.obj_SMLMdata.gr_Object_distance);
-%
-value = fix(str2double(get(hObject,'String')));
-if ~isnan(value) && value>=40 && value <= max_r
-    handles.cutoff = value;
-    guidata(hObject,handles);
-else
-    value = handles.cutoff;
-    set(hObject,'String',num2str(value));
-end
-uiresume(handles.figure1);
 
 % -------------------------------------------------------------
 function [med1,med2] = MCED(N_)
