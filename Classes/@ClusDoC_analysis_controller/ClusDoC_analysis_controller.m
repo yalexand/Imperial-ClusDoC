@@ -107,6 +107,23 @@ classdef ClusDoC_analysis_controller < handle
         DoC_NbThresh = 10;
 %%%%%%%%%%%%%%%%%%%%%%%% DoC
 
+        %
+        GR_ASSISTED_CLUSTERING = struct( ...
+        'PERFORM',false, ...
+        'r_start',750, ...
+        'dr',40, ...
+        'MODE','2-comp Gauss', ...
+        'minPts',5, ...
+        'min_Z2_Z1_ratio',2, ...
+        'max_Z2_allowed',500, ...
+        'DBSCAN_epsilon',40, ...
+        'DBSCAN_SmoothingRad',40, ...
+        'Small_Clusters_Size_Tolerance_Factor',0.75, ...
+        'imopen_Z1_excess_factor',2.5, ...
+        'sampling_Z1_excess_factor',1.2, ...
+        'sampling_Z2_excess_factor',1.2);
+        %
+
         Plate = [];
         Well = [];
         Condition = [];
@@ -2483,6 +2500,33 @@ end
         grid(ax,'on');
         savefig(h,figname);
         close(h);
+
+if ~obj.GR_ASSISTED_CLUSTERING.PERFORM, return, end
+
+r_start = obj.GR_ASSISTED_CLUSTERING.r_start;
+dr = obj.GR_ASSISTED_CLUSTERING.dr;
+comp_mode = obj.GR_ASSISTED_CLUSTERING.MODE;
+%
+fitres = zeros(length(dr),3); % s1,s2,fval
+% needed to feed fitting proc
+N_locs = sum(u,'All');
+Area = sum(u0,'All');
+% calculating interval of indices - to find best estimeate for 2 sigmas
+r_step = r(2)-r(1);
+DN = round(dr/r_step);
+for k=1:DN    
+    INTERVAL = r<(r_start + r_step*k);
+    [g_fit, A, L, n, N, F, fval] = fit_gr_14092023(r(INTERVAL),gr(INTERVAL),N_locs,Area,comp_mode,[]);
+    fitres(k,1) = L(1);
+    fitres(k,2) = L(2);    
+    fitres(k,3) = fval;
+end
+optimal_fit_ind = find(fitres(:,3)==min(fitres(:,3)));
+s1 = round(fitres(optimal_fit_ind,1));
+s2 = round(fitres(optimal_fit_ind,2));
+%
+out = obj.gr_assisted_quasi_cluster_analysis(u>0, u0, s1, s2, dir_name);
+% g(r)-assisted "true clustering" - end
         
     end
     
