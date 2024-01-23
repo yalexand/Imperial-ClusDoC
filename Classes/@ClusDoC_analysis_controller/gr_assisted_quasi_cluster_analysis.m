@@ -302,6 +302,7 @@ v = u(sub2ind(size(u), out(:,1), out(:,2)) );
 [counts, edges] = histcounts(v(:));
 max_bin_index = find(counts==max(counts)); 
 most_probable_v = (edges(max_bin_index) + edges(max_bin_index + 1)) / 2;
+most_probable_v = most_probable_v(1); % safety
 good_indices = v > 0.25*most_probable_v; % tune?
 %good_indices = v > 0.1*most_probable_v; 
 %
