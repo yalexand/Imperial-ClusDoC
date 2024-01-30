@@ -3,7 +3,8 @@ function out = gr_assisted_quasi_cluster_analysis(obj, u, u0, s1, s2, save_dir_n
 
 params = obj.GR_ASSISTED_CLUSTERING;
 
-minPts = params.minPts;
+minPts1 = params.minPts1;
+minPts2 = params.minPts2;
 
     tic
 
@@ -46,7 +47,7 @@ minPts = params.minPts;
            norm_coef = 4*pi*s^2;
            Np = gsderiv(points,s,0)/norm_coef; % N multiplied by bell function of a height 1
 
-           Np(Np<minPts) = 0; % not interested in too sparse small clusters
+           Np(Np<minPts1) = 0; % not interested in too sparse small clusters
            %  
            [maxima,maxima_v,maxima_ind,maxima_most_probable_v] = get_local_maxima(Np,s); 
            most_probable_clusters_N = maxima_most_probable_v;
@@ -66,7 +67,7 @@ minPts = params.minPts;
     
            Np1 = gsderiv(points,s1,0)/norm1; % N multiplied by bell function of a height 1
     
-           Np1(Np1<minPts) = 0; % not interested in too sparse small clusters
+           Np1(Np1<minPts1) = 0; % not interested in too sparse small clusters
            %  
            [maxima_small,maxima_small_v,maxima_small_ind,maxima_small_most_probable_v] = get_local_maxima(Np1,s1); % centres of small clusters
            most_probable_small_clusters_N = maxima_small_most_probable_v;
@@ -79,7 +80,7 @@ minPts = params.minPts;
                                     strel('disk',round(Z1_excess_fac*s1)));
            %
            Np2 = gsderiv(points & where_large_clusters_are_img,s2,0)/norm2; 
-           Np2(Np2<minPts) = 0; % also don't take into account small points
+           Np2(Np2<minPts2) = 0; % also don't take into account small points
            maxima_large = get_local_maxima(Np2,s2); % small clusters won't intefere
            %
            % finally           
@@ -108,9 +109,9 @@ disp('clustering - done!')
     maskVector = ones(size(class));
 
     DBSCANParams.epsilon = params.DBSCAN_epsilon;
-    DBSCANParams.minPts = minPts;
+    DBSCANParams.minPts = minPts1;
     DBSCANParams.SmoothingRad = params.DBSCAN_SmoothingRad;
-    DBSCANParams.Cutoff = minPts;
+    DBSCANParams.Cutoff = minPts1;
     DBSCANParams.DoStats = true;
     DBSCANParams.Outputfolder = save_dir_name;
 
