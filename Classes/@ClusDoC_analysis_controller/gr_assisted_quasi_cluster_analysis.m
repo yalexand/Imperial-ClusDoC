@@ -44,8 +44,7 @@ minPts2 = params.minPts2;
                 s = s1;
            end
 
-           norm_coef = 4*pi*s^2;
-           Np = gsderiv(points,s,0)/norm_coef; % N multiplied by bell function of a height 1
+           Np = gsderiv(points,s,0)*4*pi*s^2; % N multiplied by bell function of a height 1
 
            Np(Np<minPts1) = 0; % not interested in too sparse small clusters
            %  
@@ -219,7 +218,11 @@ disp('clustering - done!')
         n1 = length(nloc_small);
         N1 = median(nloc_small);
         n2 = length(nloc_large);
-        N2 = median(nloc_large);
+        if 0~=n2
+            N2 = median(nloc_large);
+        else
+            N2 = 0;
+        end
         Ntot1_clusters = n1*N1; 
         Ntot2_clusters =  n2*N2; 
         Ntot_clusters = Ntot1_clusters + Ntot2_clusters;
@@ -230,7 +233,7 @@ disp('clustering - done!')
         rho2_clusters = n2/AREA;
         caption = {'Z1','Z2','n1','n2','N1','N2','Ntot','Area','rho','Ntot1_clusters','Ntot2_clusters','Ntot_clusters','loc_percentage_in_clusters','rho1','rho2','rho1_clusters','rho2_clusters'};
         rec = [s1 s2 n1 n2 N1 N2 Ntot AREA rho Ntot1_clusters Ntot2_clusters Ntot_clusters loc_percentage_in_clusters rho1 rho2 rho1_clusters rho2_clusters];
-        cell2csv([save_dir_name filesep 'gr_Clustering_2comp_stats.csv'],[caption; num2cell(rec)]);
+        cell2csv([DBSCANParams.Outputfolder filesep 'gr_Clustering_2comp_stats.csv'],[caption; num2cell(rec)]);
         % save cluster info
 
         disp(toc/60);
