@@ -67,7 +67,9 @@ set(handles.number_of_components,'HorizontalAlignment','center');
 set(handles.Gaussian_PSF_size,'HorizontalAlignment','center');
 
 set(handles.number_of_components,'Value',1);
-set(handles.gr_shape,'String',{'2-comp Gauss','2-comp exp','2-comp mixed'});
+set(handles.gr_shape,'String',{'Gauss Gauss','Gauss exp','Gauss disk', ... 
+                               'exp exp','exp Gauss','exp disk', ... 
+                               'disk disk','disk Gauss','disk exp'});
 set(handles.Gaussian_PSF_size,'String','N/A');
 set(handles.Gaussian_PSF_size,'Enable','off');
 
@@ -167,7 +169,9 @@ function number_of_components_Callback(hObject, eventdata, handles)
     if strcmp('2',str{get(hObject,'Value')})
         set(handles.Gaussian_PSF_size,'String','N/A');
         set(handles.Gaussian_PSF_size,'Enable','off');
-        set(handles.gr_shape,'String',{'2-comp Gauss','2-comp exp','2-comp mixed'});
+        set(handles.gr_shape,'String',{'Gauss Gauss','Gauss exp','Gauss disk', ... 
+                                       'exp exp','exp Gauss','exp disk', ... 
+                                       'disk disk','disk Gauss','disk exp'});
     else
         set(handles.Gaussian_PSF_size,'String','fit');
         set(handles.Gaussian_PSF_size,'Enable','on');

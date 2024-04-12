@@ -59,7 +59,10 @@ handles.SMLM_Studio = varargin{1,1};
 
 handles.cutoff = 300; % nm
 set(handles.distance_cutoff,'String',num2str(handles.cutoff));
-set(handles.gr_shape,'String',{'Gaussian','exponential','mixed'});
+%
+set(handles.gr_shape,'String',{'Gauss Gauss','Gauss exp','Gauss disk', ... 
+                               'exp exp','exp Gauss','exp disk', ... 
+                               'disk disk','disk Gauss','disk exp'});
 
         handles.colors = zeros(10,3);
         handles.colors(1,:) = [0 0.4470 0.7410];

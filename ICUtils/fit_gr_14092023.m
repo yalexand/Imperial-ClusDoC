@@ -5,22 +5,8 @@ function [g_fit, A, L, n, N, F, fval] = fit_gr_14092023(r,g_exp,N_locs,Area,mode
                 
                 fixed_PSF_sigma = ~isempty(PSF_sigma)  && isnumeric(PSF_sigma);                
 
-                if strcmp(mode,'2-comp Gauss')                                   
-                    F = {'Gauss','Gauss'};
-                elseif strcmp(mode,'2-comp exp')
-                    F = {'exp','exp'};                    
-                elseif strcmp(mode,'2-comp mixed')
-                    F = {'Gauss','exp'};
-                % 3-comp    
-                elseif strcmp(mode,'Gauss + Gauss Gauss')
-                    F = {'Gauss','Gauss','Gauss'};                                        
-                elseif strcmp(mode,'Gauss + exp exp')
-                    F = {'Gauss','exp','exp'};
-                elseif strcmp(mode,'Gauss + mixed')
-                    F = {'Gauss','Gauss','exp'};                                        
-                end
-                %
-                if contains(mode,'2-comp')
+                if ~contains(mode,'Gauss + ') % 2 components
+                    F = strsplit(mode,' '); % :)
                     [x,fval,F] = run_fitting_gr_2_COMP(r,g_exp,F);
                     g_fit = gr_2_component(r,F,x);
                     L = x(1:2);
@@ -35,8 +21,17 @@ function [g_fit, A, L, n, N, F, fval] = fit_gr_14092023(r,g_exp,N_locs,Area,mode
                     N2_fit = N1_fit*eta_fit^2;
                     n = [n1_fit n2_fit];
                     N = [N1_fit N2_fit];
-                else
+                %                    
+                else % 3-comp    
                 %
+                if strcmp(mode,'Gauss + Gauss Gauss')
+                    F = {'Gauss','Gauss','Gauss'};                                        
+                elseif strcmp(mode,'Gauss + exp exp')
+                    F = {'Gauss','exp','exp'};
+                elseif strcmp(mode,'Gauss + mixed')
+                    F = {'Gauss','Gauss','exp'};                                        
+                end
+                %                
                 fixed_PSF_sigma = ~isempty(PSF_sigma)  && isnumeric(PSF_sigma);
                 %
                 if contains(mode,'+') && ~fixed_PSF_sigma 
@@ -76,17 +71,26 @@ function f = p_Gauss(r,L)
     f = 1/(4*pi*L^2)*exp(-r.^2/(4*L^2));
 end
 %------------------------------------------------------------------
+function f = p_disk(r,R) 
+    f = 1./(2*pi*r).*( 4*r/(pi*R^2).*acos(r/(2*R)) - 2*r.^2/(pi*R^3).*(1 - r.^2/(4*R^2)).^(1/2) );
+    f(imag(f)~=0) = 0;
+end
+%------------------------------------------------------------------
 function gr = gr_2_component(r,F,p)
     if strcmp(F{1},'Gauss')
-        fun1 = @p_Gauss;
-    else
+        fun1 = @p_Gauss;        
+    elseif strcmp(F{1},'exp')
         fun1 = @p_exp;
+    elseif strcmp(F{1},'disk')
+        fun1 = @p_disk;        
     end
     if strcmp(F{2},'Gauss')
-        fun2 = @p_Gauss;
-    else
+        fun2 = @p_Gauss;        
+    elseif strcmp(F{2},'exp')
         fun2 = @p_exp;
-    end
+    elseif strcmp(F{2},'disk')
+        fun2 = @p_disk;        
+    end 
     %
     L1 = p(1);
     L2 = p(2);

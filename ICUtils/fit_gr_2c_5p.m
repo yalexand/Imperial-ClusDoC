@@ -1,12 +1,6 @@
 function [g_fit, L1, L2, N1, N2, n1, n2, F_out, fval] = fit_gr_2c_5p(r,g_exp,N_locs,Area,mode)
 
-                if strcmp(mode,'Gaussian')
-                    F = {'Gauss','Gauss'};
-                elseif strcmp(mode,'exponential')
-                    F = {'exp','exp'}; 
-                elseif strcmp(mode,'mixed')
-                    F = {'Gauss','exp'};
-                end      
+    F = strsplit(mode,' ');
                 
     rho_avr = N_locs/Area;
     rho_max = 3/16;
@@ -54,17 +48,26 @@ function f = p_Gauss(r,L)
     f = 1/(4*pi*L^2)*exp(-r.^2/(4*L^2));
 end
 %------------------------------------------------------------------
+function f = p_disk(r,R) 
+    f = 1./(2*pi*r).*( 4*r/(pi*R^2).*acos(r/(2*R)) - 2*r.^2/(pi*R^3).*(1 - r.^2/(4*R^2)).^(1/2) );
+    f(imag(f)~=0) = 0;
+end
+%------------------------------------------------------------------
 function gr = gr_2_COMP(r,F,p)
     if strcmp(F{1},'Gauss')
-        fun1 = @p_Gauss;
-    else
+        fun1 = @p_Gauss;        
+    elseif strcmp(F{1},'exp')
         fun1 = @p_exp;
+    elseif strcmp(F{1},'disk')
+        fun1 = @p_disk;        
     end
     if strcmp(F{2},'Gauss')
-        fun2 = @p_Gauss;
-    else
+        fun2 = @p_Gauss;        
+    elseif strcmp(F{2},'exp')
         fun2 = @p_exp;
-    end
+    elseif strcmp(F{2},'disk')
+        fun2 = @p_disk;        
+    end    
     %
     L1 = p(1);
     L2 = p(2);
@@ -94,46 +97,25 @@ end
 function gr_theor = multi_component_gr(r,F,Z,N,n_,Ntot,Area) 
 
     if strcmp(F{1},'Gauss')
-        fun1 = @p_Gauss;
-    else
+        fun1 = @p_Gauss;        
+    elseif strcmp(F{1},'exp')
         fun1 = @p_exp;
+    elseif strcmp(F{1},'disk')
+        fun1 = @p_disk;        
     end
     if strcmp(F{2},'Gauss')
-        fun2 = @p_Gauss;
-    else
+        fun2 = @p_Gauss;        
+    elseif strcmp(F{2},'exp')
         fun2 = @p_exp;
-    end
+    elseif strcmp(F{2},'disk')
+        fun2 = @p_disk;        
+    end    
 
     rho = Ntot/Area;
     
     rank = length(N);
     n_rank = max(0,(Ntot - sum(N(1:(rank-1)).*n_))/N(rank));
     n = [n_ n_rank];
-
-%     acc = zeros(size(r));
-%     for c=1:numel(n)
-%         if 1==c
-%             fun=fun1;
-%         else
-%             fun=fun2;
-%         end
-%         acc = acc + n(c)*N(c)^2*fun(r,Z(c)) + n(c)*(n(c)-1)*N(c)^2/Area;
-%     end
-%     
-%     cross = 0;    
-%     for c1=1:numel(n)
-%         for c2=1:numel(n)
-%             if c1 ~= c2
-%                 for u=1:n(c1)
-%                     for v=1:n(c2)
-%                         cross = cross + N(c1)*N(c2)/Area;
-%                     end
-%                 end
-%             end
-%         end
-%     end
-%     
-%     gr_theor = (acc + cross)*(1/(Area*rho^2));
 
     acc = zeros(size(r));
     for c=1:numel(n)
