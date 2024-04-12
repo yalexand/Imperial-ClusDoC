@@ -1,10 +1,17 @@
 %-----------------------------------------------------------
-function out = gr_assisted_quasi_cluster_analysis(obj, u, u0, s1, s2, save_dir_name)
+function out = gr_assisted_quasi_cluster_analysis(obj, u, u0, s1, s2, A1, A2, save_dir_name)
 
 params = obj.GR_ASSISTED_CLUSTERING;
 
+% minimum #localizations in small and largr clusters
 minPts1 = params.minPts1;
 minPts2 = params.minPts2;
+
+% if N3s/N2s (#locs within 3sigma divided by #locs within 2sigma) is way bigger than this number, it means that it is not standalone small cluster
+t_ratio_3s2s = params.Small_Clusters_ratio_3s2s_threshold; 
+
+% if peak height exceeds (this number) times (most_probable_small_clusters_N), then it is not standalone small cluster
+t_N_2s_coef = params.Small_Clusters_N2s_factor_over_most_probableN;    
 
     tic
 
@@ -50,11 +57,7 @@ minPts2 = params.minPts2;
            %  
            [maxima,maxima_v,maxima_ind,maxima_most_probable_v] = get_local_maxima(Np,s); 
            most_probable_clusters_N = maxima_most_probable_v;
-           % 
-           % seems not necessary
-           % two hard-coded values are here 
-           % where_clusters_are_img = Np1>0.75*most_probable_clusters_N;
-           
+           %            
            out = actual_point_clustering(points,maxima,[],s,s);
            %
            nloc_small = sample_nlocs(points, maxima, round(1.5*s));
@@ -66,26 +69,59 @@ minPts2 = params.minPts2;
     
            Np1 = gsderiv(points,s1,0)/norm1; % N multiplied by bell function of a height 1
     
-           Np1(Np1<minPts1) = 0; % not interested in too sparse small clusters
+           Np1(Np1 < minPts1) = 0; % not interested in too sparse small clusters
            %  
            [maxima_small,maxima_small_v,maxima_small_ind,maxima_small_most_probable_v] = get_local_maxima(Np1,s1); % centres of small clusters
            most_probable_small_clusters_N = maxima_small_most_probable_v;
-           % 
-           % two hard-coded values are here 
-           tol_fac = params.Small_Clusters_Size_Tolerance_Factor;
-           Z1_excess_fac = params.imopen_Z1_excess_factor;
-           where_small_clusters_are_img = Np1 > tol_fac*most_probable_small_clusters_N;
-           where_large_clusters_are_img = imopen(where_small_clusters_are_img, ... 
-                                    strel('disk',round(Z1_excess_fac*s1)));
            %
-           Np2 = gsderiv(points & where_large_clusters_are_img,s2,0)/norm2; 
-           Np2(Np2<minPts2) = 0; % also don't take into account small points
-           maxima_large = get_local_maxima(Np2,s2); % small clusters won't intefere
+           % peak vicinity analysis via 3-2 sigma collar counting
+                   circle_2s1 = round_mask(2*s1);
+                   circle_3s1 = round_mask(3*s1);
+                   a3 = floor(length(circle_3s1)/2); % half-radius  
+                   a2 = floor(length(circle_2s1)/2); % half-radius  
+                   pad = a3 + 4; % specify the width of padding
+                   padded_points = padarray(points, [pad, pad], 0, 'both');                    
+                   x = maxima_small(:,1) + pad;
+                   y = maxima_small(:,2) + pad;
+                   N_2s = zeros(size(x)); 
+                   N_3s = zeros(size(x));
+
+                   for k=1:length(x)
+                      xc=x(k);
+                      yc=y(k);
+                      rx3 = (xc-a3):(xc+a3);
+                      ry3 = (yc-a3):(yc+a3); 
+                      rx1 = (xc-a2):(xc+a2);
+                      ry1 = (yc-a2):(yc+a2);  
+                      %
+                      u2 = padded_points(rx1,ry1).*circle_2s1;
+                      u3 = padded_points(rx3,ry3).*circle_3s1;
+                      N_2s(k) = sum(u2(:));
+                      N_3s(k) = sum(u3(:));
+                   end
+
+                   ratio_3s2s = N_3s./N_2s; % if there is no pedestal, this should be close to 1, otherwise bigger
+                   %
+                   exclusion_mask = N_2s > t_N_2s_coef*most_probable_small_clusters_N ... 
+                                    & ... 
+                                    ratio_3s2s > t_ratio_3s2s;
+                   %
+                   x_small_standalone = x(~exclusion_mask) - pad;
+                   y_small_standalone = y(~exclusion_mask) - pad;
+
+                   % corrected/redefined maxima_small
+                   maxima_small = [x_small_standalone y_small_standalone];
+                    
+           % define large clusters' centres using density image from which contribution of small clusters was excluded
+           where_small_clusters_are = imdilate(imdraw(sx,sy,maxima_small,1),strel('disk',round(2*s1)));
+           Np2 = gsderiv(points & ~where_small_clusters_are,s2,0)/norm2;            
+           Np2(Np2 < minPts2) = 0; % also don't take into account maxima that are too faint
+           maxima_large = get_local_maxima(Np2,s2); 
            %
-           % finally           
+           % sampling
            Z1_sampling_fac = params.sampling_Z1_excess_factor;
            Z2_sampling_fac = params.sampling_Z2_excess_factor;
-           %
+           %                  
            pruned_maxima_small = prune_small_size_maxima(sx,sy,maxima_small,maxima_large,s2);
            out = actual_point_clustering(points,pruned_maxima_small,maxima_large, ...
                round(s1*Z1_sampling_fac), ...
@@ -185,8 +221,10 @@ disp('clustering - done!')
                 end
 
             end
+            
         end
-             ClusterSmooth = ClusterSmooth(~cellfun('isempty', ClusterSmooth));
+
+        ClusterSmooth = ClusterSmooth(~cellfun('isempty', ClusterSmooth));
 
         disp(toc/60);
         disp('morph params - done!')
@@ -231,8 +269,8 @@ disp('clustering - done!')
         rho2 = Ntot2_clusters/AREA;
         rho1_clusters = n1/AREA;
         rho2_clusters = n2/AREA;
-        caption = {'Z1','Z2','n1','n2','N1','N2','Ntot','Area','rho','Ntot1_clusters','Ntot2_clusters','Ntot_clusters','loc_percentage_in_clusters','rho1','rho2','rho1_clusters','rho2_clusters'};
-        rec = [s1 s2 n1 n2 N1 N2 Ntot AREA rho Ntot1_clusters Ntot2_clusters Ntot_clusters loc_percentage_in_clusters rho1 rho2 rho1_clusters rho2_clusters];
+        caption = {'Z1','Z2','A1','A2','n1','n2','N1','N2','Ntot','Area','rho','Ntot1_clusters','Ntot2_clusters','Ntot_clusters','loc_percentage_in_clusters','rho1','rho2','rho1_clusters','rho2_clusters'};
+        rec = [s1 s2 A1 A2 n1 n2 N1 N2 Ntot AREA rho Ntot1_clusters Ntot2_clusters Ntot_clusters loc_percentage_in_clusters rho1 rho2 rho1_clusters rho2_clusters];
         cell2csv([DBSCANParams.Outputfolder filesep 'gr_Clustering_2comp_stats.csv'],[caption; num2cell(rec)]);
         % save cluster info
 
