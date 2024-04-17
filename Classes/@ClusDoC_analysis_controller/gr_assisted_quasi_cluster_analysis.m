@@ -123,7 +123,7 @@ t_N_2s_coef = params.Small_Clusters_N2s_factor_over_most_probableN;
            Z2_sampling_fac = params.sampling_Z2_excess_factor;
            %                  
            pruned_maxima_small = prune_small_size_maxima(sx,sy,maxima_small,maxima_large,s2);
-           out = actual_point_clustering(points,pruned_maxima_small,maxima_large, ...
+           [out,perim] = actual_point_clustering(points,pruned_maxima_small,maxima_large, ...
                round(s1*Z1_sampling_fac), ...
                round(s2*Z2_sampling_fac));
            %
@@ -134,6 +134,33 @@ t_N_2s_coef = params.Small_Clusters_N2s_factor_over_most_probableN;
 
 disp(toc/60);
 disp('clustering - done!')
+
+h = figure();
+ax = axes('parent',h);
+set(ax, 'NextPlot', 'add');
+x=out(:,1);
+y=out(:,2);
+ls=out(:,4);
+is_bckg = 0==ls;
+is_small = 1==ls;
+is_large = 2==ls;
+%
+plot(ax, x(1==is_bckg), y(1==is_bckg), 'Marker', '.', 'MarkerSize', 5, 'LineStyle', 'none', 'color', rgb(127, 140, 141)); % gray
+hold(ax,'on');
+plot(ax, x(1==is_small), y(1==is_small), 'Marker', '.', 'MarkerSize', 5, 'LineStyle', 'none', 'color', rgb(53, 94, 59)); % green
+hold(ax,'on');
+plot(ax, x(1==is_large), y(1==is_large), 'Marker', '.', 'MarkerSize', 5, 'LineStyle', 'none', 'color', rgb(210, 4, 45)); % red
+hold(ax,'on');
+plot(ax, perim(:,1),perim(:,2), 'Marker', '.', 'MarkerSize', 2, 'LineStyle', 'none', 'color',rgb(44, 62, 80)); % dark grey
+hold(ax,'off');
+daspect(ax,[1 1 1]);
+%
+Name = 'gr_assisted_clustering_SL';
+set(ax, 'box', 'on','XTickLabel',[],'XTick',[],'YTickLabel',[],'YTick',[]);
+grid(ax,'on');
+saveas(h,[save_dir_name filesep Name '.fig']);
+close(h);
+%
 
 %%%%%%%%%%%%%%%% ClusDoC-based - starts    
     class = out(:,3);
@@ -340,7 +367,7 @@ out = cat(1,good_maxima,fixed_maxima);
 
 v = u(sub2ind(size(u), out(:,1), out(:,2)) );
 
-% remove too faint clusters
+% remove too faint clusters (this is legacy & likely never has any effect)
 [counts, edges] = histcounts(v(:));
 max_bin_index = find(counts==max(counts)); 
 most_probable_v = (edges(max_bin_index) + edges(max_bin_index + 1)) / 2;
@@ -434,7 +461,7 @@ function  pruned = prune_small_size_maxima(sx,sy,maxima_small,maxima_large, larg
 end
 
 %-----------------------------------------------------------
-function out  = actual_point_clustering(points,maxima_small,maxima_large,small_r,large_r)
+function [out,perim]  = actual_point_clustering(points,maxima_small,maxima_large,small_r,large_r)
     %
     large_circle = round_mask(large_r);
     small_circle = round_mask(small_r);
@@ -451,7 +478,8 @@ function out  = actual_point_clustering(points,maxima_small,maxima_large,small_r
     label = 0;
     % scene is called "u"..
     u = zeros(size(padded_points));
-    %large
+    %
+    %large    
     if ~isempty(maxima_large)
         for k=1:N_large
           x = maxima_large(k,1) + pad;
@@ -492,8 +520,15 @@ function out  = actual_point_clustering(points,maxima_small,maxima_large,small_r
     [x,y] = find(padded_points == 1);    
     idx = u(sub2ind(size(u), x, y));
     %
-    out = [(x-pad) (y-pad) idx];    
-
+    % convention on large-small - 0 bckg, 1 small 2 large
+    ls = ones(size(idx));
+    ls(0==idx) = 0; % bckg
+    ls(0~=idx & idx<=N_large) = 2; %large
+    %
+    out = [(x-pad) (y-pad) idx ls];
+    %
+    [x_perim,y_perim] = find(1 == bwmorph(imgradient(u)>0,'thin',inf));
+    perim = [x_perim-pad,y_perim-pad];
 end
 
 %-----------------------------------------------------------
