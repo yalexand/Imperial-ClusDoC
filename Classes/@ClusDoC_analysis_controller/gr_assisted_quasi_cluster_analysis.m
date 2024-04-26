@@ -10,9 +10,6 @@ minPts2 = params.minPts2;
 % if N3s/N2s (#locs within 3sigma divided by #locs within 2sigma) is way bigger than this number, it means that it is not standalone small cluster
 t_ratio_3s2s = params.Small_Clusters_ratio_3s2s_threshold; 
 
-% if peak height exceeds (this number) times (most_probable_small_clusters_N), then it is not standalone small cluster
-t_N_2s_coef = params.Small_Clusters_N2s_factor_over_most_probableN;    
-
     tic
 
     points = single(u);
@@ -55,7 +52,7 @@ t_N_2s_coef = params.Small_Clusters_N2s_factor_over_most_probableN;
 
            Np(Np<minPts1) = 0; % not interested in too sparse small clusters
            %  
-           [maxima,maxima_v,maxima_ind,maxima_most_probable_v] = get_local_maxima(Np,s); 
+           [maxima,maxima_v,maxima_ind,maxima_most_probable_v] = get_local_maxima(Np,sqrt(2)*s); 
            most_probable_clusters_N = maxima_most_probable_v;
            %            
            out = actual_point_clustering(points,maxima,[],s,s);
@@ -71,7 +68,7 @@ t_N_2s_coef = params.Small_Clusters_N2s_factor_over_most_probableN;
     
            Np1(Np1 < minPts1) = 0; % not interested in too sparse small clusters
            %  
-           [maxima_small,maxima_small_v,maxima_small_ind,maxima_small_most_probable_v] = get_local_maxima(Np1,s1); % centres of small clusters
+           [maxima_small,maxima_small_v,maxima_small_ind,maxima_small_most_probable_v] = get_local_maxima(Np1,sqrt(2)*s1); % centres of small clusters
            most_probable_small_clusters_N = maxima_small_most_probable_v;
            %
            % peak vicinity analysis via 3-2 sigma collar counting
@@ -99,12 +96,10 @@ t_N_2s_coef = params.Small_Clusters_N2s_factor_over_most_probableN;
                       N_2s(k) = sum(u2(:));
                       N_3s(k) = sum(u3(:));
                    end
-
+                   % 
                    ratio_3s2s = N_3s./N_2s; % if there is no pedestal, this should be close to 1, otherwise bigger
                    %
-                   exclusion_mask = N_2s > t_N_2s_coef*most_probable_small_clusters_N ... 
-                                    & ... 
-                                    ratio_3s2s > t_ratio_3s2s;
+                   exclusion_mask = ratio_3s2s > t_ratio_3s2s;
                    %
                    x_small_standalone = x(~exclusion_mask) - pad;
                    y_small_standalone = y(~exclusion_mask) - pad;
@@ -116,18 +111,17 @@ t_N_2s_coef = params.Small_Clusters_N2s_factor_over_most_probableN;
            where_small_clusters_are = imdilate(imdraw(sx,sy,maxima_small,1),strel('disk',round(2*s1)));
            Np2 = gsderiv(points & ~where_small_clusters_are,s2,0)/norm2;            
            Np2(Np2 < minPts2) = 0; % also don't take into account maxima that are too faint
-           maxima_large = get_local_maxima(Np2,s2); 
+           maxima_large = get_local_maxima(Np2,sqrt(2)*s2); 
            %
            % sampling
            Z1_sampling_fac = params.sampling_Z1_excess_factor;
            Z2_sampling_fac = params.sampling_Z2_excess_factor;
            %                  
-           pruned_maxima_small = prune_small_size_maxima(sx,sy,maxima_small,maxima_large,s2);
-           [out,perim] = actual_point_clustering(points,pruned_maxima_small,maxima_large, ...
+           [out,perim] = actual_point_clustering(points,maxima_small,maxima_large, ...
                round(s1*Z1_sampling_fac), ...
                round(s2*Z2_sampling_fac));
            %
-           nloc_small = sample_nlocs(points, pruned_maxima_small, round(Z1_sampling_fac*s1));
+           nloc_small = sample_nlocs(points, maxima_small, round(Z1_sampling_fac*s1));
            nloc_large = sample_nlocs(points, maxima_large, round(Z2_sampling_fac*s2));           
        end
        %
@@ -356,7 +350,7 @@ good_maxima = s(good_indices,:);
 
 fixed_maxima = [];
 if ~isempty(multiple_maxima)
-    idx = dbscan(multiple_maxima,r/2,2);
+    idx = dbscan(multiple_maxima,r,2);
         for k=1:max(idx)
             coord = multiple_maxima(k==idx,:);
             fixed_maxima = [fixed_maxima; round([mean(coord(:,1)) mean(coord(:,2))])];
