@@ -38,7 +38,6 @@ end
 datei = fopen(fileName, 'W');
 
 for z=1:size(cellArray, 1)
-    z
     for s=1:size(cellArray, 2)
         
         var = eval(['cellArray{z,s}']);
